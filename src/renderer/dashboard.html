@@ -145,7 +145,9 @@
         .file-item.image.background { color: #27ae60; }
         .file-item.video.event { color: #f39c12; }
         .file-item.video.background { color: #27ae60; }
-        .file-item.audio { color: #9b59b6; }
+        .file-item.audio.sound { color: #9b59b6; }
+        .file-item.audio.loop { color: #e67e22; }
+        .file-item.audio.music { color: #3498db; }
         
         .loading {
             text-align: center;
@@ -213,7 +215,35 @@
             </div>
         </div>
         
+        <div class="display-section" style="border-left-color: #e67e22;">
+            <h3>🔄 Background Sounds</h3>
+            <div id="backgroundSoundDisplay">
+                <div class="empty-state">No background sounds</div>
+            </div>
+        </div>
+        
+        <div class="display-section" style="border-left-color: #3498db;">
+            <h3>🎵 Background Music</h3>
+            <div id="backgroundMusicDisplay">
+                <div class="empty-state">No background music</div>
+            </div>
+        </div>
+        
+        <div class="display-section" style="border-left-color: #9b59b6;">
+            <h3>🔊 Sound Effects</h3>
+            <div id="soundEffectsDisplay">
+                <div class="empty-state">No active sound effects</div>
+            </div>
+        </div>
+        
         <button class="clear-all-btn" onclick="clearDisplayElement('all')">🗑️ Clear Entire Display</button>
+    </div>
+
+    <!-- Audio Players -->
+    <div class="audio-container" style="display: none;">
+        <div id="backgroundSoundsContainer"></div>
+        <audio id="backgroundMusicPlayer" loop></audio>
+        <div id="soundEffectsContainer"></div>
     </div>
 
     <script>
@@ -333,8 +363,16 @@
                         }
                         break;
                     case 'audio':
-                        icon = '🎵';
-                        typeLabel = ' (Audio)';
+                        if (item.mediaSubtype === 'sound') {
+                            icon = '🔊';
+                            typeLabel = ' (SFX)';
+                        } else if (item.mediaSubtype === 'loop') {
+                            icon = '🔄';
+                            typeLabel = ' (Loop)';
+                        } else if (item.mediaSubtype === 'music') {
+                            icon = '🎵';
+                            typeLabel = ' (Music)';
+                        }
                         break;
                 }
                 
@@ -409,6 +447,211 @@
             } else {
                 eventDisplay.innerHTML = '<div class="empty-state">No event playing</div>';
             }
+
+            // Update background sounds
+            const backgroundSoundDisplay = document.getElementById('backgroundSoundDisplay');
+            if (displayState.backgroundSounds && displayState.backgroundSounds.length > 0) {
+                backgroundSoundDisplay.innerHTML = displayState.backgroundSounds.map(sound => `
+                    <div class="display-item">
+                        <span>🔄 ${sound.displayName}</span>
+                        <button class="clear-btn" onclick="clearDisplayElement('backgroundSound', '${sound.id}')">×</button>
+                    </div>
+                `).join('');
+            } else {
+                backgroundSoundDisplay.innerHTML = '<div class="empty-state">No background sounds</div>';
+            }
+
+            // Update background music
+            const backgroundMusicDisplay = document.getElementById('backgroundMusicDisplay');
+            if (displayState.backgroundMusic) {
+                backgroundMusicDisplay.innerHTML = `
+                    <div class="display-item">
+                        <span>🎵 ${displayState.backgroundMusic.displayName}</span>
+                        <button class="clear-btn" onclick="clearDisplayElement('backgroundMusic')">×</button>
+                    </div>
+                `;
+            } else {
+                backgroundMusicDisplay.innerHTML = '<div class="empty-state">No background music</div>';
+            }
+
+            // Update sound effects
+            const soundEffectsDisplay = document.getElementById('soundEffectsDisplay');
+            if (displayState.soundEffects && displayState.soundEffects.length > 0) {
+                soundEffectsDisplay.innerHTML = displayState.soundEffects.map(effect => `
+                    <div class="display-item">
+                        <span>🔊 ${effect.displayName}</span>
+                        <button class="clear-btn" onclick="clearDisplayElement('soundEffect', '${effect.id}')">×</button>
+                    </div>
+                `).join('');
+            } else {
+                soundEffectsDisplay.innerHTML = '<div class="empty-state">No active sound effects</div>';
+            }
+        }
+
+        // Audio handling functions
+        let currentSoundEffects = new Map(); // Track currently playing sound effects
+        let currentBackgroundSounds = new Map(); // Track currently playing background sounds
+
+        function updateBackgroundSounds(backgroundSounds) {
+            const container = document.getElementById('backgroundSoundsContainer');
+            const newSounds = backgroundSounds || [];
+            
+            // Convert array to Map for easier comparison
+            const newSoundsMap = new Map();
+            newSounds.forEach(sound => {
+                newSoundsMap.set(sound.id, sound);
+            });
+            
+            // Remove background sounds that are no longer in the state
+            for (const [id, audioElement] of currentBackgroundSounds) {
+                if (!newSoundsMap.has(id)) {
+                    audioElement.remove();
+                    currentBackgroundSounds.delete(id);
+                }
+            }
+            
+            // Add new background sounds that aren't already playing
+            newSounds.forEach(sound => {
+                if (!currentBackgroundSounds.has(sound.id)) {
+                    // This is a new background sound, create and play it
+                    const audio = document.createElement('audio');
+                    audio.src = `file://${sound.path}`;
+                    audio.volume = 0.7; // Slightly lower volume for background sounds
+                    audio.loop = true; // Background sounds should loop
+                    audio.id = `backgroundSound_${sound.id}`;
+                    
+                    // Remove from both maps when sound ends (shouldn't happen with loop=true)
+                    audio.addEventListener('ended', () => {
+                        currentBackgroundSounds.delete(sound.id);
+                        window.electronAPI.clearDisplayElement('backgroundSound', sound.id);
+                    });
+                    
+                    audio.addEventListener('error', (e) => {
+                        console.error('Error playing background sound:', e);
+                        currentBackgroundSounds.delete(sound.id);
+                        window.electronAPI.clearDisplayElement('backgroundSound', sound.id);
+                    });
+                    
+                    container.appendChild(audio);
+                    currentBackgroundSounds.set(sound.id, audio);
+                    audio.play().catch(e => console.error('Error playing background sound:', e));
+                }
+            });
+        }
+
+        function updateBackgroundSound(backgroundSound) {
+            // Legacy function - now just calls updateBackgroundSounds with array
+            updateBackgroundSounds(backgroundSound ? [backgroundSound] : []);
+        }
+
+        function updateBackgroundMusic(backgroundMusic) {
+            const player = document.getElementById('backgroundMusicPlayer');
+            
+            if (backgroundMusic) {
+                if (player.src !== `file://${backgroundMusic.path}`) {
+                    player.src = `file://${backgroundMusic.path}`;
+                    player.volume = 0.5; // Lower volume for background music
+                    player.play().catch(e => console.error('Error playing background music:', e));
+                }
+            } else {
+                player.pause();
+                player.src = '';
+            }
+        }
+
+        function updateSoundEffects(soundEffects) {
+            const container = document.getElementById('soundEffectsContainer');
+            const newEffects = soundEffects || [];
+            
+            // Convert array to Map for easier comparison
+            const newEffectsMap = new Map();
+            newEffects.forEach(effect => {
+                newEffectsMap.set(effect.id, effect);
+            });
+            
+            // Remove sound effects that are no longer in the state
+            for (const [id, audioElement] of currentSoundEffects) {
+                if (!newEffectsMap.has(id)) {
+                    audioElement.remove();
+                    currentSoundEffects.delete(id);
+                }
+            }
+            
+            // Add new sound effects that aren't already playing
+            newEffects.forEach(effect => {
+                if (!currentSoundEffects.has(effect.id)) {
+                    // This is a new sound effect, create and play it
+                    const audio = document.createElement('audio');
+                    audio.src = `file://${effect.path}`;
+                    audio.volume = 0.8; // Full volume for sound effects
+                    audio.id = `soundEffect_${effect.id}`;
+                    
+                    // Remove from both maps when sound ends
+                    audio.addEventListener('ended', () => {
+                        currentSoundEffects.delete(effect.id);
+                        window.electronAPI.clearDisplayElement('soundEffect', effect.id);
+                    });
+                    
+                    audio.addEventListener('error', (e) => {
+                        console.error('Error playing sound effect:', e);
+                        currentSoundEffects.delete(effect.id);
+                        window.electronAPI.clearDisplayElement('soundEffect', effect.id);
+                    });
+                    
+                    container.appendChild(audio);
+                    currentSoundEffects.set(effect.id, audio);
+                    audio.play().catch(e => console.error('Error playing sound effect:', e));
+                }
+            });
+        }
+
+        // Track previous audio state to avoid unnecessary updates
+        let previousAudioState = {
+            backgroundSounds: [],
+            backgroundMusic: null,
+            soundEffects: []
+        };
+
+        function updateAudioIfChanged(displayState) {
+            // Check if background sounds changed
+            const currentBgSounds = displayState.backgroundSounds || [];
+            const prevBgSounds = previousAudioState.backgroundSounds || [];
+            if (!soundEffectsEqual(currentBgSounds, prevBgSounds)) {
+                updateBackgroundSounds(currentBgSounds);
+                previousAudioState.backgroundSounds = currentBgSounds;
+            }
+
+            // Check if background music changed
+            const currentBgMusic = displayState.backgroundMusic;
+            const prevBgMusic = previousAudioState.backgroundMusic;
+            if (!audioStatesEqual(currentBgMusic, prevBgMusic)) {
+                updateBackgroundMusic(currentBgMusic);
+                previousAudioState.backgroundMusic = currentBgMusic;
+            }
+
+            // Check if sound effects changed
+            const currentSoundEffects = displayState.soundEffects || [];
+            const prevSoundEffects = previousAudioState.soundEffects || [];
+            if (!soundEffectsEqual(currentSoundEffects, prevSoundEffects)) {
+                updateSoundEffects(currentSoundEffects);
+                previousAudioState.soundEffects = currentSoundEffects;
+            }
+        }
+
+        function audioStatesEqual(current, previous) {
+            if (!current && !previous) return true;
+            if (!current || !previous) return false;
+            return current.path === previous.path && current.id === previous.id;
+        }
+
+        function soundEffectsEqual(current, previous) {
+            if (current.length !== previous.length) return false;
+            for (let i = 0; i < current.length; i++) {
+                if (!audioStatesEqual(current[i], previous[i])) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         // Store current display state for reference
@@ -430,6 +673,9 @@
         window.electronAPI.onDisplayStateUpdated((event, displayState) => {
             currentDisplayState = displayState; // Store the current state
             updateDisplayPanel(displayState);
+            
+            // Only update audio if the audio state has actually changed
+            updateAudioIfChanged(displayState);
         });
 
         // Load initial display state
@@ -438,6 +684,9 @@
                 const displayState = await window.electronAPI.getDisplayState();
                 currentDisplayState = displayState; // Store the current state
                 updateDisplayPanel(displayState);
+                
+                // Only update audio if the audio state has actually changed
+                updateAudioIfChanged(displayState);
             } catch (error) {
                 console.error('Error loading display state:', error);
             }

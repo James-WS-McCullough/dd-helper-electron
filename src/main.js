@@ -11,7 +11,10 @@ let cachedDirectory = null;
 let displayState = {
   portraits: [],
   background: null,
-  event: null
+  event: null,
+  backgroundSounds: [], // Changed to array for multiple background sounds
+  backgroundMusic: null,
+  soundEffects: []
 };
 
 // Get the path for storing user data
@@ -157,7 +160,13 @@ ipcMain.handle('scan-directory', async (event, directoryPath) => {
               }
             } else if (['.mp3', '.wav', '.ogg'].includes(ext)) {
               mediaType = 'audio';
-              mediaSubtype = 'sound';
+              if (fileName.toLowerCase().endsWith('_loop')) {
+                mediaSubtype = 'loop';
+              } else if (fileName.toLowerCase().endsWith('_music')) {
+                mediaSubtype = 'music';
+              } else {
+                mediaSubtype = 'sound';
+              }
             }
             
             result.children.push({
@@ -166,7 +175,7 @@ ipcMain.handle('scan-directory', async (event, directoryPath) => {
               type: 'file',
               mediaType: mediaType,
               mediaSubtype: mediaSubtype,
-              displayName: fileName.startsWith('_') ? '???' : fileName.replace(/_location$/, '')
+              displayName: fileName.startsWith('_') ? '???' : fileName.replace(/_location$|_loop$|_music$/, '')
             });
           }
         }
@@ -213,6 +222,15 @@ ipcMain.handle('display-media', (event, mediaPath, mediaType, mediaSubtype, disp
     } else if (mediaType === 'video' && mediaSubtype === 'event') {
       // Set event (replaces previous)
       displayState.event = mediaData;
+    } else if (mediaType === 'audio' && mediaSubtype === 'sound') {
+      // Add sound effect to list
+      displayState.soundEffects.push({ ...mediaData, id: Date.now() });
+    } else if (mediaType === 'audio' && mediaSubtype === 'loop') {
+      // Add background sound to list (multiple allowed)
+      displayState.backgroundSounds.push({ ...mediaData, id: Date.now() });
+    } else if (mediaType === 'audio' && mediaSubtype === 'music') {
+      // Set background music (replaces previous)
+      displayState.backgroundMusic = mediaData;
     }
     
     displayWindow.webContents.send('update-display', displayState);
@@ -241,9 +259,27 @@ ipcMain.handle('clear-display-element', (event, elementType, elementPath = null)
     displayState.background = null;
   } else if (elementType === 'event') {
     displayState.event = null;
+  } else if (elementType === 'backgroundSound') {
+    // Remove specific background sound by ID
+    if (elementPath) {
+      displayState.backgroundSounds = displayState.backgroundSounds.filter(s => s.id != elementPath);
+    } else {
+      // Clear all background sounds
+      displayState.backgroundSounds = [];
+    }
+  } else if (elementType === 'backgroundMusic') {
+    displayState.backgroundMusic = null;
+  } else if (elementType === 'soundEffect') {
+    // Remove specific sound effect by ID
+    if (elementPath) {
+      displayState.soundEffects = displayState.soundEffects.filter(s => s.id != elementPath);
+    } else {
+      // Clear all sound effects
+      displayState.soundEffects = [];
+    }
   } else if (elementType === 'all') {
     // Clear everything
-    displayState = { portraits: [], background: null, event: null };
+    displayState = { portraits: [], background: null, event: null, backgroundSounds: [], backgroundMusic: null, soundEffects: [] };
   }
   
   if (displayWindow && !displayWindow.isDestroyed()) {

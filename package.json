@@ -1,0 +1,33 @@
+{
+  "name": "dd-helper-electron",
+  "version": "1.0.0",
+  "description": "A D&D helper app for managing and displaying media files",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "install-deps": "npm install"
+  },
+  "keywords": ["electron", "dnd", "tabletop", "media"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "dependencies": {
+    "path": "^0.12.7"
+  },
+  "build": {
+    "appId": "com.example.dd-helper",
+    "productName": "D&D Helper",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*"
+    ]
+  }
+}

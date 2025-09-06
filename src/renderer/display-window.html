@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>D&D Helper - Display</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: white;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .display-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .background-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      .background-content {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        min-width: 100%;
+        min-height: 100%;
+      }
+
+      /* Ensure background videos fill the entire container */
+      video.background-content {
+        transform: scale(1.01); /* Slight scale to ensure no black bars */
+      }
+
+      .portraits-layer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: min(30px, 3vw);
+        justify-content: center;
+        align-items: center;
+        max-width: 95%;
+        max-height: 90%;
+        width: 95%;
+        height: 90%;
+      }
+
+      .portrait-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: min(15px, 1.5vw);
+        padding: min(15px, 1.5vw);
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.4);
+        transition: all 0.3s ease;
+      }
+
+      .portrait-image {
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .portrait-name {
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Dynamic sizing based on portrait count and screen size */
+      .portraits-layer[data-count="1"] .portrait-item {
+        transform: scale(1.2);
+      }
+
+      .portraits-layer[data-count="1"] .portrait-image {
+        width: min(50vw, 50vh);
+        height: min(50vw, 50vh);
+      }
+
+      .portraits-layer[data-count="1"] .portrait-name {
+        font-size: clamp(18px, 2vw, 28px);
+      }
+
+      .portraits-layer[data-count="2"] .portrait-image {
+        width: min(40vw, 40vh);
+        height: min(40vw, 40vh);
+      }
+
+      .portraits-layer[data-count="2"] .portrait-name {
+        font-size: clamp(16px, 1.8vw, 24px);
+      }
+
+      /* Scale down only for 3+ portraits */
+      .portraits-layer[data-count="3"] .portrait-image {
+        width: min(30vw, 30vh);
+        height: min(30vw, 30vh);
+      }
+
+      .portraits-layer[data-count="3"] .portrait-name {
+        font-size: clamp(14px, 1.5vw, 20px);
+      }
+
+      .portraits-layer[data-count="4"] .portrait-image {
+        width: min(25vw, 25vh);
+        height: min(25vw, 25vh);
+      }
+
+      .portraits-layer[data-count="4"] .portrait-name {
+        font-size: clamp(12px, 1.3vw, 18px);
+      }
+
+      .portraits-layer[data-count="5"] .portrait-image,
+      .portraits-layer[data-count="6"] .portrait-image {
+        width: min(20vw, 20vh);
+        height: min(20vw, 20vh);
+      }
+
+      .portraits-layer[data-count="5"] .portrait-name,
+      .portraits-layer[data-count="6"] .portrait-name {
+        font-size: clamp(11px, 1.2vw, 16px);
+      }
+
+      /* For 7+ portraits, make them even smaller */
+      .portraits-layer[data-count-many="true"] {
+        gap: min(20px, 2vw);
+      }
+
+      .portraits-layer[data-count-many="true"] .portrait-item {
+        padding: min(12px, 1vw);
+      }
+
+      .portraits-layer[data-count-many="true"] .portrait-image {
+        width: min(20vw, 20vh);
+        height: min(20vw, 20vh);
+      }
+
+      .portraits-layer[data-count-many="true"] .portrait-name {
+        font-size: clamp(10px, 1vw, 14px);
+      }
+
+      /* Responsive adjustments for different screen sizes */
+      @media (max-width: 1200px) {
+        .portraits-layer[data-count="1"] .portrait-image,
+        .portraits-layer[data-count="2"] .portrait-image {
+          width: min(30vw, 30vh);
+          height: min(30vw, 30vh);
+        }
+      }
+
+      @media (max-width: 800px) {
+        .portraits-layer[data-count="1"] .portrait-image,
+        .portraits-layer[data-count="2"] .portrait-image {
+          width: min(35vw, 35vh);
+          height: min(35vw, 35vh);
+        }
+      }
+
+      .event-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 3;
+        background: rgba(0, 0, 0, 1);
+        display: none;
+        overflow: hidden;
+      }
+
+      .event-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        min-width: 100%;
+        min-height: 100%;
+      }
+
+      /* Ensure videos fill the entire container */
+      video.event-content {
+        transform: scale(1.01); /* Slight scale to ensure no black bars */
+      }
+
+      .fade-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        z-index: 4;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s ease-in-out;
+      }
+
+      .placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #666;
+        font-size: 24px;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="display-container">
+      <!-- Background Layer -->
+      <div class="background-layer" id="backgroundLayer"></div>
+
+      <!-- Portraits Layer -->
+      <div class="portraits-layer" id="portraitsLayer"></div>
+
+      <!-- Event Layer -->
+      <div class="event-layer" id="eventLayer">
+        <div id="eventContent"></div>
+      </div>
+
+      <!-- Fade Overlay -->
+      <div class="fade-overlay" id="fadeOverlay"></div>
+
+      <!-- Placeholder -->
+      <div class="placeholder" id="placeholder">
+        <div>🎬 Display Window</div>
+        <p>Media will appear here when selected from the dashboard</p>
+      </div>
+    </div>
+
+    <script>
+      let currentDisplayState = {
+        portraits: [],
+        background: null,
+        event: null,
+      };
+      let currentEventVideo = null;
+      let previousDisplayState = null;
+
+      function updateDisplay(displayState) {
+        currentDisplayState = displayState;
+
+        // Update placeholder visibility
+        const hasAnyContent =
+          displayState.portraits.length > 0 ||
+          displayState.background ||
+          displayState.event;
+        document.getElementById("placeholder").style.display = hasAnyContent
+          ? "none"
+          : "block";
+
+        // Update portraits
+        updatePortraits(displayState.portraits);
+
+        // Update background
+        updateBackground(displayState.background);
+
+        // Update event
+        updateEvent(displayState.event);
+      }
+
+      function updatePortraits(portraits) {
+        const portraitsLayer = document.getElementById("portraitsLayer");
+
+        if (portraits && portraits.length > 0) {
+          // Set dynamic sizing attributes
+          const count = portraits.length;
+          portraitsLayer.setAttribute(
+            "data-count",
+            Math.min(count, 6).toString()
+          );
+          if (count > 6) {
+            portraitsLayer.setAttribute("data-count-many", "true");
+          } else {
+            portraitsLayer.removeAttribute("data-count-many");
+          }
+
+          portraitsLayer.innerHTML = portraits
+            .map((portrait) => {
+              return `
+                        <div class="portrait-item">
+                            <img src="file://${portrait.path}" alt="${portrait.displayName}" class="portrait-image" 
+                                 onerror="this.style.display='none'">
+                            <div class="portrait-name">${portrait.displayName}</div>
+                        </div>
+                    `;
+            })
+            .join("");
+        } else {
+          portraitsLayer.innerHTML = "";
+          portraitsLayer.removeAttribute("data-count");
+          portraitsLayer.removeAttribute("data-count-many");
+        }
+      }
+
+      function updateBackground(background) {
+        const backgroundLayer = document.getElementById("backgroundLayer");
+
+        if (background) {
+          if (background.type === "image") {
+            backgroundLayer.innerHTML = `
+                        <img src="file://${background.path}" alt="Background" class="background-content"
+                             onerror="this.style.display='none'">
+                    `;
+          } else if (background.type === "video") {
+            backgroundLayer.innerHTML = `
+                        <video class="background-content" autoplay muted loop playsinline
+                               onerror="this.style.display='none'">
+                            <source src="file://${background.path}" type="video/mp4">
+                            <source src="file://${background.path}" type="video/webm">
+                        </video>
+                    `;
+          }
+        } else {
+          backgroundLayer.innerHTML = "";
+        }
+      }
+
+      function updateEvent(event) {
+        const eventLayer = document.getElementById("eventLayer");
+        const eventContent = document.getElementById("eventContent");
+
+        if (event && event.type === "video") {
+          // Store previous state for restoration
+          if (!currentEventVideo) {
+            previousDisplayState = {
+              portraits: [...currentDisplayState.portraits],
+              background: currentDisplayState.background,
+            };
+          }
+
+          eventContent.innerHTML = `
+                    <video class="event-content" autoplay playsinline muted
+                           style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                           onerror="this.style.display='none'">
+                        <source src="file://${event.path}" type="video/mp4">
+                        <source src="file://${event.path}" type="video/webm">
+                    </video>
+                `;
+
+          const video = eventContent.querySelector("video");
+          currentEventVideo = video;
+
+          // Show event layer
+          eventLayer.style.display = "block";
+
+          // Handle video end
+          video.addEventListener("ended", () => {
+            fadeToBlackAndRestore();
+          });
+
+          video.addEventListener("error", () => {
+            console.error("Error playing event video");
+            fadeToBlackAndRestore();
+          });
+
+          // Ensure video plays with sound for events
+          video.addEventListener("loadedmetadata", () => {
+            video.muted = false; // Unmute for events (unlike background videos)
+          });
+        } else {
+          eventLayer.style.display = "none";
+          eventContent.innerHTML = "";
+          currentEventVideo = null;
+        }
+      }
+
+      function fadeToBlackAndRestore() {
+        const fadeOverlay = document.getElementById("fadeOverlay");
+        const eventLayer = document.getElementById("eventLayer");
+
+        // Fade to black
+        fadeOverlay.style.opacity = "1";
+
+        setTimeout(() => {
+          // Hide event layer
+          eventLayer.style.display = "none";
+          currentEventVideo = null;
+
+          // Clear event from state (send back to main process)
+          window.electronAPI.clearDisplayElement("event");
+
+          setTimeout(() => {
+            // Fade from black
+            fadeOverlay.style.opacity = "0";
+          }, 500);
+        }, 1000);
+      }
+
+      function clearDisplay() {
+        currentDisplayState = { portraits: [], background: null, event: null };
+        updateDisplay(currentDisplayState);
+        document.getElementById("placeholder").style.display = "block";
+      }
+
+      // Listen for display updates from main process
+      window.electronAPI.onUpdateDisplay((event, displayState) => {
+        updateDisplay(displayState);
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "Escape":
+            if (currentEventVideo) {
+              // Stop current event
+              fadeToBlackAndRestore();
+            } else {
+              // Clear entire display
+              window.electronAPI.clearDisplayElement("all");
+            }
+            break;
+          case " ": // Spacebar
+            if (currentEventVideo) {
+              if (currentEventVideo.paused) {
+                currentEventVideo.play();
+              } else {
+                currentEventVideo.pause();
+              }
+            } else if (
+              currentDisplayState.background &&
+              currentDisplayState.background.type === "video"
+            ) {
+              const bgVideo = document.querySelector(".background-layer video");
+              if (bgVideo) {
+                if (bgVideo.paused) {
+                  bgVideo.play();
+                } else {
+                  bgVideo.pause();
+                }
+              }
+            }
+            event.preventDefault();
+            break;
+        }
+      });
+    </script>
+  </body>
+</html>

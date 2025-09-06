@@ -492,6 +492,62 @@
         let currentSoundEffects = new Map(); // Track currently playing sound effects
         let currentBackgroundSounds = new Map(); // Track currently playing background sounds
 
+        // Audio fade utilities
+        function fadeIn(audioElement, duration = 2000) {
+            if (audioElement.paused) return; // Don't fade if audio is paused
+            
+            audioElement.volume = 0;
+            const targetVolume = audioElement.dataset.targetVolume ? parseFloat(audioElement.dataset.targetVolume) : 0.7;
+            const fadeStep = targetVolume / (duration / 50); // 50ms intervals
+            
+            const fadeInterval = setInterval(() => {
+                if (audioElement.paused) {
+                    clearInterval(fadeInterval);
+                    return;
+                }
+                
+                if (audioElement.volume + fadeStep >= targetVolume) {
+                    audioElement.volume = targetVolume;
+                    clearInterval(fadeInterval);
+                } else {
+                    audioElement.volume += fadeStep;
+                }
+            }, 50);
+            
+            return fadeInterval;
+        }
+
+        function fadeOut(audioElement, duration = 2000) {
+            return new Promise((resolve) => {
+                if (audioElement.paused || audioElement.volume === 0) {
+                    audioElement.volume = 0;
+                    audioElement.pause();
+                    resolve();
+                    return;
+                }
+                
+                const startVolume = audioElement.volume;
+                const fadeStep = startVolume / (duration / 50); // 50ms intervals
+                
+                const fadeInterval = setInterval(() => {
+                    if (audioElement.paused) {
+                        clearInterval(fadeInterval);
+                        resolve();
+                        return;
+                    }
+                    
+                    if (audioElement.volume - fadeStep <= 0) {
+                        audioElement.volume = 0;
+                        audioElement.pause();
+                        clearInterval(fadeInterval);
+                        resolve();
+                    } else {
+                        audioElement.volume -= fadeStep;
+                    }
+                }, 50);
+            });
+        }
+
         function updateBackgroundSounds(backgroundSounds) {
             const container = document.getElementById('backgroundSoundsContainer');
             const newSounds = backgroundSounds || [];
@@ -502,10 +558,13 @@
                 newSoundsMap.set(sound.id, sound);
             });
             
-            // Remove background sounds that are no longer in the state
+            // Remove background sounds that are no longer in the state (with fade out)
             for (const [id, audioElement] of currentBackgroundSounds) {
                 if (!newSoundsMap.has(id)) {
-                    audioElement.remove();
+                    // Fade out and remove
+                    fadeOut(audioElement).then(() => {
+                        audioElement.remove();
+                    });
                     currentBackgroundSounds.delete(id);
                 }
             }
@@ -516,7 +575,7 @@
                     // This is a new background sound, create and play it
                     const audio = document.createElement('audio');
                     audio.src = `file://${sound.path}`;
-                    audio.volume = 0.7; // Slightly lower volume for background sounds
+                    audio.dataset.targetVolume = '0.7'; // Store target volume for fade-in
                     audio.loop = true; // Background sounds should loop
                     audio.id = `backgroundSound_${sound.id}`;
                     
@@ -534,7 +593,11 @@
                     
                     container.appendChild(audio);
                     currentBackgroundSounds.set(sound.id, audio);
-                    audio.play().catch(e => console.error('Error playing background sound:', e));
+                    
+                    // Start playing and fade in
+                    audio.play().then(() => {
+                        fadeIn(audio);
+                    }).catch(e => console.error('Error playing background sound:', e));
                 }
             });
         }
@@ -548,14 +611,36 @@
             const player = document.getElementById('backgroundMusicPlayer');
             
             if (backgroundMusic) {
-                if (player.src !== `file://${backgroundMusic.path}`) {
-                    player.src = `file://${backgroundMusic.path}`;
-                    player.volume = 0.5; // Lower volume for background music
-                    player.play().catch(e => console.error('Error playing background music:', e));
+                const newSrc = `file://${backgroundMusic.path}`;
+                
+                if (player.src !== newSrc) {
+                    if (player.src && !player.paused) {
+                        // Music is currently playing, fade out then switch
+                        fadeOut(player).then(() => {
+                            player.src = newSrc;
+                            player.dataset.targetVolume = '0.5'; // Store target volume for music
+                            player.play().then(() => {
+                                fadeIn(player);
+                            }).catch(e => console.error('Error playing background music:', e));
+                        });
+                    } else {
+                        // No music currently playing, start new music with fade in
+                        player.src = newSrc;
+                        player.dataset.targetVolume = '0.5'; // Store target volume for music
+                        player.play().then(() => {
+                            fadeIn(player);
+                        }).catch(e => console.error('Error playing background music:', e));
+                    }
                 }
             } else {
-                player.pause();
-                player.src = '';
+                if (!player.paused) {
+                    // Fade out current music
+                    fadeOut(player).then(() => {
+                        player.src = '';
+                    });
+                } else {
+                    player.src = '';
+                }
             }
         }
 

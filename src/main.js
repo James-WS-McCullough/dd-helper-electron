@@ -139,11 +139,13 @@ ipcMain.handle('scan-directory', async (event, directoryPath) => {
           result.children.push(subDir);
         } else if (item.isFile()) {
           const ext = path.extname(item.name).toLowerCase();
+          const fileName = path.basename(item.name, ext);
+          
+          // Determine media type and subtype for all files
+          let mediaType = 'other';
+          let mediaSubtype = 'default';
+          
           if (mediaExtensions.includes(ext)) {
-            const fileName = path.basename(item.name, ext);
-            let mediaType = 'other';
-            let mediaSubtype = 'default';
-            
             if (['.jpg', '.jpeg', '.png', '.gif'].includes(ext)) {
               mediaType = 'image';
               if (fileName.toLowerCase().endsWith('_location')) {
@@ -168,16 +170,17 @@ ipcMain.handle('scan-directory', async (event, directoryPath) => {
                 mediaSubtype = 'sound';
               }
             }
-            
-            result.children.push({
-              name: item.name,
-              path: itemPath,
-              type: 'file',
-              mediaType: mediaType,
-              mediaSubtype: mediaSubtype,
-              displayName: fileName.startsWith('_') ? '???' : fileName.replace(/_location$|_loop$|_music$/, '')
-            });
           }
+          
+          // Include ALL files, not just media files
+          result.children.push({
+            name: item.name,
+            path: itemPath,
+            type: 'file',
+            mediaType: mediaType,
+            mediaSubtype: mediaSubtype,
+            displayName: fileName.startsWith('_') ? '???' : fileName.replace(/_location$|_loop$|_music$/, '')
+          });
         }
       }
 

@@ -7,25 +7,356 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
             color: white;
             min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .dashboard-container {
             display: grid;
             grid-template-columns: 1fr 350px;
             gap: 20px;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
         }
         
         .main-content {
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.25);
+            border-bottom: 3px solid #f39c12;
+        }
+        
+        .tab-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 10px 10px 10px;
+            padding: 20px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Media Grid Styles */
+        .media-grid-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .directory-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        
+        .breadcrumb {
+            font-size: 14px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .breadcrumb-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+        
+        .breadcrumb-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
+        }
+        
+        .breadcrumb-separator {
+            opacity: 0.5;
+            margin: 0 2px;
+        }
+        
+        .media-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            padding: 8px 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            color: #f39c12;
+        }
+        
+        .media-grid-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 5px 0;
+        }
+        
+        .media-grid {
+            padding: 10px 0;
+        }
+        
+        .media-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid transparent;
+        }
+        
+        .media-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .media-item.portrait:hover {
+            border-color: #e74c3c;
+        }
+        
+        .media-item.background:hover,
+        .media-item.background-video:hover {
+            border-color: #27ae60;
+        }
+        
+        .media-item.event:hover {
+            border-color: #f39c12;
+        }
+        
+        .media-item.folder:hover {
+            border-color: #3498db;
+        }
+        
+        .media-item.image:hover {
+            border-color: #9b59b6;
+        }
+        
+        /* Type indicator badges */
+        .media-item .type-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 8px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .media-item:hover .type-badge {
+            opacity: 1;
+        }
+        
+        .media-item.portrait .type-badge {
+            background: #e74c3c;
+        }
+        
+        .media-item.background .type-badge,
+        .media-item.background-video .type-badge {
+            background: #27ae60;
+        }
+        
+        .media-item.event .type-badge {
+            background: #f39c12;
+        }
+        
+        .media-item.folder:hover {
+            border-color: #3498db;
+        }
+        
+        .media-preview {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .media-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+        
+        .media-name {
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0.9;
+            word-break: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .media-type-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            padding: 2px 5px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .media-item.image .media-type-badge { background: #e74c3c; }
+        .media-item.video .media-type-badge { background: #f39c12; }
+        .media-item.folder .media-type-badge { background: #3498db; }
+        .media-item.portrait .media-type-badge { background: #e74c3c; }
+        .media-item.background .media-type-badge { background: #27ae60; }
+        .media-item.event .media-type-badge { background: #f39c12; }
+        
+        /* Audio List Styles */
+        .audio-list-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .audio-section {
+            margin-bottom: 25px;
+        }
+        
+        .audio-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #f39c12;
+            border-bottom: 2px solid rgba(243, 156, 18, 0.3);
+            padding-bottom: 5px;
+        }
+        
+        .audio-file-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        
+        .audio-file-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(2px);
+        }
+        
+        .audio-file-item.sound { border-left: 3px solid #9b59b6; }
+        .audio-file-item.loop { border-left: 3px solid #e67e22; }
+        .audio-file-item.music { border-left: 3px solid #3498db; }
+        .audio-file-item.folder-item { border-left: 3px solid #27ae60; }
+        .audio-file-item.back-item { border-left: 3px solid #95a5a6; }
+        
+        .audio-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .audio-name {
+            flex: 1;
+            font-size: 13px;
+        }
+        
+        .audio-badge {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+        
+        .audio-file-item.sound .audio-badge { background: #9b59b6; }
+        .audio-file-item.loop .audio-badge { background: #e67e22; }
+        .audio-file-item.music .audio-badge { background: #3498db; }
+        
+        /* Audio breadcrumbs */
+        .audio-breadcrumbs {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: rgba(243, 156, 18, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #f39c12;
+        }
+        
+        /* Unified audio list */
+        .unified-audio-list {
+            padding: 0;
+        }
+        
+        .audio-icon {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        .audio-name {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        /* Live Panel Styles */
         .live-panel {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
+            overflow-y: auto;
         }
         
         .live-panel h2 {
@@ -47,15 +378,47 @@
         .display-section.portraits { border-left-color: #e74c3c; }
         .display-section.background { border-left-color: #27ae60; }
         .display-section.event { border-left-color: #f39c12; }
+        .display-section.audio { border-left-color: #9b59b6; }
         
         .display-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 10px;
+            padding: 8px 10px;
             margin: 5px 0;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 3px;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #f39c12;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .volume-label {
+            font-size: 12px;
+            opacity: 0.8;
+            min-width: 30px;
         }
         
         .clear-btn {
@@ -179,65 +542,87 @@
     </style>
 </head>
 <body>
-    <div class="main-content">
-        <div class="header">
-            <h1>🎲 D&D Helper Dashboard</h1>
-            <button id="refreshBtn">🔄 Refresh</button>
-        </div>
-        
-        <div class="file-explorer" id="fileExplorer">
-            <div class="loading">Loading media files...</div>
-        </div>
-    </div>
-    
-    <div class="live-panel">
-        <h2>🖥️ Live Display</h2>
-        
-        <div class="display-section portraits">
-            <h3>👥 Portraits</h3>
-            <div id="portraitsList">
-                <div class="empty-state">No portraits displayed</div>
+    <div class="dashboard-container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🎲 D&D Helper Dashboard</h1>
+                <button id="refreshBtn">🔄 Refresh</button>
             </div>
-            <button class="clear-btn" onclick="clearDisplayElement('portraits')" style="width: 100%; margin-top: 10px;">Clear All Portraits</button>
-        </div>
-        
-        <div class="display-section background">
-            <h3>🖼️ Background</h3>
-            <div id="backgroundDisplay">
-                <div class="empty-state">No background set</div>
+            
+            <div class="tab-container">
+                <button class="tab-button active" onclick="switchTab('media')">🖼️ Media</button>
+                <button class="tab-button" onclick="switchTab('audio')">🎵 Audio</button>
             </div>
-        </div>
-        
-        <div class="display-section event">
-            <h3>🎬 Current Event</h3>
-            <div id="eventDisplay">
-                <div class="empty-state">No event playing</div>
+            
+            <div id="mediaTab" class="tab-content active">
+                <div class="media-grid-container">
+                    <div class="directory-nav">
+                        <span class="breadcrumb" id="currentPath">Loading...</span>
+                        <button id="refreshBtn2" style="margin-left: auto; padding: 5px 10px; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 3px; cursor: pointer;">🔄</button>
+                    </div>
+                    <div class="media-grid" id="mediaGrid">
+                        <div class="loading">Loading media files...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="audioTab" class="tab-content">
+                <div class="audio-list-container">
+                    <div id="audioList" class="unified-audio-list">
+                        <div class="empty-state">Loading audio files...</div>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div class="display-section" style="border-left-color: #e67e22;">
-            <h3>🔄 Background Sounds</h3>
-            <div id="backgroundSoundDisplay">
-                <div class="empty-state">No background sounds</div>
+        <div class="live-panel">
+            <h2>🖥️ Live Display</h2>
+            
+            <div class="display-section portraits">
+                <h3>👥 Portraits</h3>
+                <div id="portraitsList">
+                    <div class="empty-state">No portraits displayed</div>
+                </div>
+                <button class="clear-btn" onclick="clearDisplayElement('portraits')" style="width: 100%; margin-top: 10px;">Clear All Portraits</button>
             </div>
-        </div>
-        
-        <div class="display-section" style="border-left-color: #3498db;">
-            <h3>🎵 Background Music</h3>
-            <div id="backgroundMusicDisplay">
-                <div class="empty-state">No background music</div>
+            
+            <div class="display-section background">
+                <h3>🖼️ Background</h3>
+                <div id="backgroundDisplay">
+                    <div class="empty-state">No background set</div>
+                </div>
             </div>
-        </div>
-        
-        <div class="display-section" style="border-left-color: #9b59b6;">
-            <h3>🔊 Sound Effects</h3>
-            <div id="soundEffectsDisplay">
-                <div class="empty-state">No active sound effects</div>
+            
+            <div class="display-section event">
+                <h3>🎬 Current Event</h3>
+                <div id="eventDisplay">
+                    <div class="empty-state">No event playing</div>
+                </div>
             </div>
+            
+            <div class="display-section audio">
+                <h3>🔄 Background Sounds</h3>
+                <div id="backgroundSoundDisplay">
+                    <div class="empty-state">No background sounds</div>
+                </div>
+            </div>
+            
+            <div class="display-section audio">
+                <h3>🎵 Background Music</h3>
+                <div id="backgroundMusicDisplay">
+                    <div class="empty-state">No background music</div>
+                </div>
+            </div>
+            
+            <div class="display-section audio">
+                <h3>🔊 Sound Effects</h3>
+                <div id="soundEffectsDisplay">
+                    <div class="empty-state">No active sound effects</div>
+                </div>
+            </div>
+            
+            <button class="clear-all-btn" onclick="clearDisplayElement('all')">🗑️ Clear Entire Display</button>
         </div>
-        
-        <button class="clear-all-btn" onclick="clearDisplayElement('all')">🗑️ Clear Entire Display</button>
-    </div>
 
     <!-- Audio Players -->
     <div class="audio-container" style="display: none;">
@@ -249,6 +634,35 @@
     <script>
         let currentDirectory = null;
         let fileStructure = null;
+        let currentPath = []; // Initialize as empty array
+        let currentAudioPath = []; // Track audio navigation separately
+        
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Re-render audio list when switching to audio tab
+            if (tabName === 'audio' && fileStructure) {
+                console.log('Switching to audio tab, re-rendering audio list...');
+                setTimeout(() => {
+                    renderAudioLists(fileStructure, currentAudioPath);
+                }, 50);
+            }
+        }
 
         // Get the cached directory and initialize dashboard
         async function initializeDashboard() {
@@ -286,24 +700,558 @@
         async function loadFileStructure() {
             try {
                 if (!currentDirectory) {
-                    document.getElementById('fileExplorer').innerHTML = 
+                    document.getElementById('mediaGrid').innerHTML = 
                         '<div class="error">No directory selected.</div>';
                     return;
                 }
 
-                document.getElementById('fileExplorer').innerHTML = '<div class="loading">Scanning directory...</div>';
+                document.getElementById('mediaGrid').innerHTML = '<div class="loading">Scanning directory...</div>';
                 
                 fileStructure = await window.electronAPI.scanDirectory(currentDirectory);
-                renderFileStructure(fileStructure);
+                
+                // Render both interfaces
+                console.log('File structure loaded:', fileStructure); // Debug log
+                renderMediaGrid(fileStructure, currentPath);
+                
+                // Add a small delay before rendering audio to ensure DOM is ready
+                setTimeout(() => {
+                    console.log('Rendering audio lists with delay...');
+                    renderAudioLists(fileStructure, currentAudioPath);
+                }, 100);
                 
             } catch (error) {
                 console.error('Error loading file structure:', error);
-                document.getElementById('fileExplorer').innerHTML = 
+                document.getElementById('mediaGrid').innerHTML = 
                     `<div class="error">Error loading files: ${error.message}</div>`;
             }
         }
+        
+        // Helper function to check if a folder contains images or videos (recursively)
+        function folderContainsMedia(folderItem) {
+            if (!folderItem.children || !Array.isArray(folderItem.children)) {
+                return false;
+            }
+            
+            for (const child of folderItem.children) {
+                if (child.type === 'file' && (child.mediaType === 'image' || child.mediaType === 'video')) {
+                    return true;
+                }
+                if (child.type === 'folder' && folderContainsMedia(child)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Generate clickable breadcrumbs with custom navigation function
+        function generateBreadcrumbs(path, navigationFunction = 'navigateToPath') {
+            let breadcrumbs = [];
+            
+            // Add root
+            breadcrumbs.push(`
+                <span class="breadcrumb-item" onclick="${navigationFunction}([])">Root</span>
+            `);
+            
+            // Add each path segment
+            for (let i = 0; i < path.length; i++) {
+                const segment = path[i];
+                const segmentPath = path.slice(0, i + 1);
+                
+                breadcrumbs.push(`
+                    <span class="breadcrumb-separator">></span>
+                    <span class="breadcrumb-item" onclick="${navigationFunction}([${segmentPath.map(p => `'${p}'`).join(',')}])">${segment}</span>
+                `);
+            }
+            
+            return breadcrumbs.join('');
+        }
 
-        function renderFileStructure(item, container = null, depth = 0) {
+        // Clean up filename for display
+        function cleanFileName(filename) {
+            if (!filename) return '';
+            
+            // Remove file extension
+            let cleaned = filename.replace(/\.[^/.]+$/, '');
+            
+            // Remove common suffixes
+            cleaned = cleaned.replace(/_location$/, '');
+            cleaned = cleaned.replace(/_bg$/, '');
+            cleaned = cleaned.replace(/_background$/, '');
+            cleaned = cleaned.replace(/_portrait$/, '');
+            cleaned = cleaned.replace(/_event$/, '');
+            
+            // Replace underscores with spaces
+            cleaned = cleaned.replace(/_/g, ' ');
+            
+            // Capitalize first letter of each word
+            cleaned = cleaned.split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+            
+            // Handle leading underscore case (for portraits that start with _)
+            if (filename.startsWith('_')) {
+                return cleaned || '???';
+            }
+            
+            return cleaned || filename;
+        }
+
+        // Sort media items by type: folders, backgrounds, portraits, events
+        function getMediaSortOrder(item) {
+            switch (item.type) {
+                case 'back':
+                    return -1; // Back button first
+                case 'folder':
+                    return 0; // Folders first
+                case 'background':
+                case 'background-video':
+                    return 1; // Background media second
+                case 'portrait':
+                    return 2; // Portraits third
+                case 'event':
+                    return 3; // Events fourth
+                case 'image':
+                    return 4; // Other images
+                default:
+                    return 5; // Everything else
+            }
+        }
+
+        // New media grid rendering
+        function renderMediaGrid(item, path = []) {
+            const mediaGrid = document.getElementById('mediaGrid');
+            const currentPathEl = document.getElementById('currentPath');
+            
+            console.log('renderMediaGrid called with:', item, path); // Debug log
+            
+            if (!item) {
+                mediaGrid.innerHTML = '<div class="loading">No media files found</div>';
+                return;
+            }
+            
+            // Update breadcrumbs
+            currentPathEl.innerHTML = generateBreadcrumbs(path, 'navigateToPath');
+            
+            let allItems = [];
+            
+            // Add back button if not at root
+            if (path.length > 0) {
+                allItems.push({
+                    type: 'back',
+                    name: '← Back',
+                    path: path.slice(0, -1),
+                    isBack: true
+                });
+            }
+            
+            // Process children array
+            if (item.children && Array.isArray(item.children)) {
+                console.log('Processing children array:', item.children); // Debug log
+                item.children.forEach((child, index) => {
+                    console.log(`Child ${index}:`, child); // Debug log
+                    
+                    if (child.type === 'folder') {
+                        // Only include folders that contain images or videos
+                        if (folderContainsMedia(child)) {
+                            allItems.push({
+                                type: 'folder',
+                                name: child.name,
+                                child: child,
+                                path: [...path, child.name]
+                            });
+                        }
+                    } else if (child.type === 'file') {
+                        // Only include images and videos, filter out audio
+                        if (child.mediaType === 'image' || child.mediaType === 'video') {
+                            let itemType = 'file';
+                            let icon = '📄';
+                            let badge = 'FILE';
+                            
+                            if (child.mediaType === 'image') {
+                                if (child.name.startsWith('_') || child.mediaSubtype === 'portrait') {
+                                    itemType = 'portrait';
+                                    icon = '👤';
+                                    badge = 'PORTRAIT';
+                                } else if (child.name.includes('_location') || child.mediaSubtype === 'background') {
+                                    itemType = 'background';
+                                    icon = '🖼️';
+                                    badge = 'BG IMG';
+                                } else {
+                                    itemType = 'image';
+                                    icon = '🖼️';
+                                    badge = 'IMAGE';
+                                }
+                            } else if (child.mediaType === 'video') {
+                                if (child.name.includes('_location') || child.mediaSubtype === 'background') {
+                                    itemType = 'background-video';
+                                    icon = '🎥';
+                                    badge = 'BG VIDEO';
+                                } else {
+                                    itemType = 'event';
+                                    icon = '🎬';
+                                    badge = 'EVENT';
+                                }
+                            }
+                            
+                            allItems.push({
+                                type: itemType,
+                                name: child.name,
+                                displayName: cleanFileName(child.name),
+                                child: child,
+                                icon: icon,
+                                badge: badge,
+                                path: [...path, child.name]
+                            });
+                        }
+                    }
+                });
+            }
+            
+            console.log('Total items to render (after filtering):', allItems.length); // Debug log
+            console.log('Filtered items:', allItems); // Debug log
+            
+            // Sort items by type: folders, backgrounds, portraits, events
+            allItems.sort((a, b) => {
+                const aOrder = getMediaSortOrder(a);
+                const bOrder = getMediaSortOrder(b);
+                
+                if (aOrder !== bOrder) {
+                    return aOrder - bOrder;
+                }
+                
+                // Within the same category, sort alphabetically
+                return a.name.localeCompare(b.name);
+            });
+            
+            console.log('Items after sorting:', allItems); // Debug log
+            
+            // Render all items in a single grid
+            if (allItems.length === 0 || (allItems.length === 1 && allItems[0].isBack)) {
+                mediaGrid.innerHTML = `
+                    ${allItems.length === 1 && allItems[0].isBack ? `
+                        <div class="media-grid-section">
+                            <div class="media-item folder" onclick="navigateToPath([${allItems[0].path.map(p => `'${p}'`).join(',')}])">
+                                <div class="media-icon">↩️</div>
+                                <div class="media-name">${allItems[0].name}</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="empty-state">No images or videos found in this directory</div>
+                `;
+                return;
+            }
+            
+            mediaGrid.innerHTML = `
+                <div class="media-grid-section">
+                    ${allItems.map(item => {
+                        if (item.isBack) {
+                            return `
+                                <div class="media-item folder" onclick="navigateToPath([${item.path.map(p => `'${p}'`).join(',')}])">
+                                    <div class="media-icon">↩️</div>
+                                    <div class="media-name">${item.name}</div>
+                                </div>
+                            `;
+                        } else if (item.type === 'folder') {
+                            return `
+                                <div class="media-item folder" onclick="navigateToPath([${item.path.map(p => `'${p}'`).join(',')}])">
+                                    <div class="type-badge">FOLDER</div>
+                                    <div class="media-icon">📁</div>
+                                    <div class="media-name">${item.name}</div>
+                                </div>
+                            `;
+                        } else {
+                            // Handle all file types (now only images and videos)
+                            const isImage = item.child.mediaType === 'image';
+                            const clickAction = `onclick="displayMedia('${item.child.path}', '${item.child.mediaType}', '${item.child.mediaSubtype || item.type}', '${item.displayName}')"`;
+                                
+                            return `
+                                <div class="media-item ${item.type}" ${clickAction}>
+                                    <div class="type-badge">${item.badge}</div>
+                                    ${isImage ? 
+                                        `<img class="media-preview" src="file://${item.child.path}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                         <div class="media-icon" style="display: none;">${item.icon}</div>` :
+                                        `<div class="media-icon">${item.icon}</div>`
+                                    }
+                                    <div class="media-name">${item.displayName}</div>
+                                </div>
+                            `;
+                        }
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        // Common navigation function that handles path navigation for both tabs
+        function navigateToDirectory(newPath, callback) {
+            console.log('navigateToDirectory called with path:', newPath, 'fileStructure:', fileStructure);
+            
+            // Get current directory structure
+            let currentItem = fileStructure;
+            for (const segment of newPath) {
+                console.log('Looking for segment:', segment, 'in currentItem:', currentItem);
+                if (currentItem && currentItem.children) {
+                    const found = currentItem.children.find(item => item.name === segment);
+                    if (found) {
+                        currentItem = found;
+                        console.log('Found segment:', segment, 'result:', found);
+                    } else {
+                        console.log('Could not find segment:', segment, 'in', currentItem.children?.map(c => c.name));
+                        // Reset to root on failure
+                        currentItem = fileStructure;
+                        newPath = [];
+                        break;
+                    }
+                } else {
+                    console.log('No children found in currentItem:', currentItem);
+                    currentItem = fileStructure;
+                    newPath = [];
+                    break;
+                }
+            }
+            
+            console.log('Navigation result - currentItem:', currentItem, 'path:', newPath);
+            
+            // Execute callback with the result
+            if (callback) {
+                callback(currentItem, newPath);
+            }
+        }
+
+        // Media grid navigation wrapper
+        function navigateToPath(newPath) {
+            currentPath = newPath;
+            navigateToDirectory(newPath, (currentItem, actualPath) => {
+                currentPath = actualPath;
+                renderMediaGrid(currentItem, currentPath);
+            });
+        }
+        
+        // Helper function to check if folder contains audio files
+        function folderContainsAudio(folder) {
+            if (!folder.children || !Array.isArray(folder.children)) {
+                return false;
+            }
+            
+            for (const child of folder.children) {
+                if (child.type === 'file' && child.mediaType === 'audio') {
+                    return true;
+                }
+                if (child.type === 'folder' && folderContainsAudio(child)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // Get audio sort order
+        function getAudioSortOrder(item) {
+            switch (item.type) {
+                case 'back':
+                    return -1; // Back button first
+                case 'folder':
+                    return 0; // Folders first
+                case 'music':
+                    return 1; // Music second
+                case 'loop':
+                    return 2; // Loops third
+                case 'sound':
+                    return 3; // Sound effects fourth
+                default:
+                    return 4; // Everything else
+            }
+        }
+
+        // Audio list rendering with navigation
+        function renderAudioLists(structure, path = []) {
+            console.log('Rendering audio lists for path:', path, 'Structure:', structure);
+            
+            // Update unified audio container
+            const audioList = document.getElementById('audioList');
+            console.log('AudioList element found:', audioList);
+            
+            if (!audioList) {
+                console.error('audioList element not found!');
+                return;
+            }
+            
+            // Check if audio tab is visible
+            const audioTab = document.getElementById('audioTab');
+            const isVisible = audioTab && !audioTab.classList.contains('hidden') && audioTab.offsetParent !== null;
+            console.log('Audio tab visible:', isVisible, 'audioTab element:', audioTab);
+            
+            // Clear list first
+            audioList.innerHTML = '';
+            console.log('Cleared audioList innerHTML');
+
+            // Generate breadcrumbs for audio tab
+            const breadcrumbsHtml = generateBreadcrumbs(path, 'navigateToAudioPath');
+            const breadcrumbsContainer = document.createElement('div');
+            breadcrumbsContainer.className = 'breadcrumbs audio-breadcrumbs';
+            breadcrumbsContainer.innerHTML = breadcrumbsHtml;
+            
+            // Add breadcrumbs to the list container
+            audioList.appendChild(breadcrumbsContainer);
+
+            // Use the structure directly (no need to navigate again)
+            const currentDir = structure;
+
+            if (!currentDir || !currentDir.children) {
+                console.log('No children found for current directory');
+                audioList.innerHTML += '<div class="empty-state">No files found in this directory</div>';
+                return;
+            }
+
+            console.log('Current directory children for audio:', currentDir.children);            // Collect all audio items
+            let allItems = [];
+            
+            // Add back button if not at root
+            if (path.length > 0) {
+                allItems.push({
+                    type: 'back',
+                    name: '← Back',
+                    path: path.slice(0, -1),
+                    isBack: true
+                });
+            }
+
+            // Filter and categorize items (only directories with audio and audio files)
+            currentDir.children.forEach((item, index) => {
+                console.log(`Processing audio item ${index}:`, item);
+                
+                if (item.type === 'folder') {
+                    if (folderContainsAudio(item)) {
+                        console.log('Folder contains audio:', item.name);
+                        allItems.push({
+                            type: 'folder',
+                            name: item.name,
+                            child: item,
+                            path: [...path, item.name]
+                        });
+                    } else {
+                        console.log('Folder does not contain audio:', item.name);
+                    }
+                } else if (item.type === 'file') {
+                    console.log('File found:', item.name, 'mediaType:', item.mediaType);
+                    
+                    if (item.mediaType === 'audio') {
+                        console.log('Audio file found:', item.name);
+                        
+                        let itemType = 'sound'; // default
+                        let icon = '🔊';
+                        let badge = 'SFX';
+                        
+                        const name = item.name.toLowerCase();
+                        
+                        // Determine audio type based on filename or mediaSubtype
+                        if (item.mediaSubtype === 'music' || name.includes('music') || name.includes('song') || name.includes('theme')) {
+                            itemType = 'music';
+                            icon = '🎵';
+                            badge = 'MUSIC';
+                        } else if (item.mediaSubtype === 'loop' || name.includes('loop') || name.includes('ambient') || name.includes('background')) {
+                            itemType = 'loop';
+                            icon = '🔄';
+                            badge = 'LOOP';
+                        }
+                        
+                        allItems.push({
+                            type: itemType,
+                            name: item.name,
+                            displayName: cleanFileName(item.name),
+                            child: item,
+                            icon: icon,
+                            badge: badge,
+                            path: [...path, item.name]
+                        });
+                    }
+                }
+            });
+
+            console.log('Total audio items found:', allItems.length);
+            console.log('Audio items to render:', allItems);
+
+            // Sort items by type
+            allItems.sort((a, b) => {
+                const aOrder = getAudioSortOrder(a);
+                const bOrder = getAudioSortOrder(b);
+                
+                if (aOrder !== bOrder) {
+                    return aOrder - bOrder;
+                }
+                
+                // Within the same category, sort alphabetically
+                return a.name.localeCompare(b.name);
+            });
+
+            console.log('Audio items after sorting:', allItems);
+
+            // Render items in unified container
+            if (allItems.length === 0 || (allItems.length === 1 && allItems[0].isBack)) {
+                console.log('No audio items to render, showing empty state');
+                audioList.innerHTML += `
+                    ${allItems.length === 1 && allItems[0].isBack ? `
+                        <div class="audio-file-item back-item" onclick="navigateToAudioPath([${allItems[0].path.map(p => `'${p}'`).join(',')}])">
+                            <div class="audio-icon">↩️</div>
+                            <div class="audio-name">${allItems[0].name}</div>
+                        </div>
+                    ` : ''}
+                    <div class="empty-state">No audio files found in this directory</div>
+                `;
+                return;
+            }
+
+            console.log('Generating HTML for', allItems.length, 'audio items');
+            const itemsHtml = allItems.map((item, index) => {
+                console.log(`Generating HTML for item ${index}:`, item);
+                
+                if (item.isBack) {
+                    return `
+                        <div class="audio-file-item back-item" onclick="navigateToAudioPath([${item.path.map(p => `'${p}'`).join(',')}])">
+                            <div class="audio-icon">↩️</div>
+                            <div class="audio-name">${item.name}</div>
+                        </div>
+                    `;
+                } else if (item.type === 'folder') {
+                    return `
+                        <div class="audio-file-item folder-item" onclick="navigateToAudioPath([${item.path.map(p => `'${p}'`).join(',')}])">
+                            <div class="audio-icon">📁</div>
+                            <div class="audio-name">${item.name}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="audio-file-item ${item.type}" onclick="playAudio('${item.child.path}', '${item.type}', '${item.displayName}')">
+                            <div class="audio-icon">${item.icon}</div>
+                            <div class="audio-name">${item.displayName}</div>
+                            <div class="audio-badge">${item.badge}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            console.log('Generated HTML length:', itemsHtml.length);
+            console.log('Generated HTML preview:', itemsHtml.substring(0, 200));
+            
+            audioList.innerHTML += itemsHtml;
+            
+            console.log('Final audioList innerHTML length:', audioList.innerHTML.length);
+            console.log('AudioList element:', audioList);
+        }
+
+        // Audio navigation wrapper  
+        function navigateToAudioPath(newPath) {
+            console.log('navigateToAudioPath called with:', newPath);
+            currentAudioPath = newPath;
+            navigateToDirectory(newPath, (currentItem, actualPath) => {
+                console.log('Audio navigation callback - currentItem:', currentItem, 'actualPath:', actualPath);
+                currentAudioPath = actualPath;
+                renderAudioLists(currentItem, currentAudioPath);
+            });
+        }
+
+        function playAudio(path, subtype, displayName) {
+            window.electronAPI.displayMedia(path, 'audio', subtype, displayName);
+        }        function renderFileStructure(item, container = null, depth = 0) {
             if (!container) {
                 container = document.getElementById('fileExplorer');
                 container.innerHTML = '';
@@ -453,8 +1401,18 @@
             if (displayState.backgroundSounds && displayState.backgroundSounds.length > 0) {
                 backgroundSoundDisplay.innerHTML = displayState.backgroundSounds.map(sound => `
                     <div class="display-item">
-                        <span>🔄 ${sound.displayName}</span>
-                        <button class="clear-btn" onclick="clearDisplayElement('backgroundSound', '${sound.id}')">×</button>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🔄 ${sound.displayName}</span>
+                                <button class="clear-btn" onclick="clearDisplayElement('backgroundSound', '${sound.id}')">×</button>
+                            </div>
+                            <div class="volume-control">
+                                <span class="volume-label">Vol:</span>
+                                <input type="range" class="volume-slider" min="0" max="100" value="70" 
+                                       onchange="updateAudioVolume('backgroundSound_${sound.id}', this.value)">
+                                <span class="volume-label">70%</span>
+                            </div>
+                        </div>
                     </div>
                 `).join('');
             } else {
@@ -466,8 +1424,18 @@
             if (displayState.backgroundMusic) {
                 backgroundMusicDisplay.innerHTML = `
                     <div class="display-item">
-                        <span>🎵 ${displayState.backgroundMusic.displayName}</span>
-                        <button class="clear-btn" onclick="clearDisplayElement('backgroundMusic')">×</button>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🎵 ${displayState.backgroundMusic.displayName}</span>
+                                <button class="clear-btn" onclick="clearDisplayElement('backgroundMusic')">×</button>
+                            </div>
+                            <div class="volume-control">
+                                <span class="volume-label">Vol:</span>
+                                <input type="range" class="volume-slider" min="0" max="100" value="50" 
+                                       onchange="updateAudioVolume('backgroundMusicPlayer', this.value)">
+                                <span class="volume-label">50%</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             } else {
@@ -479,8 +1447,18 @@
             if (displayState.soundEffects && displayState.soundEffects.length > 0) {
                 soundEffectsDisplay.innerHTML = displayState.soundEffects.map(effect => `
                     <div class="display-item">
-                        <span>🔊 ${effect.displayName}</span>
-                        <button class="clear-btn" onclick="clearDisplayElement('soundEffect', '${effect.id}')">×</button>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🔊 ${effect.displayName}</span>
+                                <button class="clear-btn" onclick="clearDisplayElement('soundEffect', '${effect.id}')">×</button>
+                            </div>
+                            <div class="volume-control">
+                                <span class="volume-label">Vol:</span>
+                                <input type="range" class="volume-slider" min="0" max="100" value="80" 
+                                       onchange="updateAudioVolume('soundEffect_${effect.id}', this.value)">
+                                <span class="volume-label">80%</span>
+                            </div>
+                        </div>
                     </div>
                 `).join('');
             } else {
@@ -738,6 +1716,24 @@
             }
             return true;
         }
+        
+        // Volume control function
+        function updateAudioVolume(audioElementId, value) {
+            const volume = parseInt(value) / 100;
+            const audioElement = document.getElementById(audioElementId);
+            
+            if (audioElement) {
+                audioElement.volume = volume;
+                audioElement.dataset.targetVolume = volume; // Update target volume for fading
+                
+                // Update the volume label
+                const slider = event.target;
+                const volumeLabel = slider.nextElementSibling;
+                if (volumeLabel) {
+                    volumeLabel.textContent = value + '%';
+                }
+            }
+        }
 
         // Store current display state for reference
         let currentDisplayState = { portraits: [], background: null, event: null };
@@ -778,6 +1774,10 @@
         }
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadFileStructure();
+        });
+        
+        document.getElementById('refreshBtn2').addEventListener('click', () => {
             loadFileStructure();
         });
 

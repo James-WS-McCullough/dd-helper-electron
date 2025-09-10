@@ -189,7 +189,7 @@
             padding: 2px 4px;
             border-radius: 3px;
             font-weight: bold;
-            opacity: 0;
+            opacity: 0.8;
             transition: opacity 0.3s ease;
         }
         
@@ -796,7 +796,7 @@
             return cleaned || filename;
         }
 
-        // Sort media items by type: folders, backgrounds, portraits, events
+        // Sort media items by type: folders, bg images, bg videos, portraits, events
         function getMediaSortOrder(item) {
             switch (item.type) {
                 case 'back':
@@ -804,16 +804,17 @@
                 case 'folder':
                     return 0; // Folders first
                 case 'background':
+                    return 1; // Background images second
                 case 'background-video':
-                    return 1; // Background media second
+                    return 2; // Background videos third
                 case 'portrait':
-                    return 2; // Portraits third
+                    return 3; // Portraits fourth
                 case 'event':
-                    return 3; // Events fourth
+                    return 4; // Events fifth
                 case 'image':
-                    return 4; // Other images
+                    return 5; // Other images
                 default:
-                    return 5; // Everything else
+                    return 6; // Everything else
             }
         }
 
@@ -875,7 +876,7 @@
                                 } else if (child.name.includes('_location') || child.mediaSubtype === 'background') {
                                     itemType = 'background';
                                     icon = '🖼️';
-                                    badge = 'BG IMG';
+                                    badge = 'BACKGROUND';
                                 } else {
                                     itemType = 'image';
                                     icon = '🖼️';
@@ -885,7 +886,7 @@
                                 if (child.name.includes('_location') || child.mediaSubtype === 'background') {
                                     itemType = 'background-video';
                                     icon = '🎥';
-                                    badge = 'BG VIDEO';
+                                    badge = 'BACKGROUND';
                                 } else {
                                     itemType = 'event';
                                     icon = '🎬';

@@ -87,10 +87,9 @@
         font-weight: bold;
         text-align: center;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-        white-space: nowrap;
         max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        word-wrap: break-word;
+        line-height: 1.2;
       }
 
       /* Dynamic sizing based on portrait count and screen size */
@@ -265,7 +264,7 @@
         event: null,
         backgroundSound: null,
         backgroundMusic: null,
-        soundEffects: []
+        soundEffects: [],
       };
       let currentEventVideo = null;
       let previousDisplayState = null;
@@ -421,7 +420,14 @@
       }
 
       function clearDisplay() {
-        currentDisplayState = { portraits: [], background: null, event: null, backgroundSound: null, backgroundMusic: null, soundEffects: [] };
+        currentDisplayState = {
+          portraits: [],
+          background: null,
+          event: null,
+          backgroundSound: null,
+          backgroundMusic: null,
+          soundEffects: [],
+        };
         updateDisplay(currentDisplayState);
         document.getElementById("placeholder").style.display = "block";
       }
@@ -464,7 +470,9 @@
               }
             } else if (currentDisplayState.backgroundMusic) {
               // Control background music
-              const musicPlayer = document.getElementById('backgroundMusicPlayer');
+              const musicPlayer = document.getElementById(
+                "backgroundMusicPlayer"
+              );
               if (musicPlayer.paused) {
                 musicPlayer.play();
               } else {

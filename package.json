@@ -9,7 +9,12 @@
     "build": "electron-builder",
     "install-deps": "npm install"
   },
-  "keywords": ["electron", "dnd", "tabletop", "media"],
+  "keywords": [
+    "electron",
+    "dnd",
+    "tabletop",
+    "media"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
@@ -28,6 +33,9 @@
     "files": [
       "src/**/*",
       "node_modules/**/*"
-    ]
+    ],
+    "mac": {
+      "icon": "src/public/d20icon.icns"
+    }
   }
 }

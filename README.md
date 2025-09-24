@@ -13,12 +13,14 @@ A desktop application built with Electron for managing and displaying media file
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (version 16 or higher)
 - npm
 
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -26,11 +28,13 @@ npm install
 ### Running the Application
 
 For development:
+
 ```bash
 npm run dev
 ```
 
 For production:
+
 ```bash
 npm start
 ```
@@ -38,6 +42,7 @@ npm start
 ### Building the Application
 
 To create a distributable package:
+
 ```bash
 npm run build
 ```
@@ -69,11 +74,13 @@ src/
 ## Development
 
 The app uses Electron's security best practices:
+
 - Context isolation enabled
 - Node integration disabled
 - Secure IPC communication between processes
 
 To add new features:
+
 1. Update the main process (`main.js`) for new IPC handlers
 2. Add corresponding API methods to `preload.js`
 3. Implement UI changes in the appropriate HTML files

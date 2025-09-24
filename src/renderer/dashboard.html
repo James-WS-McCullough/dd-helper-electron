@@ -539,6 +539,373 @@
         button:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+        
+        /* Party Editor Styles */
+        .party-editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .party-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .party-header h3 {
+            margin: 0;
+            color: #f39c12;
+            font-size: 20px;
+        }
+        
+        .party-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .add-player-btn, .save-party-btn, .load-party-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-player-btn {
+            background: rgba(46, 204, 113, 0.7);
+            color: white;
+        }
+        
+        .add-player-btn:hover {
+            background: rgba(46, 204, 113, 0.9);
+        }
+        
+        .save-party-btn {
+            background: rgba(52, 152, 219, 0.7);
+            color: white;
+        }
+        
+        .save-party-btn:hover {
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        .load-party-btn {
+            background: rgba(155, 89, 182, 0.7);
+            color: white;
+        }
+        
+        .load-party-btn:hover {
+            background: rgba(155, 89, 182, 0.9);
+        }
+        
+        .party-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        
+        .player-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(2px);
+        }
+        
+        .player-portrait {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .player-portrait:hover {
+            border-color: #3498db;
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .player-portrait.has-image {
+            border-color: #27ae60;
+        }
+        
+        .player-portrait .portrait-icon {
+            font-size: 32px;
+            opacity: 0.6;
+        }
+        
+        .player-portrait.has-image .portrait-icon {
+            display: none;
+        }
+        
+        .player-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .player-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .player-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f39c12;
+            text-transform: uppercase;
+        }
+        
+        .player-field input, .player-field select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .player-field input:focus, .player-field select:focus {
+            outline: none;
+            border-color: #3498db;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .player-field input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .player-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #ecf0f1;
+            min-width: 60px;
+            text-transform: uppercase;
+        }
+        
+        .stat-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .player-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .remove-player-btn {
+            background: rgba(231, 76, 60, 0.7);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-player-btn:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        /* Portrait Selection Modal */
+        .portrait-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .portrait-modal.active {
+            display: flex;
+        }
+        
+        .portrait-modal-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .portrait-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .portrait-modal-title {
+            color: #f39c12;
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .portrait-search-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .portrait-search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+        
+        .portrait-search-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+        }
+        
+        .portrait-search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .portrait-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .close-modal-btn {
+            background: rgba(231, 76, 60, 0.7);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .close-modal-btn:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .portrait-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        
+        .portrait-option {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-direction: column;
+        }
+        
+        .portrait-option:hover {
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+        
+        .portrait-option.no-image {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+        }
+        
+        .portrait-option.hidden {
+            display: none;
+        }
+        
+        .portrait-name {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .portrait-option:hover .portrait-name {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -552,6 +919,7 @@
             <div class="tab-container">
                 <button class="tab-button active" onclick="switchTab('media')">🖼️ Media</button>
                 <button class="tab-button" onclick="switchTab('audio')">🎵 Audio</button>
+                <button class="tab-button" onclick="switchTab('party')">👥 Party</button>
             </div>
             
             <div id="mediaTab" class="tab-content active">
@@ -570,6 +938,22 @@
                 <div class="audio-list-container">
                     <div id="audioList" class="unified-audio-list">
                         <div class="empty-state">Loading audio files...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="partyTab" class="tab-content">
+                <div class="party-editor-container">
+                    <div class="party-header">
+                        <h3>🎲 Party Configuration</h3>
+                        <div class="party-actions">
+                            <button id="addPlayerBtn" class="add-player-btn">➕ Add Player</button>
+                            <button id="savePartyBtn" class="save-party-btn">💾 Save Party</button>
+                            <button id="loadPartyBtn" class="load-party-btn">📁 Load Party</button>
+                        </div>
+                    </div>
+                    <div id="partyList" class="party-list">
+                        <div class="empty-state">No players in party. Click "Add Player" to get started!</div>
                     </div>
                 </div>
             </div>
@@ -631,6 +1015,27 @@
         <div id="soundEffectsContainer"></div>
     </div>
 
+    <!-- Portrait Selection Modal -->
+    <div id="portraitModal" class="portrait-modal">
+        <div class="portrait-modal-content">
+            <div class="portrait-modal-header">
+                <h3 class="portrait-modal-title">Select Character Portrait</h3>
+                <button class="close-modal-btn" onclick="closePortraitModal()">✕</button>
+            </div>
+            <div class="portrait-search-container">
+                <input type="text" id="portraitSearchInput" class="portrait-search-input" 
+                       placeholder="🔍 Search portraits by name..." 
+                       oninput="filterPortraits(this.value)">
+                <div id="portraitSearchInfo" class="portrait-search-info">
+                    Press '/' to focus search • Enter to select first result • Esc to close
+                </div>
+            </div>
+            <div id="portraitGrid" class="portrait-grid">
+                <!-- Portrait options will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentDirectory = null;
         let fileStructure = null;
@@ -661,6 +1066,11 @@
                 setTimeout(() => {
                     renderAudioLists(fileStructure, currentAudioPath);
                 }, 50);
+            }
+            
+            // Load party data when switching to party tab
+            if (tabName === 'party') {
+                loadPartyData();
             }
         }
 
@@ -1773,6 +2183,288 @@
                 console.error('Error loading display state:', error);
             }
         }
+
+        document.getElementById('refreshBtn2').addEventListener('click', () => {
+            loadFileStructure();
+        });
+
+        // Party Editor Functionality
+        let partyData = [];
+        let availablePortraits = [];
+        let currentEditingPlayer = null;
+
+        // Collect all available portrait images from the file structure
+        function collectPortraits(item, portraits = []) {
+            if (item.children && Array.isArray(item.children)) {
+                item.children.forEach(child => {
+                    if (child.type === 'file' && child.mediaType === 'image' && 
+                        (child.mediaSubtype === 'portrait' || child.name.startsWith('_'))) {
+                        
+                        // Create a clean display name
+                        let displayName = child.displayName || child.name;
+                        if (displayName === '???') {
+                            // For files starting with _, use the filename without extension
+                            displayName = child.name.replace(/\.[^/.]+$/, '').substring(1) || 'Unknown';
+                        }
+                        
+                        portraits.push({
+                            path: child.path,
+                            name: displayName,
+                            originalName: child.name,
+                            searchTerms: [
+                                displayName.toLowerCase(),
+                                child.name.toLowerCase(),
+                                child.name.replace(/\.[^/.]+$/, '').toLowerCase(), // filename without extension
+                                child.name.replace(/^_/, '').replace(/\.[^/.]+$/, '').toLowerCase() // without leading underscore
+                            ].join(' ')
+                        });
+                    } else if (child.type === 'folder') {
+                        collectPortraits(child, portraits);
+                    }
+                });
+            }
+            return portraits;
+        }
+
+        function generatePlayerHTML(player, index) {
+            const portraitStyle = player.portrait ? 
+                `background-image: url('file://${player.portrait}'); background-size: cover; background-position: center;` : '';
+            
+            return `
+                <div class="player-card" data-index="${index}">
+                    <div class="player-portrait ${player.portrait ? 'has-image' : ''}" 
+                         style="${portraitStyle}" 
+                         onclick="openPortraitModal(${index})">
+                        <div class="portrait-icon">👤</div>
+                    </div>
+                    <div class="player-details">
+                        <div class="player-field">
+                            <label>Character Name</label>
+                            <input type="text" value="${player.name || ''}" 
+                                   placeholder="Enter character name" 
+                                   onchange="updatePlayer(${index}, 'name', this.value)">
+                        </div>
+                        <div class="player-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">AC</span>
+                                <input type="number" class="stat-input" value="${player.ac || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updatePlayer(${index}, 'ac', parseInt(this.value))">
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Passive Perc</span>
+                                <input type="number" class="stat-input" value="${player.passivePerception || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updatePlayer(${index}, 'passivePerception', parseInt(this.value))">
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Speed</span>
+                                <input type="number" class="stat-input" value="${player.speed || ''}" 
+                                       placeholder="30" min="0" max="120" step="5"
+                                       onchange="updatePlayer(${index}, 'speed', parseInt(this.value))">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="player-actions">
+                        <button class="remove-player-btn" onclick="removePlayer(${index})">🗑️ Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderParty() {
+            const partyList = document.getElementById('partyList');
+            
+            if (partyData.length === 0) {
+                partyList.innerHTML = '<div class="empty-state">No players in party. Click "Add Player" to get started!</div>';
+                return;
+            }
+            
+            partyList.innerHTML = partyData.map((player, index) => generatePlayerHTML(player, index)).join('');
+        }
+
+        function addPlayer() {
+            const newPlayer = {
+                name: '',
+                portrait: null,
+                portraitName: '',
+                ac: 10,
+                passivePerception: 10,
+                speed: 30
+            };
+            partyData.push(newPlayer);
+            renderParty();
+        }
+
+        function removePlayer(index) {
+            if (confirm('Are you sure you want to remove this player?')) {
+                partyData.splice(index, 1);
+                renderParty();
+            }
+        }
+
+        function updatePlayer(index, field, value) {
+            if (partyData[index]) {
+                partyData[index][field] = value;
+                console.log('Updated player', index, field, value);
+            }
+        }
+
+        function openPortraitModal(playerIndex) {
+            currentEditingPlayer = playerIndex;
+            
+            // Update available portraits from current file structure
+            if (fileStructure) {
+                availablePortraits = collectPortraits(fileStructure);
+            }
+            
+            const portraitGrid = document.getElementById('portraitGrid');
+            
+            // Add "No Portrait" option
+            let portraitOptionsHTML = `
+                <div class="portrait-option no-image" onclick="selectPortrait(null, 'No Portrait')" data-name="no portrait none">
+                    🚫
+                    <div class="portrait-name">No Portrait</div>
+                </div>
+            `;
+            
+            // Add available portraits
+            portraitOptionsHTML += availablePortraits.map(portrait => `
+                <div class="portrait-option" 
+                     style="background-image: url('file://${portrait.path}');"
+                     onclick="selectPortrait('${portrait.path}', '${portrait.name}')"
+                     data-name="${portrait.searchTerms || portrait.name.toLowerCase()}">
+                    <div class="portrait-name">${portrait.name}</div>
+                </div>
+            `).join('');
+            
+            portraitGrid.innerHTML = portraitOptionsHTML;
+            
+            // Clear search input
+            document.getElementById('portraitSearchInput').value = '';
+            
+            const modal = document.getElementById('portraitModal');
+            modal.classList.add('active');
+        }
+
+        function closePortraitModal() {
+            const modal = document.getElementById('portraitModal');
+            modal.classList.remove('active');
+            currentEditingPlayer = null;
+            
+            // Clear search when closing
+            document.getElementById('portraitSearchInput').value = '';
+        }
+        
+        function filterPortraits(searchTerm) {
+            const portraits = document.querySelectorAll('.portrait-option');
+            const term = searchTerm.toLowerCase().trim();
+            const infoEl = document.getElementById('portraitSearchInfo');
+            let visibleCount = 0;
+            
+            portraits.forEach(portrait => {
+                const searchableText = portrait.getAttribute('data-name') || '';
+                const matches = term === '' || searchableText.includes(term);
+                
+                if (matches) {
+                    portrait.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    portrait.classList.add('hidden');
+                }
+            });
+            
+            // Update info text
+            if (term === '') {
+                infoEl.textContent = "Press '/' to focus search • Enter to select first result • Esc to close";
+            } else {
+                infoEl.textContent = `${visibleCount} portrait${visibleCount !== 1 ? 's' : ''} found • Enter to select first • Esc to close`;
+            }
+        }
+
+        function selectPortrait(portraitPath, portraitName) {
+            if (currentEditingPlayer !== null && partyData[currentEditingPlayer]) {
+                partyData[currentEditingPlayer].portrait = portraitPath;
+                partyData[currentEditingPlayer].portraitName = portraitName;
+                renderParty();
+                closePortraitModal();
+            }
+        }
+
+        async function savePartyData() {
+            try {
+                if (!currentDirectory) {
+                    alert('No directory selected. Please select a directory first.');
+                    return;
+                }
+                
+                const partyFilePath = currentDirectory + '/party.json';
+                await window.electronAPI.savePartyData(partyFilePath, partyData);
+                alert('Party data saved successfully!');
+            } catch (error) {
+                console.error('Error saving party data:', error);
+                alert('Error saving party data: ' + error.message);
+            }
+        }
+
+        async function loadPartyData() {
+            try {
+                if (!currentDirectory) {
+                    console.log('No directory selected for party data');
+                    return;
+                }
+                
+                const partyFilePath = currentDirectory + '/party.json';
+                const data = await window.electronAPI.loadPartyData(partyFilePath);
+                if (data) {
+                    partyData = data;
+                    renderParty();
+                    console.log('Party data loaded successfully');
+                } else {
+                    // No party file exists yet, that's okay
+                    partyData = [];
+                    renderParty();
+                }
+            } catch (error) {
+                console.error('Error loading party data:', error);
+                partyData = [];
+                renderParty();
+            }
+        }
+
+        // Event listeners for party editor
+        document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+        document.getElementById('savePartyBtn').addEventListener('click', savePartyData);
+        document.getElementById('loadPartyBtn').addEventListener('click', loadPartyData);
+
+        // Close modal when clicking outside
+        document.getElementById('portraitModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePortraitModal();
+            }
+        });
+        
+        // Add keyboard support for portrait search
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('portraitModal');
+            const searchInput = document.getElementById('portraitSearchInput');
+            
+            if (modal.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closePortraitModal();
+                } else if (e.key === 'Enter') {
+                    // Select first visible portrait option
+                    const firstVisible = document.querySelector('.portrait-option:not(.hidden)');
+                    if (firstVisible) {
+                        firstVisible.click();
+                    }
+                } else if (e.key === '/' && e.target !== searchInput) {
+                    // Focus search input when pressing '/'
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            }
+        });
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
             loadFileStructure();

@@ -11,6 +11,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   clearDisplayElement: (elementType, elementPath) =>
     ipcRenderer.invoke("clear-display-element", elementType, elementPath),
   getDisplayState: () => ipcRenderer.invoke("get-display-state"),
+  
+  // Party data methods
+  savePartyData: (filePath, partyData) =>
+    ipcRenderer.invoke("save-party-data", filePath, partyData),
+  loadPartyData: (filePath) =>
+    ipcRenderer.invoke("load-party-data", filePath),
 
   // Listen for display window events
   onUpdateDisplay: (callback) => ipcRenderer.on("update-display", callback),

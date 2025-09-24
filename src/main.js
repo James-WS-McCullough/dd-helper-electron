@@ -348,6 +348,32 @@ ipcMain.handle("get-display-state", () => {
   return displayState;
 });
 
+// Handle saving party data
+ipcMain.handle("save-party-data", async (event, filePath, partyData) => {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(partyData, null, 2));
+    return true;
+  } catch (error) {
+    console.error("Error saving party data:", error);
+    throw error;
+  }
+});
+
+// Handle loading party data
+ipcMain.handle("load-party-data", async (event, filePath) => {
+  try {
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    // File doesn't exist or is invalid
+    if (error.code === 'ENOENT') {
+      return null; // File doesn't exist, that's okay
+    }
+    console.error("Error loading party data:", error);
+    throw error;
+  }
+});
+
 app.whenReady().then(async () => {
   await loadCachedDirectory();
   createMainWindow();

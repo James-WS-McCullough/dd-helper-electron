@@ -491,6 +491,60 @@ ipcMain.handle("load-initiative-data", async (event, directoryPath) => {
   }
 });
 
+// Battlemap IPC handlers
+ipcMain.handle(
+  "save-battlemap-data",
+  async (event, directoryPath, battlemapData) => {
+    try {
+      const filePath = path.join(directoryPath, "battlemap.json");
+      await fs.writeFile(filePath, JSON.stringify(battlemapData, null, 2));
+      console.log("Battlemap data saved to:", filePath);
+      return { success: true };
+    } catch (error) {
+      console.error("Error saving battlemap data:", error);
+      return { success: false, error: error.message };
+    }
+  }
+);
+
+ipcMain.handle("load-battlemap-data", async (event, directoryPath) => {
+  try {
+    const filePath = path.join(directoryPath, "battlemap.json");
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error loading battlemap data:", error);
+    return null;
+  }
+});
+
+// Battlemap display IPC handlers
+ipcMain.handle("display-battlemap", async (event, battlemapData) => {
+  try {
+    if (displayWindow) {
+      displayWindow.webContents.send("display-battlemap", battlemapData);
+      console.log("Battlemap sent to display window");
+      return { success: true };
+    }
+  } catch (error) {
+    console.error("Error displaying battlemap:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("hide-battlemap", async (event) => {
+  try {
+    if (displayWindow) {
+      displayWindow.webContents.send("hide-battlemap");
+      console.log("Battlemap hidden from display");
+      return { success: true };
+    }
+  } catch (error) {
+    console.error("Error hiding battlemap:", error);
+    return { success: false, error: error.message };
+  }
+});
+
 app.whenReady().then(async () => {
   await loadCachedDirectory();
   createMainWindow();

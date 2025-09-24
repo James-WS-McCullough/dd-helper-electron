@@ -251,10 +251,7 @@
       <div class="fade-overlay" id="fadeOverlay"></div>
 
       <!-- Placeholder -->
-      <div class="placeholder" id="placeholder">
-        <div>🎬 Display Window</div>
-        <p>Media will appear here when selected from the dashboard</p>
-      </div>
+      <div class="placeholder" id="placeholder"></div>
     </div>
 
     <script>
@@ -268,24 +265,30 @@
       };
       let currentEventVideo = null;
       let previousDisplayState = null;
+      let currentBattlemapData = null;
 
       function updateDisplay(displayState) {
         currentDisplayState = displayState;
 
-        // Update placeholder visibility
+        // Update placeholder visibility - also consider battlemap
         const hasAnyContent =
           displayState.portraits.length > 0 ||
           displayState.background ||
-          displayState.event;
+          displayState.event ||
+          currentBattlemapData;
         document.getElementById("placeholder").style.display = hasAnyContent
           ? "none"
           : "block";
 
-        // Update portraits
-        updatePortraits(displayState.portraits);
+        // Update portraits - but only if no battlemap is showing
+        if (!currentBattlemapData) {
+          updatePortraits(displayState.portraits);
+        }
 
-        // Update background
-        updateBackground(displayState.background);
+        // Update background - but only if no battlemap is showing
+        if (!currentBattlemapData) {
+          updateBackground(displayState.background);
+        }
 
         // Update event
         updateEvent(displayState.event);
@@ -436,6 +439,197 @@
       window.electronAPI.onUpdateDisplay((event, displayState) => {
         updateDisplay(displayState);
       });
+
+      // Listen for battlemap events
+      window.electronAPI.onDisplayBattlemap((event, battlemapData) => {
+        displayBattlemap(battlemapData);
+      });
+
+      window.electronAPI.onHideBattlemap((event) => {
+        hideBattlemap();
+      });
+
+      function displayBattlemap(battlemapData) {
+        console.log("Displaying battlemap with zoom:", battlemapData);
+
+        // Store current battlemap data
+        currentBattlemapData = battlemapData;
+
+        // Hide placeholder
+        document.getElementById("placeholder").style.display = "none";
+
+        // Clear existing content
+        document.getElementById("backgroundLayer").innerHTML = "";
+        document.getElementById("portraitsLayer").innerHTML = "";
+        document.getElementById("eventLayer").style.display = "none";
+
+        const zoom = battlemapData.zoom || {
+          scale: 1.0,
+          centerX: 0.5,
+          centerY: 0.5,
+        };
+
+        // Convert center coordinates (0-1) to percentage for transform-origin
+        const originX = zoom.centerX * 100;
+        const originY = zoom.centerY * 100;
+
+        // Create battlemap display with zoom
+        let battlemapHTML = `
+          <div class="display-battlemap-container" style="
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+          ">
+            <div class="display-battlemap" style="
+              display: grid;
+              grid-template-columns: repeat(${battlemapData.gridWidth}, 1fr);
+              gap: 1px;
+              background-image: url('file://${battlemapData.backgroundImage}');
+              background-size: cover;
+              background-position: top left;
+              background-repeat: no-repeat;
+              background-attachment: local;
+              transform: scale(${zoom.scale});
+              transform-origin: ${originX}% ${originY}%;
+              transition: transform 0.3s ease-out;
+              border: 2px solid rgba(255, 255, 255, 0.1);
+              width: fit-content;
+            ">
+        `;
+
+        // Generate cells with grid lines and tokens
+        for (let y = 0; y < battlemapData.gridHeight; y++) {
+          for (let x = 0; x < battlemapData.gridWidth; x++) {
+            const tokenKey = `${x}-${y}`;
+            const token = battlemapData.tokens[tokenKey];
+
+            battlemapHTML += `
+              <div class="display-battlemap-cell" style="
+                aspect-ratio: 1;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.02);
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: ${Math.max(30, 60 / zoom.scale)}px;
+              ">
+            `;
+
+            if (token) {
+              const tokenStyle = token.portrait
+                ? `background-image: url('file://${token.portrait}'); background-size: cover; background-position: center;`
+                : `background: linear-gradient(45deg, #3498db, #2980b9); color: white; display: flex; align-items: center; justify-content: center;`;
+
+              // Check if this is the last moved token for highlight
+              const isLastMoved =
+                battlemapData.zoom &&
+                battlemapData.zoom.lastMovedToken &&
+                battlemapData.zoom.lastMovedToken.x === x &&
+                battlemapData.zoom.lastMovedToken.y === y;
+
+              battlemapHTML += `
+                <div class="display-token ${
+                  isLastMoved ? "recently-moved" : ""
+                }" style="
+                  width: 80%;
+                  height: 80%;
+                  border-radius: 50%;
+                  border: ${
+                    isLastMoved ? "4px solid #f39c12" : "3px solid #fff"
+                  };
+                  ${tokenStyle}
+                  font-size: max(1.2vw, 12px);
+                  font-weight: bold;
+                  position: relative;
+                  box-shadow: ${
+                    isLastMoved
+                      ? "0 0 20px rgba(243, 156, 18, 0.8)"
+                      : "0 0 10px rgba(0, 0, 0, 0.5)"
+                  };
+                  ${
+                    isLastMoved
+                      ? "animation: pulse-highlight 2s ease-in-out 3;"
+                      : ""
+                  }
+                ">
+                  ${!token.portrait ? token.name.charAt(0).toUpperCase() : ""}
+                  <div class="display-token-name" style="
+                    position: absolute;
+                    bottom: -30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: ${
+                      isLastMoved
+                        ? "rgba(243, 156, 18, 0.9)"
+                        : "rgba(0, 0, 0, 0.8)"
+                    };
+                    color: white;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    font-size: max(0.8vw, 8px);
+                    white-space: nowrap;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+                    font-weight: bold;
+                  ">${token.name}</div>
+                </div>
+              `;
+            }
+
+            battlemapHTML += "</div>";
+          }
+        }
+
+        battlemapHTML += `
+            </div>
+            <style>
+              @keyframes pulse-highlight {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+              }
+            </style>
+          </div>
+        `;
+
+        // Display the battlemap in the background layer
+        document.getElementById("backgroundLayer").innerHTML = battlemapHTML;
+
+        console.log(
+          "Battlemap displayed successfully with zoom level:",
+          zoom.scale
+        );
+      }
+
+      function hideBattlemap() {
+        console.log("Hiding battlemap");
+
+        // Clear battlemap data
+        currentBattlemapData = null;
+
+        // Clear battlemap
+        document.getElementById("backgroundLayer").innerHTML = "";
+        document.getElementById("portraitsLayer").innerHTML = "";
+
+        // Restore current display state if there is content
+        const hasOtherContent =
+          currentDisplayState.portraits.length > 0 ||
+          currentDisplayState.background ||
+          currentDisplayState.event;
+
+        if (hasOtherContent) {
+          // Restore the display content
+          updatePortraits(currentDisplayState.portraits);
+          updateBackground(currentDisplayState.background);
+          document.getElementById("placeholder").style.display = "none";
+        } else {
+          // Show placeholder
+          document.getElementById("placeholder").style.display = "block";
+        }
+
+        console.log("Battlemap hidden successfully");
+      }
 
       // Keyboard shortcuts
       document.addEventListener("keydown", (event) => {

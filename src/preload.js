@@ -33,12 +33,28 @@ contextBridge.exposeInMainWorld("electronAPI", {
   loadInitiativeData: (directoryPath) =>
     ipcRenderer.invoke("load-initiative-data", directoryPath),
 
+  // Battlemap data methods
+  saveBattlemapData: (directoryPath, battlemapData) =>
+    ipcRenderer.invoke("save-battlemap-data", directoryPath, battlemapData),
+  loadBattlemapData: (directoryPath) =>
+    ipcRenderer.invoke("load-battlemap-data", directoryPath),
+
+  // Battlemap display methods
+  displayBattlemap: (battlemapData) =>
+    ipcRenderer.invoke("display-battlemap", battlemapData),
+  hideBattlemap: () => ipcRenderer.invoke("hide-battlemap"),
+
   // Listen for display window events
   onUpdateDisplay: (callback) => ipcRenderer.on("update-display", callback),
   onDisplayStateUpdated: (callback) =>
     ipcRenderer.on("display-state-updated", callback),
+  onDisplayBattlemap: (callback) =>
+    ipcRenderer.on("display-battlemap", callback),
+  onHideBattlemap: (callback) => ipcRenderer.on("hide-battlemap", callback),
   removeDisplayListeners: () => {
     ipcRenderer.removeAllListeners("update-display");
     ipcRenderer.removeAllListeners("display-state-updated");
+    ipcRenderer.removeAllListeners("display-battlemap");
+    ipcRenderer.removeAllListeners("hide-battlemap");
   },
 });

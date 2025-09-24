@@ -774,6 +774,68 @@
             display: flex;
         }
         
+        /* Generic Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
         .portrait-modal-content {
             background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
             border-radius: 10px;
@@ -906,6 +968,1120 @@
         .portrait-option:hover .portrait-name {
             opacity: 1;
         }
+        
+        /* Encounter Builder Styles */
+        .encounter-editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .encounter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .encounter-header h3 {
+            margin: 0;
+            color: #e74c3c;
+            font-size: 20px;
+        }
+        
+        .encounter-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .new-encounter-btn, .save-encounter-btn, .load-encounter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .new-encounter-btn {
+            background: rgba(52, 152, 219, 0.7);
+            color: white;
+        }
+        
+        .new-encounter-btn:hover {
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        .save-encounter-btn {
+            background: rgba(46, 204, 113, 0.7);
+            color: white;
+        }
+        
+        .save-encounter-btn:hover {
+            background: rgba(46, 204, 113, 0.9);
+        }
+        
+        .load-encounter-btn {
+            background: rgba(155, 89, 182, 0.7);
+            color: white;
+        }
+        
+        .load-encounter-btn:hover {
+            background: rgba(155, 89, 182, 0.9);
+        }
+        
+        .current-encounter-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .encounter-name-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .encounter-name-input:focus {
+            outline: none;
+            border-color: #e74c3c;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .encounter-name-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .add-enemy-btn {
+            padding: 10px 20px;
+            background: rgba(231, 76, 60, 0.7);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-enemy-btn:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .encounter-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        
+        .enemy-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #e74c3c;
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 20px;
+            align-items: start;
+            transition: all 0.3s ease;
+        }
+        
+        .enemy-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(2px);
+        }
+        
+        .enemy-portrait {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .enemy-portrait:hover {
+            border-color: #e74c3c;
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .enemy-portrait.has-image {
+            border-color: #27ae60;
+        }
+        
+        .enemy-portrait .portrait-icon {
+            font-size: 32px;
+            opacity: 0.6;
+        }
+        
+        .enemy-portrait.has-image .portrait-icon {
+            display: none;
+        }
+        
+        .enemy-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .enemy-basic-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .enemy-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .enemy-description {
+            margin-top: 10px;
+        }
+        
+        .enemy-description label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #e74c3c;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .enemy-description textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 12px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .enemy-description textarea:focus {
+            outline: none;
+            border-color: #e74c3c;
+        }
+        
+        .enemy-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .enemy-field label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #e74c3c;
+            text-transform: uppercase;
+        }
+        
+        .enemy-field input {
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 13px;
+        }
+        
+        .enemy-field input:focus {
+            outline: none;
+            border-color: #e74c3c;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .enemy-field input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .stat-field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .stat-field label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #ecf0f1;
+            text-transform: uppercase;
+        }
+        
+        .stat-field input {
+            padding: 4px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            width: 60px;
+        }
+        
+        .enemy-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .remove-enemy-btn {
+            background: rgba(231, 76, 60, 0.7);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-enemy-btn:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .enemy-name-input {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            padding: 8px 12px !important;
+        }
+        
+        /* Encounter Selection Modal */
+        .encounter-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .encounter-modal.active {
+            display: flex;
+        }
+        
+        .encounter-modal-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #e74c3c 100%);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .encounter-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .encounter-modal-title {
+            color: #f39c12;
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .encounter-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .encounter-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #e74c3c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .encounter-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(2px);
+        }
+        
+        .encounter-item-info {
+            flex: 1;
+        }
+        
+        .encounter-item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+        
+        .encounter-item-details {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            gap: 15px;
+        }
+        
+        .encounter-item-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .encounter-item-date {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .encounter-enemy-count {
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .no-encounters {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+        
+        /* Initiative Tracker Styles */
+        .initiative-tracker-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .initiative-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .initiative-header h3 {
+            margin: 0;
+            color: #f39c12;
+            font-size: 20px;
+        }
+        
+        .initiative-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .round-counter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(243, 156, 18, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(243, 156, 18, 0.4);
+        }
+        
+        .round-label {
+            font-size: 14px;
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .round-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .turn-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .prev-turn {
+            background: rgba(155, 89, 182, 0.7);
+            color: white;
+        }
+        
+        .prev-turn:hover {
+            background: rgba(155, 89, 182, 0.9);
+        }
+        
+        .next-turn {
+            background: rgba(46, 204, 113, 0.7);
+            color: white;
+        }
+        
+        .next-turn:hover {
+            background: rgba(46, 204, 113, 0.9);
+        }
+        
+        .initiative-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .initiative-action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-party {
+            background: rgba(52, 152, 219, 0.7);
+            color: white;
+        }
+        
+        .add-party:hover {
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        .add-encounter {
+            background: rgba(231, 76, 60, 0.7);
+            color: white;
+        }
+        
+        .add-encounter:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .add-note {
+            background: rgba(243, 156, 18, 0.7);
+            color: white;
+        }
+        
+        .add-note:hover {
+            background: rgba(243, 156, 18, 0.9);
+        }
+        
+        .clear-initiative {
+            background: rgba(127, 140, 141, 0.7);
+            color: white;
+        }
+        
+        .clear-initiative:hover {
+            background: rgba(127, 140, 141, 0.9);
+        }
+        
+        .initiative-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        
+        .initiative-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .initiative-item.current-turn {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid rgba(46, 204, 113, 0.6);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .initiative-item.player {
+            border-left: 4px solid #3498db;
+        }
+        
+        .initiative-item.enemy {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .initiative-item.note {
+            border-left: 4px solid #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+        
+        .initiative-portrait {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .initiative-portrait.has-image {
+            border-color: #27ae60;
+        }
+        
+        .initiative-portrait.has-image .initiative-icon {
+            display: none;
+        }
+        
+        .initiative-item.enemy .initiative-portrait {
+            cursor: pointer;
+        }
+        
+        .initiative-item.enemy .initiative-portrait:hover {
+            border-color: #3498db;
+            transform: scale(1.05);
+            transition: all 0.2s;
+        }
+        
+        .initiative-icon {
+            font-size: 20px;
+            opacity: 0.7;
+        }
+        
+        .initiative-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .initiative-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .initiative-type {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .initiative-order {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .initiative-input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .hp-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .hp-display {
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .hp-display.low-hp {
+            color: #e74c3c;
+        }
+        
+        .hp-display.half-hp {
+            color: #f39c12;
+        }
+        
+        .hp-button {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hp-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .hp-button.damage {
+            border-color: #e74c3c;
+        }
+        
+        .hp-button.heal {
+            border-color: #27ae60;
+        }
+        
+        .hp-display {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .hp-display:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: -2px -4px;
+        }
+        
+        .hp-modal {
+            max-width: 400px;
+        }
+        
+        .hp-modal .modal-header h3 {
+            margin: 0;
+            color: #fff;
+        }
+        
+        .hp-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .damage-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .damage-btn:hover {
+            background: #c0392b;
+        }
+        
+        .heal-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .heal-btn:hover {
+            background: #229954;
+        }
+        
+        .info-btn {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+            color: #3498db;
+            width: 25px;
+            height: 25px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        
+        .info-btn:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        .enemy-info-modal {
+            max-width: 90%;
+            width: 800px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .enemy-info-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            min-height: 300px;
+        }
+        
+        .enemy-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .enemy-info-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .enemy-portrait-section {
+            text-align: center;
+        }
+        
+        .enemy-portrait-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            margin: 0 auto 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .enemy-name-large {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            margin: 0;
+        }
+        
+        .enemy-type-info {
+            color: #bbb;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .enemy-vital-stats {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .vital-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .vital-stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .vital-stat-label {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .vital-stat-value {
+            font-size: 16px;
+            color: #fff;
+        }
+        
+        .enemy-stat-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .enemy-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-item .stat-name {
+            font-size: 11px;
+            color: #e74c3c;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-item .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 3px;
+        }
+        
+        .stat-item .stat-modifier {
+            font-size: 14px;
+            color: #bbb;
+        }
+        
+        .enemy-description-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #e74c3c;
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            flex-grow: 1;
+            min-height: 200px;
+        }
+        
+        .enemy-description-section h4 {
+            margin: 0 0 15px 0;
+            color: #e74c3c;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .enemy-description-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #ddd;
+            font-size: 14px;
+        }
+        
+        .empty-description {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .initiative-input:focus {
+            outline: none;
+            border-color: #f39c12;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .initiative-actions-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .remove-initiative-btn {
+            background: rgba(231, 76, 60, 0.7);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-initiative-btn:hover {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .current-turn-indicator {
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+        
+        /* Note Modal Styles */
+        .note-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .note-modal.active {
+            display: flex;
+        }
+        
+        .note-modal-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #f39c12 100%);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .note-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .note-modal-title {
+            color: #f39c12;
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .note-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .note-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .note-field label {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .note-field input, .note-field textarea {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .note-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .note-field input:focus, .note-field textarea:focus {
+            outline: none;
+            border-color: #f39c12;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .note-field input::placeholder, .note-field textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .note-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .note-modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .note-cancel-btn {
+            background: rgba(127, 140, 141, 0.7);
+            color: white;
+        }
+        
+        .note-cancel-btn:hover {
+            background: rgba(127, 140, 141, 0.9);
+        }
+        
+        .note-add-btn {
+            background: rgba(243, 156, 18, 0.7);
+            color: white;
+        }
+        
+        .note-add-btn:hover {
+            background: rgba(243, 156, 18, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -920,6 +2096,8 @@
                 <button class="tab-button active" onclick="switchTab('media')">🖼️ Media</button>
                 <button class="tab-button" onclick="switchTab('audio')">🎵 Audio</button>
                 <button class="tab-button" onclick="switchTab('party')">👥 Party</button>
+                <button class="tab-button" onclick="switchTab('encounters')">⚔️ Encounters</button>
+                <button class="tab-button" onclick="switchTab('initiative')">🎲 Initiative</button>
             </div>
             
             <div id="mediaTab" class="tab-content active">
@@ -954,6 +2132,51 @@
                     </div>
                     <div id="partyList" class="party-list">
                         <div class="empty-state">No players in party. Click "Add Player" to get started!</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="encountersTab" class="tab-content">
+                <div class="encounter-editor-container">
+                    <div class="encounter-header">
+                        <h3>⚔️ Encounter Builder</h3>
+                        <div class="encounter-actions">
+                            <button id="newEncounterBtn" class="new-encounter-btn">📋 New Encounter</button>
+                            <button id="saveEncounterBtn" class="save-encounter-btn">💾 Save Encounter</button>
+                            <button id="loadEncounterBtn" class="load-encounter-btn">📁 Load Encounter</button>
+                        </div>
+                    </div>
+                    <div class="current-encounter-info">
+                        <input type="text" id="encounterNameInput" placeholder="Enter encounter name..." class="encounter-name-input">
+                        <button id="addEnemyBtn" class="add-enemy-btn">➕ Add Enemy</button>
+                    </div>
+                    <div id="encounterList" class="encounter-list">
+                        <div class="empty-state">No encounter loaded. Click "New Encounter" to get started!</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="initiativeTab" class="tab-content">
+                <div class="initiative-tracker-container">
+                    <div class="initiative-header">
+                        <h3>🎲 Initiative Tracker</h3>
+                        <div class="initiative-controls">
+                            <div class="round-counter">
+                                <span class="round-label">Round:</span>
+                                <span id="roundCounter" class="round-number">1</span>
+                            </div>
+                            <button id="prevTurnBtn" class="turn-btn prev-turn">⬅️ Previous</button>
+                            <button id="nextTurnBtn" class="turn-btn next-turn">Next ➡️</button>
+                        </div>
+                    </div>
+                    <div class="initiative-actions">
+                        <button id="addPartyBtn" class="initiative-action-btn add-party">👥 Add Party</button>
+                        <button id="addEncounterToInitiativeBtn" class="initiative-action-btn add-encounter">⚔️ Add Encounter</button>
+                        <button id="addNoteBtn" class="initiative-action-btn add-note">📝 Add Note</button>
+                        <button id="clearInitiativeBtn" class="initiative-action-btn clear-initiative">🗑️ Clear All</button>
+                    </div>
+                    <div id="initiativeList" class="initiative-list">
+                        <div class="empty-state">No combatants in initiative. Add party members or encounters to get started!</div>
                     </div>
                 </div>
             </div>
@@ -1036,6 +2259,110 @@
         </div>
     </div>
 
+    <!-- Enemy Portrait Selection Modal -->
+    <div id="enemyPortraitModal" class="portrait-modal">
+        <div class="portrait-modal-content">
+            <div class="portrait-modal-header">
+                <h3 class="portrait-modal-title">Select Enemy Portrait</h3>
+                <button class="close-modal-btn" onclick="closeEnemyPortraitModal()">✕</button>
+            </div>
+            <div class="portrait-search-container">
+                <input type="text" id="enemyPortraitSearchInput" class="portrait-search-input" 
+                       placeholder="🔍 Search portraits by name..." 
+                       oninput="filterEnemyPortraits(this.value)">
+                <div id="enemyPortraitSearchInfo" class="portrait-search-info">
+                    Press '/' to focus search • Enter to select first result • Esc to close
+                </div>
+            </div>
+            <div id="enemyPortraitGrid" class="portrait-grid">
+                <!-- Enemy portrait options will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Encounter Selection Modal -->
+    <div id="encounterSelectionModal" class="encounter-modal">
+        <div class="encounter-modal-content">
+            <div class="encounter-modal-header">
+                <h3 class="encounter-modal-title">Load Encounter</h3>
+                <button class="close-modal-btn" onclick="closeEncounterSelectionModal()">✕</button>
+            </div>
+            <div id="encounterListContainer" class="encounter-list-container">
+                <!-- Encounter list will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Note Modal -->
+    <div id="noteModal" class="note-modal">
+        <div class="note-modal-content">
+            <div class="note-modal-header">
+                <h3 class="note-modal-title">Add Initiative Note</h3>
+                <button class="close-modal-btn" onclick="closeNoteModal()">✕</button>
+            </div>
+            <form class="note-form" onsubmit="addInitiativeNote(event)">
+                <div class="note-field">
+                    <label>Initiative</label>
+                    <input type="number" id="noteInitiative" placeholder="Enter initiative value" required min="0" max="50">
+                </div>
+                <div class="note-field">
+                    <label>Note Title</label>
+                    <input type="text" id="noteTitle" placeholder="Enter note title" required>
+                </div>
+                <div class="note-field">
+                    <label>Description (optional)</label>
+                    <textarea id="noteDescription" placeholder="Enter additional details..."></textarea>
+                </div>
+                <div class="note-modal-actions">
+                    <button type="button" class="note-modal-btn note-cancel-btn" onclick="closeNoteModal()">Cancel</button>
+                    <button type="submit" class="note-modal-btn note-add-btn">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HP Modal -->
+    <div id="hpModal" class="modal">
+        <div class="modal-content hp-modal">
+            <div class="modal-header">
+                <h3 id="hpModalTitle">Adjust HP</h3>
+                <span class="close" onclick="closeHPModal()">&times;</span>
+            </div>
+            <div id="hpModalContent">
+                <div class="form-group">
+                    <label for="hpAmount">Amount:</label>
+                    <input type="number" id="hpAmount" min="1" max="999" placeholder="Enter amount" required>
+                    <small style="color: #999; font-size: 12px; display: block; margin-top: 5px;">
+                        Enter = Apply Damage | Shift+Enter = Apply Healing
+                    </small>
+                </div>
+                <div class="current-hp-display">
+                    <span id="currentHPDisplay">Current HP: 0/0</span>
+                </div>
+                <div class="hp-modal-actions">
+                    <button class="damage-btn" onclick="applyHPChange('damage')">Apply Damage</button>
+                    <button class="heal-btn" onclick="applyHPChange('heal')">Apply Healing</button>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" onclick="closeHPModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enemy Info Modal -->
+    <div id="enemyInfoModal" class="modal">
+        <div class="modal-content enemy-info-modal">
+            <div class="modal-header">
+                <h3 id="enemyInfoTitle">Enemy Details</h3>
+                <span class="close" onclick="closeEnemyInfoModal()">&times;</span>
+            </div>
+            <div id="enemyInfoContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentDirectory = null;
         let fileStructure = null;
@@ -1072,6 +2399,11 @@
             if (tabName === 'party') {
                 loadPartyData();
             }
+            
+            // Load encounter data when switching to encounters tab
+            if (tabName === 'encounters') {
+                // No need to auto-load, user will select
+            }
         }
 
         // Get the cached directory and initialize dashboard
@@ -1081,6 +2413,7 @@
                 if (currentDirectory) {
                     loadFileStructure();
                     loadDisplayState();
+                    loadInitiativeState();
                 } else {
                     // If no cached directory, prompt for one
                     document.getElementById('fileExplorer').innerHTML = 
@@ -1100,6 +2433,7 @@
                 if (directory) {
                     currentDirectory = directory;
                     loadFileStructure();
+                    loadInitiativeState();
                 }
             } catch (error) {
                 console.error('Error selecting directory:', error);
@@ -2437,6 +3771,909 @@
         document.getElementById('savePartyBtn').addEventListener('click', savePartyData);
         document.getElementById('loadPartyBtn').addEventListener('click', loadPartyData);
 
+        // Encounter Builder Functionality
+        let currentEncounter = {
+            name: '',
+            enemies: []
+        };
+        let currentEditingEnemy = null;
+
+        function generateEnemyHTML(enemy, index) {
+            const portraitStyle = enemy.portrait ? 
+                `background-image: url('file://${enemy.portrait}'); background-size: cover; background-position: center;` : '';
+            
+            return `
+                <div class="enemy-card" data-index="${index}">
+                    <div class="enemy-portrait ${enemy.portrait ? 'has-image' : ''}" 
+                         style="${portraitStyle}" 
+                         onclick="openEnemyPortraitModal(${index})">
+                        <div class="portrait-icon">👹</div>
+                    </div>
+                    <div class="enemy-details">
+                        <div class="enemy-basic-info">
+                            <div class="enemy-field">
+                                <label>Enemy Name</label>
+                                <input type="text" class="enemy-name-input" value="${enemy.name || ''}" 
+                                       placeholder="Enter enemy name" 
+                                       onchange="updateEnemy(${index}, 'name', this.value)">
+                            </div>
+                            <div class="enemy-field">
+                                <label>Max HP</label>
+                                <input type="number" value="${enemy.maxHp || ''}" 
+                                       placeholder="e.g. 45" min="1" max="999"
+                                       onchange="updateEnemy(${index}, 'maxHp', parseInt(this.value))">
+                            </div>
+                            <div class="enemy-field">
+                                <label>Speed (ft)</label>
+                                <input type="number" value="${enemy.speed || ''}" 
+                                       placeholder="e.g. 30" min="0" max="120" step="5"
+                                       onchange="updateEnemy(${index}, 'speed', parseInt(this.value))">
+                            </div>
+                        </div>
+                        <div class="enemy-stats">
+                            <div class="stat-field">
+                                <label>STR</label>
+                                <input type="number" value="${enemy.strength || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'strength', parseInt(this.value))">
+                            </div>
+                            <div class="stat-field">
+                                <label>DEX</label>
+                                <input type="number" value="${enemy.dexterity || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'dexterity', parseInt(this.value))">
+                            </div>
+                            <div class="stat-field">
+                                <label>CON</label>
+                                <input type="number" value="${enemy.constitution || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'constitution', parseInt(this.value))">
+                            </div>
+                            <div class="stat-field">
+                                <label>INT</label>
+                                <input type="number" value="${enemy.intelligence || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'intelligence', parseInt(this.value))">
+                            </div>
+                            <div class="stat-field">
+                                <label>WIS</label>
+                                <input type="number" value="${enemy.wisdom || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'wisdom', parseInt(this.value))">
+                            </div>
+                            <div class="stat-field">
+                                <label>CHA</label>
+                                <input type="number" value="${enemy.charisma || ''}" 
+                                       placeholder="10" min="1" max="30"
+                                       onchange="updateEnemy(${index}, 'charisma', parseInt(this.value))">
+                            </div>
+                        </div>
+                        <div class="enemy-description">
+                            <label>Abilities & Notes</label>
+                            <textarea placeholder="Enter enemy abilities, attacks, special moves, or tactical notes..."
+                                     onchange="updateEnemy(${index}, 'description', this.value)">${enemy.description || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="enemy-actions">
+                        <button class="remove-enemy-btn" onclick="removeEnemy(${index})">🗑️ Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderEncounter() {
+            const encounterList = document.getElementById('encounterList');
+            const encounterNameInput = document.getElementById('encounterNameInput');
+            
+            if (currentEncounter.enemies.length === 0) {
+                encounterList.innerHTML = '<div class="empty-state">No enemies in this encounter. Click "Add Enemy" to get started!</div>';
+            } else {
+                encounterList.innerHTML = currentEncounter.enemies.map((enemy, index) => generateEnemyHTML(enemy, index)).join('');
+            }
+            
+            encounterNameInput.value = currentEncounter.name;
+        }
+
+        function newEncounter() {
+            if (currentEncounter.name || currentEncounter.enemies.length > 0) {
+                if (!confirm('This will clear the current encounter. Are you sure?')) {
+                    return;
+                }
+            }
+            
+            currentEncounter = {
+                name: '',
+                enemies: []
+            };
+            renderEncounter();
+        }
+
+        function addEnemy() {
+            const newEnemy = {
+                name: '',
+                portrait: null,
+                portraitName: '',
+                maxHp: 1,
+                speed: 30,
+                strength: 10,
+                dexterity: 10,
+                constitution: 10,
+                intelligence: 10,
+                wisdom: 10,
+                charisma: 10,
+                description: ''
+            };
+            currentEncounter.enemies.push(newEnemy);
+            renderEncounter();
+        }
+
+        function removeEnemy(index) {
+            if (confirm('Are you sure you want to remove this enemy?')) {
+                currentEncounter.enemies.splice(index, 1);
+                renderEncounter();
+            }
+        }
+
+        function updateEnemy(index, field, value) {
+            if (currentEncounter.enemies[index]) {
+                currentEncounter.enemies[index][field] = value;
+                console.log('Updated enemy', index, field, value);
+            }
+        }
+
+        function updateEncounterName() {
+            const encounterNameInput = document.getElementById('encounterNameInput');
+            currentEncounter.name = encounterNameInput.value;
+        }
+
+        // Enemy portrait selection functions
+        function openEnemyPortraitModal(enemyIndex) {
+            currentEditingEnemy = enemyIndex;
+            
+            // Update available portraits from current file structure
+            if (fileStructure) {
+                availablePortraits = collectPortraits(fileStructure);
+            }
+            
+            const portraitGrid = document.getElementById('enemyPortraitGrid');
+            
+            // Add "No Portrait" option
+            let portraitOptionsHTML = `
+                <div class="portrait-option no-image" onclick="selectEnemyPortrait(null, 'No Portrait')" data-name="no portrait none">
+                    🚫
+                    <div class="portrait-name">No Portrait</div>
+                </div>
+            `;
+            
+            // Add available portraits
+            portraitOptionsHTML += availablePortraits.map(portrait => `
+                <div class="portrait-option" 
+                     style="background-image: url('file://${portrait.path}');"
+                     onclick="selectEnemyPortrait('${portrait.path}', '${portrait.name}')"
+                     data-name="${portrait.searchTerms || portrait.name.toLowerCase()}">
+                    <div class="portrait-name">${portrait.name}</div>
+                </div>
+            `).join('');
+            
+            portraitGrid.innerHTML = portraitOptionsHTML;
+            
+            // Clear search input
+            document.getElementById('enemyPortraitSearchInput').value = '';
+            
+            const modal = document.getElementById('enemyPortraitModal');
+            modal.classList.add('active');
+        }
+
+        function closeEnemyPortraitModal() {
+            const modal = document.getElementById('enemyPortraitModal');
+            modal.classList.remove('active');
+            currentEditingEnemy = null;
+            
+            // Clear search when closing
+            document.getElementById('enemyPortraitSearchInput').value = '';
+        }
+
+        function selectEnemyPortrait(portraitPath, portraitName) {
+            if (currentEditingEnemy !== null && currentEncounter.enemies[currentEditingEnemy]) {
+                currentEncounter.enemies[currentEditingEnemy].portrait = portraitPath;
+                currentEncounter.enemies[currentEditingEnemy].portraitName = portraitName;
+                renderEncounter();
+                closeEnemyPortraitModal();
+            }
+        }
+
+        function filterEnemyPortraits(searchTerm) {
+            const portraits = document.querySelectorAll('#enemyPortraitGrid .portrait-option');
+            const term = searchTerm.toLowerCase().trim();
+            const infoEl = document.getElementById('enemyPortraitSearchInfo');
+            let visibleCount = 0;
+            
+            portraits.forEach(portrait => {
+                const searchableText = portrait.getAttribute('data-name') || '';
+                const matches = term === '' || searchableText.includes(term);
+                
+                if (matches) {
+                    portrait.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    portrait.classList.add('hidden');
+                }
+            });
+            
+            // Update info text
+            if (term === '') {
+                infoEl.textContent = "Press '/' to focus search • Enter to select first result • Esc to close";
+            } else {
+                infoEl.textContent = `${visibleCount} portrait${visibleCount !== 1 ? 's' : ''} found • Enter to select first • Esc to close`;
+            }
+        }
+
+        async function saveEncounterData() {
+            try {
+                if (!currentDirectory) {
+                    alert('No directory selected. Please select a directory first.');
+                    return;
+                }
+                
+                if (!currentEncounter.name) {
+                    alert('Please enter an encounter name before saving.');
+                    return;
+                }
+                
+                const encounterFilePath = currentDirectory + '/' + currentEncounter.name + '_encounter.json';
+                await window.electronAPI.saveEncounterData(encounterFilePath, currentEncounter);
+                alert('Encounter saved successfully!');
+            } catch (error) {
+                console.error('Error saving encounter data:', error);
+                alert('Error saving encounter data: ' + error.message);
+            }
+        }
+
+        async function loadEncounterData() {
+            try {
+                if (!currentDirectory) {
+                    alert('No directory selected. Please select a directory first.');
+                    return;
+                }
+                
+                // Get list of encounter files
+                const encounterFiles = await window.electronAPI.getEncounterFiles(currentDirectory);
+                
+                if (encounterFiles.length === 0) {
+                    alert('No encounter files found in the current directory.');
+                    return;
+                }
+                
+                // Show encounter selection modal
+                showEncounterSelectionModal(encounterFiles);
+                
+            } catch (error) {
+                console.error('Error loading encounter files:', error);
+                alert('Error loading encounter files: ' + error.message);
+            }
+        }
+
+        function showEncounterSelectionModal(encounterFiles) {
+            const modal = document.getElementById('encounterSelectionModal');
+            const container = document.getElementById('encounterListContainer');
+            
+            if (encounterFiles.length === 0) {
+                container.innerHTML = '<div class="no-encounters">No encounter files found in this directory.</div>';
+            } else {
+                container.innerHTML = encounterFiles.map(encounter => {
+                    const date = new Date(encounter.lastModified).toLocaleDateString();
+                    const time = new Date(encounter.lastModified).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    return `
+                        <div class="encounter-item" onclick="selectEncounterFile('${encounter.path}', '${encounter.name}')">
+                            <div class="encounter-item-info">
+                                <div class="encounter-item-name">${encounter.name}</div>
+                                <div class="encounter-item-details">
+                                    <span>📁 ${encounter.filename}</span>
+                                </div>
+                            </div>
+                            <div class="encounter-item-meta">
+                                <div class="encounter-enemy-count">${encounter.enemyCount} ${encounter.enemyCount === 1 ? 'enemy' : 'enemies'}</div>
+                                <div class="encounter-item-date">${date} ${time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeEncounterSelectionModal() {
+            const modal = document.getElementById('encounterSelectionModal');
+            modal.classList.remove('active');
+        }
+
+        async function selectEncounterFile(filePath, encounterName) {
+            try {
+                const data = await window.electronAPI.loadEncounterData(filePath);
+                if (data) {
+                    currentEncounter = data;
+                    renderEncounter();
+                    closeEncounterSelectionModal();
+                    console.log('Encounter loaded successfully:', encounterName);
+                }
+            } catch (error) {
+                console.error('Error loading encounter:', error);
+                alert('Error loading encounter: ' + error.message);
+            }
+        }
+
+        // Event listeners for encounter builder
+        document.getElementById('newEncounterBtn').addEventListener('click', newEncounter);
+        document.getElementById('addEnemyBtn').addEventListener('click', addEnemy);
+        document.getElementById('saveEncounterBtn').addEventListener('click', saveEncounterData);
+        document.getElementById('loadEncounterBtn').addEventListener('click', loadEncounterData);
+        document.getElementById('encounterNameInput').addEventListener('input', updateEncounterName);
+
+        // Initiative Tracker Functionality
+        let initiativeOrder = [];
+        let currentTurnIndex = 0;
+        let currentRound = 1;
+
+        // Calculate D&D initiative modifier from dexterity score
+        function getInitiativeModifier(dexScore) {
+            return Math.floor((dexScore - 10) / 2);
+        }
+
+        // Roll initiative (1d20 + modifier)
+        function rollInitiative(modifier = 0) {
+            return Math.floor(Math.random() * 20) + 1 + modifier;
+        }
+
+        function generateInitiativeItemHTML(item, index) {
+            const portraitStyle = item.portrait ? 
+                `background-image: url('file://${item.portrait}'); background-size: cover; background-position: center;` : '';
+            
+            const isCurrentTurn = index === currentTurnIndex;
+            const typeClass = item.type === 'player' ? 'player' : (item.type === 'enemy' ? 'enemy' : 'note');
+            
+            // HP tracking for enemies
+            let hpSection = '';
+            if (item.type === 'enemy' && item.maxHP !== undefined) {
+                const currentHP = item.currentHP !== undefined ? item.currentHP : item.maxHP;
+                const hpPercentage = (currentHP / item.maxHP) * 100;
+                let hpClass = '';
+                if (hpPercentage <= 25) hpClass = 'low-hp';
+                else if (hpPercentage <= 50) hpClass = 'half-hp';
+                
+                hpSection = `
+                    <div class="hp-controls">
+                        <div class="hp-display ${hpClass}" onclick="openHPModal(${index})" title="Click to adjust HP">
+                            ${currentHP}/${item.maxHP} HP
+                        </div>
+                        <button class="info-btn" onclick="openEnemyInfoModal(${index})" title="View enemy details">ℹ️</button>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="initiative-item ${typeClass} ${isCurrentTurn ? 'current-turn' : ''}" data-index="${index}">
+                    ${isCurrentTurn ? '<div class="current-turn-indicator">▶</div>' : ''}
+                    <div class="initiative-portrait ${item.portrait ? 'has-image' : ''}" 
+                         style="${portraitStyle}" 
+                         onclick="${item.type === 'enemy' ? `openEnemyInfoModal(${index})` : ''}"
+                         title="${item.type === 'enemy' ? 'Click to view enemy details' : ''}">
+                        <div class="initiative-icon">${item.icon || '👤'}</div>
+                    </div>
+                    <div class="initiative-info">
+                        <div class="initiative-name">${item.name}</div>
+                        <div class="initiative-type">${item.type}${item.description ? ' - ' + item.description : ''}</div>
+                        ${hpSection}
+                    </div>
+                    <div class="initiative-order">
+                        <input type="number" class="initiative-input" value="${item.initiative}" 
+                               onchange="updateInitiativeValue(${index}, parseInt(this.value))" 
+                               min="0" max="50">
+                    </div>
+                    <div class="initiative-actions-cell">
+                        <button class="remove-initiative-btn" onclick="removeInitiativeItem(${index})">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInitiativeOrder() {
+            const initiativeList = document.getElementById('initiativeList');
+            
+            if (initiativeOrder.length === 0) {
+                initiativeList.innerHTML = '<div class="empty-state">No combatants in initiative. Add party members or encounters to get started!</div>';
+                return;
+            }
+            
+            // Sort by initiative (highest first)
+            const sortedOrder = [...initiativeOrder].sort((a, b) => b.initiative - a.initiative);
+            
+            // Find current turn index in sorted order
+            if (initiativeOrder.length > 0 && currentTurnIndex < initiativeOrder.length) {
+                const currentItem = initiativeOrder[currentTurnIndex];
+                currentTurnIndex = sortedOrder.findIndex(item => item.id === currentItem.id);
+            }
+            
+            // Update the main array to match sorted order
+            initiativeOrder = sortedOrder;
+            
+            initiativeList.innerHTML = sortedOrder.map((item, index) => generateInitiativeItemHTML(item, index)).join('');
+            
+            // Update round counter display
+            document.getElementById('roundCounter').textContent = currentRound;
+        }
+
+        function addPartyToInitiative() {
+            if (!partyData || partyData.length === 0) {
+                alert('No party data found. Please create a party first.');
+                return;
+            }
+            
+            partyData.forEach(player => {
+                const playerId = Date.now() + Math.random();
+                initiativeOrder.push({
+                    id: playerId,
+                    name: player.name || 'Unnamed Player',
+                    type: 'player',
+                    portrait: player.portrait,
+                    icon: '👤',
+                    initiative: 0, // Players start with blank initiative
+                    source: 'party'
+                });
+            });
+            
+            renderInitiativeOrder();
+        }
+
+        async function addEncounterToInitiative() {
+            try {
+                if (!currentDirectory) {
+                    alert('No directory selected. Please select a directory first.');
+                    return;
+                }
+                
+                // Get list of encounter files
+                const encounterFiles = await window.electronAPI.getEncounterFiles(currentDirectory);
+                
+                if (encounterFiles.length === 0) {
+                    alert('No encounter files found in the current directory.');
+                    return;
+                }
+                
+                // Show encounter selection for initiative
+                showEncounterSelectionForInitiative(encounterFiles);
+                
+            } catch (error) {
+                console.error('Error loading encounter files for initiative:', error);
+                alert('Error loading encounter files: ' + error.message);
+            }
+        }
+
+        function showEncounterSelectionForInitiative(encounterFiles) {
+            const modal = document.getElementById('encounterSelectionModal');
+            const container = document.getElementById('encounterListContainer');
+            
+            // Update modal title for initiative context
+            modal.querySelector('.encounter-modal-title').textContent = 'Add Encounter to Initiative';
+            
+            if (encounterFiles.length === 0) {
+                container.innerHTML = '<div class="no-encounters">No encounter files found in this directory.</div>';
+            } else {
+                container.innerHTML = encounterFiles.map(encounter => {
+                    const date = new Date(encounter.lastModified).toLocaleDateString();
+                    const time = new Date(encounter.lastModified).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    return `
+                        <div class="encounter-item" onclick="addEncounterToInitiativeOrder('${encounter.path}', '${encounter.name}')">
+                            <div class="encounter-item-info">
+                                <div class="encounter-item-name">${encounter.name}</div>
+                                <div class="encounter-item-details">
+                                    <span>📁 ${encounter.filename}</span>
+                                </div>
+                            </div>
+                            <div class="encounter-item-meta">
+                                <div class="encounter-enemy-count">${encounter.enemyCount} ${encounter.enemyCount === 1 ? 'enemy' : 'enemies'}</div>
+                                <div class="encounter-item-date">${date} ${time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        async function addEncounterToInitiativeOrder(filePath, encounterName) {
+            try {
+                const encounter = await window.electronAPI.loadEncounterData(filePath);
+                if (encounter && encounter.enemies) {
+                    encounter.enemies.forEach(enemy => {
+                        const enemyId = Date.now() + Math.random();
+                        const dexModifier = getInitiativeModifier(enemy.dexterity || 10);
+                        const rolledInitiative = rollInitiative(dexModifier);
+                        
+                        initiativeOrder.push({
+                            id: enemyId,
+                            name: enemy.name || 'Unnamed Enemy',
+                            type: 'enemy',
+                            portrait: enemy.portrait,
+                            icon: '👹',
+                            initiative: rolledInitiative,
+                            maxHP: enemy.maxHp || 1,
+                            currentHP: enemy.maxHp || 1,
+                            speed: enemy.speed,
+                            strength: enemy.strength,
+                            dexterity: enemy.dexterity,
+                            constitution: enemy.constitution,
+                            intelligence: enemy.intelligence,
+                            wisdom: enemy.wisdom,
+                            charisma: enemy.charisma,
+                            description: enemy.description,
+                            source: 'encounter',
+                            encounterName: encounterName
+                        });
+                    });
+                    
+                    closeEncounterSelectionModal();
+                    renderInitiativeOrder();
+                    console.log(`Added ${encounter.enemies.length} enemies from ${encounterName} to initiative`);
+                }
+            } catch (error) {
+                console.error('Error adding encounter to initiative:', error);
+                alert('Error adding encounter to initiative: ' + error.message);
+            }
+        }
+
+        function updateInitiativeValue(index, newValue) {
+            if (initiativeOrder[index] && !isNaN(newValue)) {
+                initiativeOrder[index].initiative = newValue;
+                // Re-render to re-sort the order
+                setTimeout(() => renderInitiativeOrder(), 100);
+            }
+        }
+
+        function removeInitiativeItem(index) {
+            if (confirm('Remove this combatant from initiative?')) {
+                // Adjust current turn index if necessary
+                if (index < currentTurnIndex) {
+                    currentTurnIndex--;
+                } else if (index === currentTurnIndex && currentTurnIndex >= initiativeOrder.length - 1) {
+                    currentTurnIndex = 0;
+                }
+                
+                initiativeOrder.splice(index, 1);
+                
+                // Ensure currentTurnIndex is valid
+                if (initiativeOrder.length === 0) {
+                    currentTurnIndex = 0;
+                } else if (currentTurnIndex >= initiativeOrder.length) {
+                    currentTurnIndex = 0;
+                }
+                
+                renderInitiativeOrder();
+            }
+        }
+
+        function nextTurn() {
+            if (initiativeOrder.length === 0) return;
+            
+            currentTurnIndex++;
+            if (currentTurnIndex >= initiativeOrder.length) {
+                currentTurnIndex = 0;
+                currentRound++;
+            }
+            
+            renderInitiativeOrder();
+            saveInitiativeState();
+        }
+
+        function previousTurn() {
+            if (initiativeOrder.length === 0) return;
+            
+            currentTurnIndex--;
+            if (currentTurnIndex < 0) {
+                currentTurnIndex = initiativeOrder.length - 1;
+                currentRound = Math.max(1, currentRound - 1);
+            }
+            
+            renderInitiativeOrder();
+            saveInitiativeState();
+        }
+
+        function clearInitiative() {
+            if (initiativeOrder.length === 0) return;
+            
+            if (confirm('Clear all combatants from initiative? This cannot be undone.')) {
+                initiativeOrder = [];
+                currentTurnIndex = 0;
+                currentRound = 1;
+                renderInitiativeOrder();
+                saveInitiativeState();
+            }
+        }
+
+        // Initiative state management
+        async function saveInitiativeState() {
+            if (!currentDirectory) return;
+            
+            const initiativeData = {
+                order: initiativeOrder,
+                currentTurnIndex: currentTurnIndex,
+                currentRound: currentRound,
+                timestamp: Date.now()
+            };
+            
+            try {
+                await window.electronAPI.saveInitiativeData(currentDirectory, initiativeData);
+                console.log('Initiative state saved');
+            } catch (error) {
+                console.error('Error saving initiative state:', error);
+            }
+        }
+
+        async function loadInitiativeState() {
+            if (!currentDirectory) return;
+            
+            try {
+                const initiativeData = await window.electronAPI.loadInitiativeData(currentDirectory);
+                if (initiativeData) {
+                    initiativeOrder = initiativeData.order || [];
+                    currentTurnIndex = initiativeData.currentTurnIndex || 0;
+                    currentRound = initiativeData.currentRound || 1;
+                    
+                    // Ensure currentTurnIndex is valid
+                    if (currentTurnIndex >= initiativeOrder.length) {
+                        currentTurnIndex = 0;
+                    }
+                    
+                    renderInitiativeOrder();
+                    console.log('Initiative state loaded');
+                }
+            } catch (error) {
+                console.error('Error loading initiative state:', error);
+            }
+        }
+
+        // Note functionality
+        function openNoteModal() {
+            const modal = document.getElementById('noteModal');
+            
+            // Clear previous values
+            document.getElementById('noteInitiative').value = '';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteDescription').value = '';
+            
+            modal.classList.add('active');
+        }
+
+        function closeNoteModal() {
+            const modal = document.getElementById('noteModal');
+            modal.classList.remove('active');
+        }
+
+        function addInitiativeNote(event) {
+            event.preventDefault();
+            
+            const initiative = parseInt(document.getElementById('noteInitiative').value);
+            const title = document.getElementById('noteTitle').value.trim();
+            const description = document.getElementById('noteDescription').value.trim();
+            
+            if (!title || isNaN(initiative)) {
+                alert('Please enter both initiative value and note title.');
+                return;
+            }
+            
+            const noteId = Date.now() + Math.random();
+            initiativeOrder.push({
+                id: noteId,
+                name: title,
+                type: 'note',
+                description: description || '',
+                icon: '📝',
+                initiative: initiative,
+                source: 'note'
+            });
+            
+            closeNoteModal();
+            renderInitiativeOrder();
+        }
+
+        // HP Modal functionality
+        let currentHPIndex = -1;
+
+        function openHPModal(index) {
+            if (!initiativeOrder[index] || initiativeOrder[index].type !== 'enemy') return;
+            
+            currentHPIndex = index;
+            const enemy = initiativeOrder[index];
+            
+            document.getElementById('hpModalTitle').textContent = `Adjust HP - ${enemy.name}`;
+            document.getElementById('currentHPDisplay').textContent = 
+                `Current HP: ${enemy.currentHP}/${enemy.maxHP}`;
+            document.getElementById('hpAmount').value = '';
+            
+            const modal = document.getElementById('hpModal');
+            modal.classList.add('active');
+            
+            // Focus on the input field
+            setTimeout(() => {
+                const input = document.getElementById('hpAmount');
+                input.focus();
+                
+                // Add keyboard shortcuts
+                input.onkeydown = function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            applyHPChange('heal');
+                        } else {
+                            applyHPChange('damage');
+                        }
+                    }
+                };
+            }, 100);
+        }
+
+        function closeHPModal() {
+            const modal = document.getElementById('hpModal');
+            modal.classList.remove('active');
+            currentHPIndex = -1;
+        }
+
+        function applyHPChange(type) {
+            if (currentHPIndex === -1 || !initiativeOrder[currentHPIndex]) return;
+            
+            const amount = parseInt(document.getElementById('hpAmount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid positive number.');
+                return;
+            }
+            
+            const changeAmount = type === 'damage' ? -amount : amount;
+            adjustHP(currentHPIndex, changeAmount);
+            closeHPModal();
+        }
+
+        // Update the adjustHP function to handle the modal case
+        function adjustHP(index, amount) {
+            if (!initiativeOrder[index] || initiativeOrder[index].type !== 'enemy') return;
+            
+            const enemy = initiativeOrder[index];
+            enemy.currentHP = Math.max(0, Math.min(enemy.maxHP, enemy.currentHP + amount));
+            
+            renderInitiativeOrder();
+            saveInitiativeState();
+        }
+
+        // Enemy Info Modal functionality
+        function getStatModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function formatModifier(modifier) {
+            return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+        }
+
+        function openEnemyInfoModal(index) {
+            if (!initiativeOrder[index] || initiativeOrder[index].type !== 'enemy') return;
+            
+            const enemy = initiativeOrder[index];
+            
+            // Set title
+            document.getElementById('enemyInfoTitle').textContent = `${enemy.name} - Character Sheet`;
+            
+            // Generate content with horizontal layout
+            const content = document.getElementById('enemyInfoContent');
+            
+            // Calculate HP percentage for color coding
+            const hpPercentage = (enemy.currentHP / enemy.maxHP) * 100;
+            let hpClass = '';
+            if (hpPercentage <= 25) hpClass = 'low-hp';
+            else if (hpPercentage <= 50) hpClass = 'half-hp';
+            
+            // Portrait styling
+            const portraitStyle = enemy.portrait ? 
+                `background-image: url('file://${enemy.portrait}'); background-size: cover; background-position: center;` : '';
+            
+            content.innerHTML = `
+                <div class="enemy-info-content">
+                    <div class="enemy-info-left">
+                        <div class="enemy-portrait-section">
+                            <div class="enemy-portrait-large" style="${portraitStyle}">
+                                ${enemy.portrait ? '' : '👹'}
+                            </div>
+                            <h2 class="enemy-name-large">${enemy.name}</h2>
+                            <div class="enemy-type-info">Initiative: ${enemy.initiative}</div>
+                        </div>
+                        
+                        <div class="enemy-vital-stats">
+                            <div class="vital-stat-row">
+                                <span class="vital-stat-label">Hit Points</span>
+                                <span class="vital-stat-value hp-display ${hpClass}">${enemy.currentHP}/${enemy.maxHP}</span>
+                            </div>
+                            <div class="vital-stat-row">
+                                <span class="vital-stat-label">Speed</span>
+                                <span class="vital-stat-value">${enemy.speed || 30} ft</span>
+                            </div>
+                        </div>
+                        
+                        <div class="enemy-stats-section">
+                            <h4 style="color: #e74c3c; text-align: center; margin-bottom: 15px;">ABILITY SCORES</h4>
+                            <div class="enemy-stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-name">STR</div>
+                                    <div class="stat-value">${enemy.strength || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.strength || 10))})</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-name">DEX</div>
+                                    <div class="stat-value">${enemy.dexterity || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.dexterity || 10))})</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-name">CON</div>
+                                    <div class="stat-value">${enemy.constitution || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.constitution || 10))})</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-name">INT</div>
+                                    <div class="stat-value">${enemy.intelligence || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.intelligence || 10))})</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-name">WIS</div>
+                                    <div class="stat-value">${enemy.wisdom || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.wisdom || 10))})</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-name">CHA</div>
+                                    <div class="stat-value">${enemy.charisma || 10}</div>
+                                    <div class="stat-modifier">(${formatModifier(getStatModifier(enemy.charisma || 10))})</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="enemy-info-right">
+                        <div class="enemy-description-section">
+                            <h4>Abilities & Actions</h4>
+                            ${enemy.description && enemy.description.trim() ? 
+                                `<div class="enemy-description-text">${enemy.description}</div>` : 
+                                `<div class="empty-description">No abilities or notes recorded for this enemy.</div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.getElementById('enemyInfoModal');
+            modal.classList.add('active');
+        }
+
+        function closeEnemyInfoModal() {
+            const modal = document.getElementById('enemyInfoModal');
+            modal.classList.remove('active');
+        }
+
+        // Event listeners for initiative tracker
+        document.getElementById('addPartyBtn').addEventListener('click', addPartyToInitiative);
+        document.getElementById('addEncounterToInitiativeBtn').addEventListener('click', addEncounterToInitiative);
+        document.getElementById('addNoteBtn').addEventListener('click', openNoteModal);
+        document.getElementById('clearInitiativeBtn').addEventListener('click', clearInitiative);
+        document.getElementById('nextTurnBtn').addEventListener('click', nextTurn);
+        document.getElementById('prevTurnBtn').addEventListener('click', previousTurn);
+
+        // Modal close functionality - click outside to close
+        window.addEventListener('click', function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
         // Close modal when clicking outside
         document.getElementById('portraitModal').addEventListener('click', function(e) {
             if (e.target === this) {
@@ -2444,17 +4681,32 @@
             }
         });
         
+        document.getElementById('enemyPortraitModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEnemyPortraitModal();
+            }
+        });
+        
+        document.getElementById('encounterSelectionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEncounterSelectionModal();
+            }
+        });
+        
         // Add keyboard support for portrait search
         document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('portraitModal');
+            const portraitModal = document.getElementById('portraitModal');
+            const enemyPortraitModal = document.getElementById('enemyPortraitModal');
+            const encounterModal = document.getElementById('encounterSelectionModal');
             const searchInput = document.getElementById('portraitSearchInput');
+            const enemySearchInput = document.getElementById('enemyPortraitSearchInput');
             
-            if (modal.classList.contains('active')) {
+            if (portraitModal.classList.contains('active')) {
                 if (e.key === 'Escape') {
                     closePortraitModal();
                 } else if (e.key === 'Enter') {
                     // Select first visible portrait option
-                    const firstVisible = document.querySelector('.portrait-option:not(.hidden)');
+                    const firstVisible = portraitModal.querySelector('.portrait-option:not(.hidden)');
                     if (firstVisible) {
                         firstVisible.click();
                     }
@@ -2462,6 +4714,30 @@
                     // Focus search input when pressing '/'
                     e.preventDefault();
                     searchInput.focus();
+                }
+            } else if (enemyPortraitModal.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeEnemyPortraitModal();
+                } else if (e.key === 'Enter') {
+                    // Select first visible portrait option
+                    const firstVisible = enemyPortraitModal.querySelector('.portrait-option:not(.hidden)');
+                    if (firstVisible) {
+                        firstVisible.click();
+                    }
+                } else if (e.key === '/' && e.target !== enemySearchInput) {
+                    // Focus search input when pressing '/'
+                    e.preventDefault();
+                    enemySearchInput.focus();
+                }
+            } else if (encounterModal.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeEncounterSelectionModal();
+                } else if (e.key === 'Enter') {
+                    // Select first encounter
+                    const firstEncounter = encounterModal.querySelector('.encounter-item');
+                    if (firstEncounter) {
+                        firstEncounter.click();
+                    }
                 }
             }
         });
@@ -2477,5 +4753,33 @@
         // Initialize dashboard on load
         initializeDashboard();
     </script>
+    <!-- Note Modal -->
+    <div id="noteModal" class="modal">
+        <div class="modal-content note-modal">
+            <div class="modal-header">
+                <h3>Add Initiative Note</h3>
+                <span class="close" onclick="closeNoteModal()">&times;</span>
+            </div>
+            <form id="noteForm" onsubmit="addInitiativeNote(event)">
+                <div class="form-group">
+                    <label for="noteInitiative">Initiative Value:</label>
+                    <input type="number" id="noteInitiative" min="0" max="50" required>
+                </div>
+                <div class="form-group">
+                    <label for="noteTitle">Note Title:</label>
+                    <input type="text" id="noteTitle" placeholder="e.g., Trap activates, Reinforcements arrive" required>
+                </div>
+                <div class="form-group">
+                    <label for="noteDescription">Description (optional):</label>
+                    <textarea id="noteDescription" placeholder="Additional details about this initiative event..." rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="primary-btn">Add Note</button>
+                    <button type="button" class="secondary-btn" onclick="closeNoteModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>

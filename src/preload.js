@@ -11,12 +11,27 @@ contextBridge.exposeInMainWorld("electronAPI", {
   clearDisplayElement: (elementType, elementPath) =>
     ipcRenderer.invoke("clear-display-element", elementType, elementPath),
   getDisplayState: () => ipcRenderer.invoke("get-display-state"),
-  
+
   // Party data methods
   savePartyData: (filePath, partyData) =>
     ipcRenderer.invoke("save-party-data", filePath, partyData),
-  loadPartyData: (filePath) =>
-    ipcRenderer.invoke("load-party-data", filePath),
+  loadPartyData: (filePath) => ipcRenderer.invoke("load-party-data", filePath),
+
+  // Encounter data methods
+  saveEncounterData: (filePath, encounterData) =>
+    ipcRenderer.invoke("save-encounter-data", filePath, encounterData),
+  loadEncounterData: (filePath) =>
+    ipcRenderer.invoke("load-encounter-data", filePath),
+  selectEncounterFile: (directoryPath) =>
+    ipcRenderer.invoke("select-encounter-file", directoryPath),
+  getEncounterFiles: (directoryPath) =>
+    ipcRenderer.invoke("get-encounter-files", directoryPath),
+
+  // Initiative data methods
+  saveInitiativeData: (directoryPath, initiativeData) =>
+    ipcRenderer.invoke("save-initiative-data", directoryPath, initiativeData),
+  loadInitiativeData: (directoryPath) =>
+    ipcRenderer.invoke("load-initiative-data", directoryPath),
 
   // Listen for display window events
   onUpdateDisplay: (callback) => ipcRenderer.on("update-display", callback),

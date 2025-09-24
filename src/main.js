@@ -366,11 +366,119 @@ ipcMain.handle("load-party-data", async (event, filePath) => {
     return JSON.parse(data);
   } catch (error) {
     // File doesn't exist or is invalid
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       return null; // File doesn't exist, that's okay
     }
     console.error("Error loading party data:", error);
     throw error;
+  }
+});
+
+// Handle saving encounter data
+ipcMain.handle("save-encounter-data", async (event, filePath, encounterData) => {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(encounterData, null, 2));
+    return true;
+  } catch (error) {
+    console.error("Error saving encounter data:", error);
+    throw error;
+  }
+});
+
+// Handle loading encounter data
+ipcMain.handle("load-encounter-data", async (event, filePath) => {
+  try {
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    // File doesn't exist or is invalid
+    if (error.code === "ENOENT") {
+      return null; // File doesn't exist, that's okay
+    }
+    console.error("Error loading encounter data:", error);
+    throw error;
+  }
+});
+
+// Handle encounter file selection
+ipcMain.handle("select-encounter-file", async (event, directoryPath) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ["openFile"],
+    defaultPath: directoryPath,
+    filters: [
+      { name: "Encounter Files", extensions: ["json"] },
+      { name: "All Files", extensions: ["*"] }
+    ]
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// Get list of encounter files in directory
+ipcMain.handle("get-encounter-files", async (event, directoryPath) => {
+  try {
+    const items = await fs.readdir(directoryPath, { withFileTypes: true });
+    const encounterFiles = [];
+    
+    for (const item of items) {
+      if (item.isFile() && item.name.endsWith('_encounter.json')) {
+        const filePath = path.join(directoryPath, item.name);
+        try {
+          // Try to read and parse the file to validate it's a proper encounter
+          const fileContent = await fs.readFile(filePath, 'utf8');
+          const encounterData = JSON.parse(fileContent);
+          
+          // Basic validation - check if it has the expected structure
+          if (encounterData.name !== undefined && Array.isArray(encounterData.enemies)) {
+            encounterFiles.push({
+              filename: item.name,
+              path: filePath,
+              name: encounterData.name,
+              enemyCount: encounterData.enemies.length,
+              lastModified: (await fs.stat(filePath)).mtime
+            });
+          }
+        } catch (error) {
+          // Skip invalid JSON files
+          console.log(`Skipping invalid encounter file: ${item.name}`);
+        }
+      }
+    }
+    
+    // Sort by last modified date (newest first)
+    encounterFiles.sort((a, b) => b.lastModified - a.lastModified);
+    
+    return encounterFiles;
+  } catch (error) {
+    console.error("Error getting encounter files:", error);
+    return [];
+  }
+});
+
+// Initiative tracking IPC handlers
+ipcMain.handle("save-initiative-data", async (event, directoryPath, initiativeData) => {
+  try {
+    const filePath = path.join(directoryPath, 'initiative.json');
+    await fs.writeFile(filePath, JSON.stringify(initiativeData, null, 2));
+    console.log("Initiative data saved to:", filePath);
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving initiative data:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("load-initiative-data", async (event, directoryPath) => {
+  try {
+    const filePath = path.join(directoryPath, 'initiative.json');
+    const data = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error loading initiative data:", error);
+    return null;
   }
 });
 

@@ -469,36 +469,54 @@
           centerY: 0.5,
         };
 
-        // Convert center coordinates (0-1) to percentage for transform-origin
-        const originX = zoom.centerX * 100;
-        const originY = zoom.centerY * 100;
+        // Calculate viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate grid cell size based on viewport and desired coverage
+        const baseGridSize = Math.min(viewportWidth / battlemapData.gridWidth, viewportHeight / battlemapData.gridHeight);
+        const cellSize = baseGridSize * zoom.scale;
+        
+        // Calculate total grid dimensions (including gaps)
+        const gap = 1; // Match dashboard implementation
+        const totalGridWidth = (cellSize * battlemapData.gridWidth) + (gap * (battlemapData.gridWidth - 1));
+        const totalGridHeight = (cellSize * battlemapData.gridHeight) + (gap * (battlemapData.gridHeight - 1));
+        
+        // Calculate camera offset to center the view on the specified center point
+        const centerOffsetX = (zoom.centerX * totalGridWidth) - (viewportWidth / 2);
+        const centerOffsetY = (zoom.centerY * totalGridHeight) - (viewportHeight / 2);
 
-        // Create battlemap display with zoom
+        // Create battlemap display matching dashboard implementation exactly
         let battlemapHTML = `
-          <div class="display-battlemap-container" style="
+          <div class="display-battlemap-viewport" style="
             width: 100vw;
             height: 100vh;
             overflow: hidden;
             position: relative;
+            background: #1a1a1a;
           ">
-            <div class="display-battlemap" style="
-              display: grid;
-              grid-template-columns: repeat(${battlemapData.gridWidth}, 1fr);
-              gap: 1px;
-              background-image: url('file://${battlemapData.backgroundImage}');
-              background-size: cover;
-              background-position: top left;
-              background-repeat: no-repeat;
-              background-attachment: local;
-              transform: scale(${zoom.scale});
-              transform-origin: ${originX}% ${originY}%;
-              transition: transform 0.3s ease-out;
-              border: 2px solid rgba(255, 255, 255, 0.1);
-              width: fit-content;
+            <div class="display-battlemap-camera" style="
+              position: absolute;
+              transform: translate(${-centerOffsetX}px, ${-centerOffsetY}px);
+              transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             ">
+              <div class="display-battlemap" style="
+                display: grid;
+                grid-template-columns: repeat(${battlemapData.gridWidth}, ${cellSize}px);
+                grid-template-rows: repeat(${battlemapData.gridHeight}, ${cellSize}px);
+                gap: ${gap}px;
+                background-image: url('file://${battlemapData.backgroundImage}');
+                background-size: cover;
+                background-position: top left;
+                background-repeat: no-repeat;
+                background-attachment: local;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                width: fit-content;
+                position: relative;
+              ">
         `;
 
-        // Generate cells with grid lines and tokens
+        // Generate cells with grid lines and tokens (matching dashboard implementation)
         for (let y = 0; y < battlemapData.gridHeight; y++) {
           for (let x = 0; x < battlemapData.gridWidth; x++) {
             const tokenKey = `${x}-${y}`;
@@ -507,17 +525,16 @@
             battlemapHTML += `
               <div class="display-battlemap-cell" style="
                 aspect-ratio: 1;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                background: rgba(255, 255, 255, 0.02);
+                background: rgba(52, 73, 94, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.1);
                 position: relative;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                min-height: ${Math.max(30, 60 / zoom.scale)}px;
               ">
             `;
 
-            if (token) {
+            if (token && !token.hidden) {
               const tokenStyle = token.portrait
                 ? `background-image: url('file://${token.portrait}'); background-size: cover; background-position: center;`
                 : `background: linear-gradient(45deg, #3498db, #2980b9); color: white; display: flex; align-items: center; justify-content: center;`;
@@ -528,6 +545,10 @@
                 battlemapData.zoom.lastMovedToken &&
                 battlemapData.zoom.lastMovedToken.x === x &&
                 battlemapData.zoom.lastMovedToken.y === y;
+
+              // Scale font size based on cell size for better visibility
+              const tokenFontSize = Math.max(12, cellSize * 0.2);
+              const nameFontSize = Math.max(8, cellSize * 0.12);
 
               battlemapHTML += `
                 <div class="display-token ${
@@ -540,7 +561,7 @@
                     isLastMoved ? "4px solid #f39c12" : "3px solid #fff"
                   };
                   ${tokenStyle}
-                  font-size: max(1.2vw, 12px);
+                  font-size: ${tokenFontSize}px;
                   font-weight: bold;
                   position: relative;
                   box-shadow: ${
@@ -557,7 +578,7 @@
                   ${!token.portrait ? token.name.charAt(0).toUpperCase() : ""}
                   <div class="display-token-name" style="
                     position: absolute;
-                    bottom: -30px;
+                    bottom: -${Math.max(20, cellSize * 0.3)}px;
                     left: 50%;
                     transform: translateX(-50%);
                     background: ${
@@ -566,12 +587,15 @@
                         : "rgba(0, 0, 0, 0.8)"
                     };
                     color: white;
-                    padding: 3px 10px;
-                    border-radius: 12px;
-                    font-size: max(0.8vw, 8px);
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: ${nameFontSize}px;
                     white-space: nowrap;
                     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
                     font-weight: bold;
+                    max-width: ${cellSize * 1.8}px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                   ">${token.name}</div>
                 </div>
               `;
@@ -582,6 +606,7 @@
         }
 
         battlemapHTML += `
+              </div>
             </div>
             <style>
               @keyframes pulse-highlight {
@@ -598,7 +623,10 @@
 
         console.log(
           "Battlemap displayed successfully with zoom level:",
-          zoom.scale
+          zoom.scale,
+          "centered at:",
+          zoom.centerX,
+          zoom.centerY
         );
       }
 

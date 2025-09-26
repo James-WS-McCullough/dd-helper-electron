@@ -2149,12 +2149,6 @@
             flex-wrap: wrap;
         }
 
-        .grid-dimension-mode {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
         .grid-dimension-controls {
             display: flex;
             align-items: center;
@@ -2179,14 +2173,6 @@
             color: #3498db;
         }
 
-        #gridSizeMode {
-            padding: 5px 10px;
-            border: 1px solid #34495e;
-            border-radius: 4px;
-            background: #2c3e50;
-            color: #ecf0f1;
-        }
-
         .zoom-controls {
             display: flex;
             gap: 8px;
@@ -2197,6 +2183,124 @@
         .zoom-controls button {
             font-size: 12px;
             padding: 6px 12px;
+        }
+
+        .focus-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: 15px;
+        }
+
+        .focus-controls button {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        /* Character Focus Modal */
+        .character-focus-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .character-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .character-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(2px);
+        }
+
+        .character-portrait-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .character-info {
+            flex: 1;
+        }
+
+        .character-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .character-position {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Battlemap Context Menu */
+        .battlemap-context-menu {
+            position: fixed;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 0;
+            z-index: 1000;
+            min-width: 160px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+
+        .context-menu-item:active {
+            background: rgba(52, 152, 219, 0.5);
+        }
+
+        .context-menu-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 4px 0;
         }
 
         .grid-config label {
@@ -2292,6 +2396,16 @@
             border: 3px solid #f39c12;
             box-shadow: 0 0 15px rgba(243, 156, 18, 0.8);
             animation: pulse-move 1s ease-in-out infinite alternate;
+        }
+
+        .battlemap-token.hidden-token {
+            opacity: 0.3;
+            filter: grayscale(50%);
+        }
+
+        .battlemap-token.hidden-token .token-name {
+            opacity: 0.7;
+            font-style: italic;
         }
 
         @keyframes pulse-move {
@@ -2458,14 +2572,6 @@
                     </div>
                     <div class="battlemap-config">
                         <div class="grid-config">
-                            <div class="grid-dimension-mode">
-                                <label>Grid Sizing:</label>
-                                <select id="gridSizeMode" onchange="updateGridSizeMode()">
-                                    <option value="manual">Manual (Width × Height)</option>
-                                    <option value="width-based">Image-Based (Set Width)</option>
-                                    <option value="height-based">Image-Based (Set Height)</option>
-                                </select>
-                            </div>
                             <div class="grid-dimension-controls">
                                 <div class="grid-size-input">
                                     <label for="gridWidth">Grid Width:</label>
@@ -2473,18 +2579,23 @@
                                 </div>
                                 <div class="grid-size-input">
                                     <label for="gridHeight">Grid Height:</label>
-                                    <input type="number" id="gridHeight" min="5" max="50" value="15" onchange="updateBattlemapGrid()">
+                                    <input type="number" id="gridHeight" min="5" max="50" value="15" disabled readonly>
+                                    <small style="color: #bbb; margin-left: 8px;">(Auto from image)</small>
                                 </div>
-                                <div id="aspectRatioInfo" class="aspect-ratio-info" style="display: none;">
-                                    <small>Calculated from image: <span id="imageRatio">--</span></small>
+                                <div id="aspectRatioInfo" class="aspect-ratio-info">
+                                    <small>Image ratio: <span id="imageRatio">Select background first</span></small>
                                 </div>
                             </div>
                             <button id="saveBattlemapBtn" class="battlemap-action-btn">💾 Save Map</button>
                             <button id="toggleBattlemapDisplay" class="battlemap-action-btn">📺 Show on Display</button>
                             <div class="zoom-controls">
-                                <button id="zoomOutBtn" class="battlemap-action-btn">🔍- Zoom Out</button>
-                                <button id="resetZoomBtn" class="battlemap-action-btn">🎯 Reset View</button>
-                                <button id="zoomInBtn" class="battlemap-action-btn">🔍+ Zoom In</button>
+                                <button id="zoomOutBtn" class="battlemap-action-btn" onclick="zoomOut()">🔍- Zoom Out</button>
+                                <button id="resetZoomBtn" class="battlemap-action-btn" onclick="resetZoom()">🎯 Reset View</button>
+                                <button id="zoomInBtn" class="battlemap-action-btn" onclick="zoomIn()">🔍+ Zoom In</button>
+                            </div>
+                            <div class="focus-controls">
+                                <button class="battlemap-action-btn" onclick="openCharacterFocusModal()">🎯 Focus Character</button>
+                                <button class="battlemap-action-btn" onclick="panCenter()">📍 Center Map</button>
                             </div>
                         </div>
                     </div>
@@ -2716,6 +2827,26 @@
                 <!-- Background options will be populated dynamically -->
             </div>
         </div>
+    </div>
+
+    <!-- Character Focus Modal -->
+    <div id="characterFocusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Focus on Character</h3>
+                <button class="close" onclick="closeCharacterFocusModal()">✕</button>
+            </div>
+            <div class="character-focus-content">
+                <div class="character-list" id="characterFocusList">
+                    <!-- Characters will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battlemap Context Menu -->
+    <div id="battlemapContextMenu" class="battlemap-context-menu">
+        <!-- Context menu items will be populated dynamically -->
     </div>
 
     <script>
@@ -5093,6 +5224,12 @@
                         const tokenElement = document.createElement('div');
                         tokenElement.className = 'battlemap-token';
                         
+                        // Apply transparency for hidden tokens
+                        if (token.hidden) {
+                            tokenElement.style.opacity = '0.3';
+                            tokenElement.classList.add('hidden-token');
+                        }
+                        
                         if (token.portrait) {
                             tokenElement.style.backgroundImage = `url('file://${token.portrait}')`;
                         } else {
@@ -5105,16 +5242,16 @@
                         nameElement.textContent = token.name;
                         tokenElement.appendChild(nameElement);
                         
-                        // Right-click to remove token
+                        // Prevent default right-click context menu and handle our custom one
                         tokenElement.addEventListener('contextmenu', (e) => {
                             e.preventDefault();
-                            removeTokenFromBattlemap(x, y);
+                            showBattlemapContextMenu(e, x, y, token);
                         });
                         
-                        // Left-click to enter move mode
+                        // Left-click also shows context menu (replaces move mode behavior)
                         tokenElement.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            enterTokenMoveMode(x, y, token);
+                            showBattlemapContextMenu(e, x, y, token);
                         });
                         
                         // Apply move mode styling if this token is selected
@@ -5126,14 +5263,21 @@
                         cell.appendChild(tokenElement);
                     }
                     
-                    // Click to add token (only if empty) or move existing token
-                    cell.addEventListener('click', () => {
+                    // Right-click context menu for cells
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        showBattlemapContextMenu(e, x, y, token);
+                    });
+                    
+                    // Left-click also shows context menu (replaces add token/move token behavior)
+                    cell.addEventListener('click', (e) => {
+                        // Only show context menu if not in move mode
                         if (battlemapData.moveMode.active) {
                             // In move mode - move the selected token to this position
                             moveTokenToPosition(x, y);
-                        } else if (!token) {
-                            // Normal mode - open token modal for empty cells
-                            openBattlemapTokenModal(x, y);
+                        } else {
+                            // Show context menu instead of directly opening token modal
+                            showBattlemapContextMenu(e, x, y, token);
                         }
                     });
                     
@@ -5166,34 +5310,30 @@
         }
 
         function updateBattlemapGrid() {
-            const mode = document.getElementById('gridSizeMode').value;
-            
-            if (mode !== 'manual' && battlemapData.imageAspectRatio) {
-                // In image-based mode, recalculate the other dimension
+            // Always use width-based mode with auto-calculated height
+            if (battlemapData.imageAspectRatio) {
+                // Image-based mode - calculate height from width and aspect ratio
                 updateGridDimensionsFromImage();
-                return;
-            }
-            
-            // Manual mode - use both inputs directly
-            const width = parseInt(document.getElementById('gridWidth').value);
-            const height = parseInt(document.getElementById('gridHeight').value);
-            
-            if (width >= 5 && width <= 50 && height >= 5 && height <= 50) {
-                // Remove tokens that are outside new grid bounds
-                const newTokens = {};
-                Object.entries(battlemapData.tokens).forEach(([key, token]) => {
-                    const [x, y] = key.split('-').map(Number);
-                    if (x < width && y < height) {
-                        newTokens[key] = token;
-                    }
-                });
+            } else {
+                // No image yet - use manual width value
+                const width = parseInt(document.getElementById('gridWidth').value);
                 
-                battlemapData.gridWidth = width;
-                battlemapData.gridHeight = height;
-                battlemapData.tokens = newTokens;
-                
-                generateBattlemapGrid();
-                saveBattlemapData();
+                if (width >= 5 && width <= 50) {
+                    // Remove tokens that are outside new grid bounds
+                    const newTokens = {};
+                    Object.entries(battlemapData.tokens).forEach(([key, token]) => {
+                        const [x, y] = key.split('-').map(Number);
+                        if (x < width && y < battlemapData.gridHeight) {
+                            newTokens[key] = token;
+                        }
+                    });
+                    
+                    battlemapData.gridWidth = width;
+                    battlemapData.tokens = newTokens;
+                    
+                    generateBattlemapGrid();
+                    saveBattlemapData();
+                }
             }
         }
 
@@ -5281,62 +5421,32 @@
                 // Update aspect ratio display
                 document.getElementById('imageRatio').textContent = `${this.naturalWidth}×${this.naturalHeight} (${aspectRatio.toFixed(2)}:1)`;
                 
-                // Recalculate grid dimensions based on current mode
+                // Always recalculate grid dimensions based on width and image aspect ratio
                 updateGridDimensionsFromImage();
             };
             img.src = `file://${imagePath}`;
         }
 
         function updateGridDimensionsFromImage() {
-            const mode = document.getElementById('gridSizeMode').value;
             const aspectRatio = battlemapData.imageAspectRatio;
             
-            if (!aspectRatio || mode === 'manual') {
+            if (!aspectRatio) {
                 document.getElementById('aspectRatioInfo').style.display = 'none';
+                document.getElementById('imageRatio').textContent = 'Select background first';
                 return;
             }
             
-            document.getElementById('aspectRatioInfo').style.display = 'block';
+            // Always use width-based mode - user sets width, calculate height from aspect ratio
+            const width = parseInt(document.getElementById('gridWidth').value);
+            const calculatedHeight = Math.max(5, Math.min(50, Math.round(width / aspectRatio)));
             
-            if (mode === 'width-based') {
-                // User sets width, calculate height from aspect ratio
-                const width = parseInt(document.getElementById('gridWidth').value);
-                const calculatedHeight = Math.round(width / aspectRatio);
-                
-                battlemapData.gridHeight = calculatedHeight;
-                document.getElementById('gridHeight').value = calculatedHeight;
-                document.getElementById('gridHeight').disabled = true;
-                document.getElementById('gridWidth').disabled = false;
-                
-            } else if (mode === 'height-based') {
-                // User sets height, calculate width from aspect ratio  
-                const height = parseInt(document.getElementById('gridHeight').value);
-                const calculatedWidth = Math.round(height * aspectRatio);
-                
-                battlemapData.gridWidth = calculatedWidth;
-                document.getElementById('gridWidth').value = calculatedWidth;
-                document.getElementById('gridWidth').disabled = true;
-                document.getElementById('gridHeight').disabled = false;
-            }
+            battlemapData.gridHeight = calculatedHeight;
+            document.getElementById('gridHeight').value = calculatedHeight;
             
             // Update the data and regenerate grid
             battlemapData.gridWidth = parseInt(document.getElementById('gridWidth').value);
-            battlemapData.gridHeight = parseInt(document.getElementById('gridHeight').value);
+            battlemapData.gridHeight = calculatedHeight;
             generateBattlemapGrid();
-        }
-
-        function updateGridSizeMode() {
-            const mode = document.getElementById('gridSizeMode').value;
-            
-            if (mode === 'manual') {
-                // Enable both inputs
-                document.getElementById('gridWidth').disabled = false;
-                document.getElementById('gridHeight').disabled = false;
-                document.getElementById('aspectRatioInfo').style.display = 'none';
-            } else if (battlemapData.imageAspectRatio) {
-                // Image-based sizing - recalculate
-                updateGridDimensionsFromImage();
-            }
         }
 
         function closeBattlemapBackgroundModal() {
@@ -5421,8 +5531,8 @@
                 name: selectedToken.name
             };
             
-            // Auto-zoom to moved token on display if active
-            if (battlemapData.displayActive) {
+            // Auto-zoom to moved token on display if active and token is visible
+            if (battlemapData.displayActive && !selectedToken.hidden) {
                 zoomToToken(newX, newY);
             }
             
@@ -5443,14 +5553,24 @@
 
         // Zoom Control Functions
         function zoomIn() {
-            battlemapData.displayZoom.scale = Math.min(battlemapData.displayZoom.scale * 1.5, 4.0);
+            const previousScale = battlemapData.displayZoom.scale;
+            battlemapData.displayZoom.scale = Math.min(battlemapData.displayZoom.scale * 1.2, 4.0); // Reduced from 1.5 to 1.2
+            
+            // Maintain center point when zooming
+            maintainZoomCenter(previousScale, battlemapData.displayZoom.scale);
+            
             if (battlemapData.displayActive) {
                 showBattlemapOnDisplay();
             }
         }
 
         function zoomOut() {
-            battlemapData.displayZoom.scale = Math.max(battlemapData.displayZoom.scale / 1.5, 0.5);
+            const previousScale = battlemapData.displayZoom.scale;
+            battlemapData.displayZoom.scale = Math.max(battlemapData.displayZoom.scale / 1.2, 0.3); // Reduced from 1.5 to 1.2
+            
+            // Maintain center point when zooming
+            maintainZoomCenter(previousScale, battlemapData.displayZoom.scale);
+            
             if (battlemapData.displayActive) {
                 showBattlemapOnDisplay();
             }
@@ -5460,16 +5580,293 @@
             battlemapData.displayZoom.scale = 1.0;
             battlemapData.displayZoom.centerX = 0.5;
             battlemapData.displayZoom.centerY = 0.5;
+            battlemapData.displayZoom.lastMovedToken = null;
+            
             if (battlemapData.displayActive) {
                 showBattlemapOnDisplay();
             }
         }
 
+        function maintainZoomCenter(oldScale, newScale) {
+            // This function ensures that when zooming, the current center point 
+            // remains at the center of the viewport
+            // For now, we keep the center the same, but this could be enhanced
+            // to account for mouse position or other factors
+        }
+
         function zoomToToken(x, y) {
             // Calculate center position (0 to 1) based on token position
+            // Add 0.5 to center on the token rather than its corner
             battlemapData.displayZoom.centerX = (x + 0.5) / battlemapData.gridWidth;
             battlemapData.displayZoom.centerY = (y + 0.5) / battlemapData.gridHeight;
-            battlemapData.displayZoom.scale = 2.0; // Zoom in to show detail
+            
+            // Don't change zoom level - preserve current zoom
+            // battlemapData.displayZoom.scale = Math.min(2.5, battlemapData.displayZoom.scale * 1.2);
+            
+            console.log(`Zooming to token at ${x},${y} - Center: ${battlemapData.displayZoom.centerX.toFixed(2)}, ${battlemapData.displayZoom.centerY.toFixed(2)}, Scale: ${battlemapData.displayZoom.scale.toFixed(2)}`);
+        }
+
+        function focusOnCharacter(characterName) {
+            // Find the character's position on the battlemap
+            for (const [key, token] of Object.entries(battlemapData.tokens)) {
+                if (token.name.toLowerCase().includes(characterName.toLowerCase())) {
+                    const [x, y] = key.split('-').map(Number);
+                    zoomToToken(x, y);
+                    
+                    // Mark this as the last moved token for highlighting
+                    battlemapData.displayZoom.lastMovedToken = { x, y, name: token.name };
+                    
+                    if (battlemapData.displayActive) {
+                        showBattlemapOnDisplay();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Add mouse wheel zoom support (you can expand this later)
+        function setupBattlemapZoomControls() {
+            // This would be called after the battlemap grid is generated
+            // Could add mouse wheel support, drag to pan, etc.
+        }
+
+        function panCenter() {
+            battlemapData.displayZoom.centerX = 0.5;
+            battlemapData.displayZoom.centerY = 0.5;
+            
+            if (battlemapData.displayActive) {
+                showBattlemapOnDisplay();
+            }
+        }
+
+        // Character Focus Functions
+        function openCharacterFocusModal() {
+            populateCharacterFocusList();
+            const modal = document.getElementById('characterFocusModal');
+            modal.classList.add('active');
+        }
+
+        function closeCharacterFocusModal() {
+            const modal = document.getElementById('characterFocusModal');
+            modal.classList.remove('active');
+        }
+
+        function populateCharacterFocusList() {
+            const list = document.getElementById('characterFocusList');
+            const characters = [];
+
+            // Collect all tokens from the battlemap
+            Object.entries(battlemapData.tokens).forEach(([key, token]) => {
+                const [x, y] = key.split('-').map(Number);
+                characters.push({
+                    name: token.name,
+                    portrait: token.portrait,
+                    x: x,
+                    y: y,
+                    position: `${x}, ${y}`
+                });
+            });
+
+            if (characters.length === 0) {
+                list.innerHTML = '<div class="empty-state">No characters on the battlemap to focus on.</div>';
+                return;
+            }
+
+            // Sort by name
+            characters.sort((a, b) => a.name.localeCompare(b.name));
+
+            list.innerHTML = characters.map(char => {
+                const portraitStyle = char.portrait ? 
+                    `background-image: url('file://${char.portrait}');` : 
+                    '';
+                    
+                return `
+                    <div class="character-item" onclick="focusOnCharacterAndClose('${char.name}')">
+                        <div class="character-portrait-small" style="${portraitStyle}">
+                            ${!char.portrait ? char.name.charAt(0).toUpperCase() : ''}
+                        </div>
+                        <div class="character-info">
+                            <div class="character-name">${char.name}</div>
+                            <div class="character-position">Position: ${char.position}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function focusOnCharacterAndClose(characterName) {
+            const success = focusOnCharacter(characterName);
+            if (success) {
+                closeCharacterFocusModal();
+            }
+        }
+
+        // Battlemap Context Menu Functions
+        let contextMenuData = { x: 0, y: 0, token: null };
+
+        function showBattlemapContextMenu(event, x, y, token) {
+            const contextMenu = document.getElementById('battlemapContextMenu');
+            contextMenuData = { x, y, token };
+            
+            // Generate context menu items based on cell state
+            let menuItems = [];
+            
+            // Focus here option (always available)
+            menuItems.push({
+                icon: '🎯',
+                text: 'Focus Here',
+                action: 'focusHere'
+            });
+            
+            if (token) {
+                // Cell has a token
+                menuItems.push({
+                    icon: '🏃‍♂️',
+                    text: 'Move',
+                    action: 'moveToken'
+                });
+                
+                // Add Hide/Show option based on current visibility
+                if (token.hidden) {
+                    menuItems.push({
+                        icon: '👁️',
+                        text: 'Show Token',
+                        action: 'showToken'
+                    });
+                } else {
+                    menuItems.push({
+                        icon: '👁️‍🗨️',
+                        text: 'Hide Token',
+                        action: 'hideToken'
+                    });
+                }
+                
+                menuItems.push({
+                    icon: '🗑️',
+                    text: 'Remove Token',
+                    action: 'removeToken'
+                });
+            } else {
+                // Empty cell
+                menuItems.push({
+                    icon: '👤',
+                    text: 'Add Token',
+                    action: 'addToken'
+                });
+            }
+            
+            // Generate menu HTML
+            contextMenu.innerHTML = menuItems.map(item => `
+                <div class="context-menu-item" onclick="handleContextMenuAction('${item.action}')">
+                    <span class="context-menu-icon">${item.icon}</span>
+                    <span>${item.text}</span>
+                </div>
+            `).join('');
+            
+            // Position the context menu
+            const menuRect = contextMenu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            let menuX = event.clientX;
+            let menuY = event.clientY;
+            
+            // Adjust position if menu would go off-screen
+            if (menuX + 160 > viewportWidth) { // 160px is min-width of menu
+                menuX = event.clientX - 160;
+            }
+            if (menuY + menuItems.length * 40 > viewportHeight) { // Approximate menu height
+                menuY = event.clientY - (menuItems.length * 40);
+            }
+            
+            contextMenu.style.left = menuX + 'px';
+            contextMenu.style.top = menuY + 'px';
+            contextMenu.style.display = 'block';
+            
+            // Close menu when clicking elsewhere
+            setTimeout(() => {
+                document.addEventListener('click', hideBattlemapContextMenu, { once: true });
+            }, 10);
+        }
+
+        function hideBattlemapContextMenu() {
+            const contextMenu = document.getElementById('battlemapContextMenu');
+            contextMenu.style.display = 'none';
+        }
+
+        function handleContextMenuAction(action) {
+            const { x, y, token } = contextMenuData;
+            
+            switch (action) {
+                case 'focusHere':
+                    focusOnTile(x, y);
+                    break;
+                case 'addToken':
+                    openBattlemapTokenModal(x, y);
+                    break;
+                case 'moveToken':
+                    enterTokenMoveMode(x, y, token);
+                    break;
+                case 'removeToken':
+                    removeTokenFromBattlemap(x, y);
+                    break;
+                case 'hideToken':
+                    // Hide the token
+                    const tokenToHide = battlemapData.tokens[`${x}-${y}`];
+                    if (tokenToHide) {
+                        tokenToHide.hidden = true;
+                        saveBattlemapData(); // Save the changes
+                        generateBattlemapGrid();
+                        if (battlemapData.displayActive) {
+                            showBattlemapOnDisplay(); // Update display to hide the token
+                        }
+                    }
+                    break;
+                case 'showToken':
+                    // Show the token
+                    const tokenToShow = battlemapData.tokens[`${x}-${y}`];
+                    if (tokenToShow) {
+                        tokenToShow.hidden = false;
+                        saveBattlemapData(); // Save the changes
+                        generateBattlemapGrid();
+                        if (battlemapData.displayActive) {
+                            showBattlemapOnDisplay(); // Update display to show the token
+                        }
+                    }
+                    break;
+            }
+            
+            hideBattlemapContextMenu();
+        }
+
+        function focusOnTile(x, y) {
+            // Calculate center position (0 to 1) based on tile position
+            battlemapData.displayZoom.centerX = (x + 0.5) / battlemapData.gridWidth;
+            battlemapData.displayZoom.centerY = (y + 0.5) / battlemapData.gridHeight;
+            
+            // Don't change zoom level - preserve current zoom
+            // battlemapData.displayZoom.scale = Math.min(2.0, Math.max(1.5, battlemapData.displayZoom.scale));
+            
+            // Check if there's a visible token at this position
+            const tokenAtPosition = battlemapData.tokens[`${x}-${y}`];
+            if (tokenAtPosition && !tokenAtPosition.hidden) {
+                // Set lastMovedToken to highlight the focused token
+                battlemapData.displayZoom.lastMovedToken = {
+                    x: x,
+                    y: y,
+                    name: tokenAtPosition.name
+                };
+            } else {
+                // Clear any previous lastMovedToken highlight
+                battlemapData.displayZoom.lastMovedToken = null;
+            }
+            
+            if (battlemapData.displayActive) {
+                showBattlemapOnDisplay();
+            }
+            
+            console.log(`Focused on tile ${x},${y} - Center: ${battlemapData.displayZoom.centerX.toFixed(2)}, ${battlemapData.displayZoom.centerY.toFixed(2)}, Zoom: ${battlemapData.displayZoom.scale.toFixed(2)}`);
         }
 
         function exitTokenMoveMode() {
@@ -5480,12 +5877,46 @@
             console.log('Exiting move mode');
         }
 
-        // ESC key listener for canceling move mode
+        // ESC key listener for canceling move mode and closing modals
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && battlemapData.moveMode.active) {
-                exitTokenMoveMode();
-                generateBattlemapGrid();
+            if (e.key === 'Escape') {
+                if (battlemapData.moveMode.active) {
+                    exitTokenMoveMode();
+                    generateBattlemapGrid();
+                } else {
+                    // Close any open battlemap modals and context menu
+                    hideBattlemapContextMenu();
+                    closeCharacterFocusModal();
+                    closeBattlemapTokenModal();
+                    closeBattlemapBackgroundModal();
+                }
             }
+            
+            // Zoom shortcuts when battlemap tab is active
+            if (document.getElementById('battlemapTab').classList.contains('active')) {
+                if (e.key === '=' || e.key === '+') {
+                    e.preventDefault();
+                    zoomIn();
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    zoomOut();
+                } else if (e.key === '0') {
+                    e.preventDefault();
+                    resetZoom();
+                }
+            }
+        });
+
+        // Initialize zoom button event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Make sure zoom buttons work
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const resetZoomBtn = document.getElementById('resetZoomBtn');
+            
+            if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+            if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+            if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
         });
 
         // Battlemap Display Toggle
@@ -5694,13 +6125,12 @@
             const { x, y } = battlemapModalPosition;
             const tokenKey = `${x}-${y}`;
             
-            battlemapData.tokens[tokenKey] = {
-                name: name,
-                portrait: portraitPath,
-                type: type
-            };
-            
-            generateBattlemapGrid();
+                    battlemapData.tokens[tokenKey] = {
+                        name: name,
+                        portrait: portraitPath,
+                        type: type,
+                        hidden: true // Tokens are hidden by default
+                    };            generateBattlemapGrid();
             saveBattlemapData();
             closeBattlemapTokenModal();
             

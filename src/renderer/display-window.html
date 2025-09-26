@@ -472,19 +472,27 @@
         // Calculate viewport dimensions
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
+
         // Calculate grid cell size based on viewport and desired coverage
-        const baseGridSize = Math.min(viewportWidth / battlemapData.gridWidth, viewportHeight / battlemapData.gridHeight);
+        const baseGridSize = Math.min(
+          viewportWidth / battlemapData.gridWidth,
+          viewportHeight / battlemapData.gridHeight
+        );
         const cellSize = baseGridSize * zoom.scale;
-        
+
         // Calculate total grid dimensions (including gaps)
         const gap = 1; // Match dashboard implementation
-        const totalGridWidth = (cellSize * battlemapData.gridWidth) + (gap * (battlemapData.gridWidth - 1));
-        const totalGridHeight = (cellSize * battlemapData.gridHeight) + (gap * (battlemapData.gridHeight - 1));
-        
+        const totalGridWidth =
+          cellSize * battlemapData.gridWidth +
+          gap * (battlemapData.gridWidth - 1);
+        const totalGridHeight =
+          cellSize * battlemapData.gridHeight +
+          gap * (battlemapData.gridHeight - 1);
+
         // Calculate camera offset to center the view on the specified center point
-        const centerOffsetX = (zoom.centerX * totalGridWidth) - (viewportWidth / 2);
-        const centerOffsetY = (zoom.centerY * totalGridHeight) - (viewportHeight / 2);
+        const centerOffsetX = zoom.centerX * totalGridWidth - viewportWidth / 2;
+        const centerOffsetY =
+          zoom.centerY * totalGridHeight - viewportHeight / 2;
 
         // Create battlemap display matching dashboard implementation exactly
         let battlemapHTML = `
@@ -502,10 +510,16 @@
             ">
               <div class="display-battlemap" style="
                 display: grid;
-                grid-template-columns: repeat(${battlemapData.gridWidth}, ${cellSize}px);
-                grid-template-rows: repeat(${battlemapData.gridHeight}, ${cellSize}px);
+                grid-template-columns: repeat(${
+                  battlemapData.gridWidth
+                }, ${cellSize}px);
+                grid-template-rows: repeat(${
+                  battlemapData.gridHeight
+                }, ${cellSize}px);
                 gap: ${gap}px;
-                background-image: url('file://${battlemapData.backgroundImage}');
+                background-image: url('file://${
+                  battlemapData.backgroundImage
+                }');
                 background-size: cover;
                 background-position: top left;
                 background-repeat: no-repeat;
@@ -522,6 +536,30 @@
             const tokenKey = `${x}-${y}`;
             const token = battlemapData.tokens[tokenKey];
 
+            // Check if this cell is within movement radius
+            let radiusStyle = "";
+            if (
+              battlemapData.movementRadius &&
+              battlemapData.movementRadius.active
+            ) {
+              const centerX = battlemapData.movementRadius.centerX;
+              const centerY = battlemapData.movementRadius.centerY;
+              const radius = battlemapData.movementRadius.radius;
+
+              // Calculate distance using Manhattan distance (grid movement)
+              const distance = Math.abs(x - centerX) + Math.abs(y - centerY);
+
+              if (distance <= radius) {
+                if (x === centerX && y === centerY) {
+                  // Center cell
+                  radiusStyle = `background: rgba(52, 152, 219, 0.6); border: 2px solid rgba(52, 152, 219, 0.8);`;
+                } else {
+                  // Movement radius cell
+                  radiusStyle = `background: rgba(52, 152, 219, 0.3); border: 1px solid rgba(52, 152, 219, 0.5);`;
+                }
+              }
+            }
+
             battlemapHTML += `
               <div class="display-battlemap-cell" style="
                 aspect-ratio: 1;
@@ -531,6 +569,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                ${radiusStyle}
               ">
             `;
 

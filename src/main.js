@@ -464,6 +464,55 @@ ipcMain.handle("get-encounter-files", async (event, directoryPath) => {
   }
 });
 
+// Get list of battlemap files in directory
+ipcMain.handle("get-battlemap-files", async (event, directoryPath) => {
+  try {
+    const items = await fs.readdir(directoryPath, { withFileTypes: true });
+    const battlemapFiles = [];
+
+    for (const item of items) {
+      if (item.isFile() && item.name.endsWith("_battlemap.json")) {
+        const filePath = path.join(directoryPath, item.name);
+        try {
+          // Try to read and parse the file to validate it's a proper battlemap
+          const fileContent = await fs.readFile(filePath, "utf8");
+          const battlemapData = JSON.parse(fileContent);
+
+          // Basic validation - check if it has the expected structure
+          if (
+            battlemapData.gridWidth !== undefined &&
+            battlemapData.gridHeight !== undefined
+          ) {
+            const tokenCount = battlemapData.tokens ? Object.keys(battlemapData.tokens).length : 0;
+            
+            battlemapFiles.push({
+              filename: item.name,
+              path: filePath,
+              name: item.name.replace('_battlemap.json', ''),
+              gridWidth: battlemapData.gridWidth,
+              gridHeight: battlemapData.gridHeight,
+              backgroundImage: battlemapData.backgroundImage,
+              tokenCount: tokenCount,
+              lastModified: (await fs.stat(filePath)).mtime,
+            });
+          }
+        } catch (error) {
+          // Skip invalid JSON files
+          console.log(`Skipping invalid battlemap file: ${item.name}`);
+        }
+      }
+    }
+
+    // Sort by last modified date (newest first)
+    battlemapFiles.sort((a, b) => b.lastModified - a.lastModified);
+
+    return battlemapFiles;
+  } catch (error) {
+    console.error("Error getting battlemap files:", error);
+    return [];
+  }
+});
+
 // Initiative tracking IPC handlers
 ipcMain.handle(
   "save-initiative-data",
@@ -494,9 +543,11 @@ ipcMain.handle("load-initiative-data", async (event, directoryPath) => {
 // Battlemap IPC handlers
 ipcMain.handle(
   "save-battlemap-data",
-  async (event, directoryPath, battlemapData) => {
+  async (event, directoryPath, battlemapData, fileName = null) => {
     try {
-      const filePath = path.join(directoryPath, "battlemap.json");
+      const defaultFileName = "default_battlemap.json";
+      const actualFileName = fileName || defaultFileName;
+      const filePath = path.join(directoryPath, actualFileName);
       await fs.writeFile(filePath, JSON.stringify(battlemapData, null, 2));
       console.log("Battlemap data saved to:", filePath);
       return { success: true };
@@ -507,10 +558,32 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle("load-battlemap-data", async (event, directoryPath) => {
+ipcMain.handle("load-battlemap-data", async (event, pathToLoad) => {
   try {
-    const filePath = path.join(directoryPath, "battlemap.json");
+    let filePath;
+    
+    // If pathToLoad ends with .json, it's a specific file path
+    if (pathToLoad.endsWith('.json')) {
+      filePath = pathToLoad;
+      console.log('Loading specific battlemap file:', filePath);
+    } else {
+      // It's a directory, try the legacy filename first
+      filePath = path.join(pathToLoad, "battlemap.json");
+      console.log('Trying legacy battlemap file:', filePath);
+      
+      // Check if legacy file exists, if not, try default
+      try {
+        await fs.access(filePath);
+        console.log('Legacy file found');
+      } catch {
+        // Legacy file doesn't exist, try default
+        filePath = path.join(pathToLoad, "default_battlemap.json");
+        console.log('Legacy file not found, trying default:', filePath);
+      }
+    }
+    
     const data = await fs.readFile(filePath, "utf8");
+    console.log('Battlemap data loaded successfully');
     return JSON.parse(data);
   } catch (error) {
     console.error("Error loading battlemap data:", error);

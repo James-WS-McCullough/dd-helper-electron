@@ -2319,6 +2319,30 @@
             text-align: center;
         }
 
+        .battlemap-name-config {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .battlemap-name-config label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .battlemap-name-config input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 16px;
+        }
+
         .battlemap-grid-container {
             flex: 1;
             background: rgba(0, 0, 0, 0.2);
@@ -2420,6 +2444,16 @@
 
         .battlemap-cell.move-target:hover {
             background: rgba(243, 156, 18, 0.6);
+        }
+
+        .battlemap-cell.movement-radius {
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+        }
+
+        .battlemap-cell.movement-center {
+            background: rgba(52, 152, 219, 0.6);
+            border: 2px solid rgba(52, 152, 219, 0.8);
         }
 
         .move-mode-overlay {
@@ -2571,6 +2605,10 @@
                         </div>
                     </div>
                     <div class="battlemap-config">
+                        <div class="battlemap-name-config">
+                            <label for="battlemapName">Battlemap Name:</label>
+                            <input type="text" id="battlemapName" value="Untitled Battlemap" onchange="updateBattlemapName()">
+                        </div>
                         <div class="grid-config">
                             <div class="grid-dimension-controls">
                                 <div class="grid-size-input">
@@ -2587,6 +2625,7 @@
                                 </div>
                             </div>
                             <button id="saveBattlemapBtn" class="battlemap-action-btn">💾 Save Map</button>
+                            <button id="loadBattlemapBtn" class="battlemap-action-btn">📂 Load Map</button>
                             <button id="toggleBattlemapDisplay" class="battlemap-action-btn">📺 Show on Display</button>
                             <div class="zoom-controls">
                                 <button id="zoomOutBtn" class="battlemap-action-btn" onclick="zoomOut()">🔍- Zoom Out</button>
@@ -2713,6 +2752,19 @@
             </div>
             <div id="encounterListContainer" class="encounter-list-container">
                 <!-- Encounter list will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Battlemap Modal -->
+    <div id="battlemapSelectionModal" class="encounter-modal">
+        <div class="encounter-modal-content">
+            <div class="encounter-modal-header">
+                <h3 class="encounter-modal-title">Load Battlemap</h3>
+                <button class="close-modal-btn" onclick="closeBattlemapSelectionModal()">✕</button>
+            </div>
+            <div id="battlemapListContainer" class="encounter-list-container">
+                <!-- Battlemap list will be populated dynamically -->
             </div>
         </div>
     </div>
@@ -4594,6 +4646,11 @@
             modal.classList.remove('active');
         }
 
+        function closeBattlemapSelectionModal() {
+            const modal = document.getElementById('battlemapSelectionModal');
+            modal.classList.remove('active');
+        }
+
         async function selectEncounterFile(filePath, encounterName) {
             try {
                 const data = await window.electronAPI.loadEncounterData(filePath);
@@ -4606,6 +4663,129 @@
             } catch (error) {
                 console.error('Error loading encounter:', error);
                 alert('Error loading encounter: ' + error.message);
+            }
+        }
+
+        // Battlemap Loading Functions
+        async function loadBattlemapList() {
+            try {
+                if (!currentDirectory) {
+                    alert('No directory selected. Please select a directory first.');
+                    return;
+                }
+                
+                // Get list of battlemap files
+                const battlemapFiles = await window.electronAPI.getBattlemapFiles(currentDirectory);
+                
+                if (battlemapFiles.length === 0) {
+                    alert('No battlemap files found in the current directory.');
+                    return;
+                }
+                
+                // Show battlemap selection modal
+                showBattlemapSelectionModal(battlemapFiles);
+                
+            } catch (error) {
+                console.error('Error loading battlemap files:', error);
+                alert('Error loading battlemap files: ' + error.message);
+            }
+        }
+
+        function showBattlemapSelectionModal(battlemapFiles) {
+            const modal = document.getElementById('battlemapSelectionModal');
+            const container = document.getElementById('battlemapListContainer');
+            
+            if (battlemapFiles.length === 0) {
+                container.innerHTML = '<div class="no-encounters">No battlemap files found in this directory.</div>';
+            } else {
+                container.innerHTML = battlemapFiles.map(battlemap => {
+                    const date = new Date(battlemap.lastModified).toLocaleDateString();
+                    const time = new Date(battlemap.lastModified).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    return `
+                        <div class="encounter-item" onclick="selectBattlemapFile('${battlemap.path}', '${battlemap.name}')">
+                            <div class="encounter-item-info">
+                                <div class="encounter-item-name">${battlemap.name}</div>
+                                <div class="encounter-item-details">
+                                    <span>🗺️ ${battlemap.gridWidth}x${battlemap.gridHeight} grid</span>
+                                    ${battlemap.tokenCount ? `<span>⚔️ ${battlemap.tokenCount} ${battlemap.tokenCount === 1 ? 'token' : 'tokens'}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="encounter-item-meta">
+                                <div class="encounter-enemy-count">${battlemap.backgroundImage ? 'Background' : 'Grid only'}</div>
+                                <div class="encounter-item-date">${date} ${time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        async function selectBattlemapFile(filePath, battlemapName) {
+            try {
+                console.log('Attempting to load battlemap from:', filePath);
+                const data = await window.electronAPI.loadBattlemapData(filePath);
+                console.log('Loaded battlemap data:', data);
+                
+                if (data) {
+                    // Update battlemapData with loaded data, ensuring movementRadius is initialized
+                    battlemapData = {
+                        name: data.name || battlemapName,
+                        backgroundImage: data.backgroundImage || null,
+                        gridWidth: data.gridWidth || 20,
+                        gridHeight: data.gridHeight || 15,
+                        imageAspectRatio: data.imageAspectRatio || null,
+                        tokens: data.tokens || {},
+                        moveMode: {
+                            active: false,
+                            selectedToken: null,
+                            originalPosition: null
+                        },
+                        displayActive: false,
+                        displayZoom: data.displayZoom || {
+                            scale: 1.0,
+                            centerX: 0.5,
+                            centerY: 0.5,
+                            lastMovedToken: null
+                        },
+                        movementRadius: data.movementRadius || {
+                            active: false,
+                            centerX: 0,
+                            centerY: 0,
+                            radius: 6, // Default 30ft = 6 cells
+                            tokenName: '',
+                            movementSpeed: 30
+                        }
+                    };
+                    
+                    // Update UI elements
+                    document.getElementById('battlemapName').value = battlemapData.name;
+                    document.getElementById('gridWidth').value = battlemapData.gridWidth;
+                    document.getElementById('gridHeight').value = battlemapData.gridHeight;
+                    
+                    // Regenerate the battlemap with proper aspect ratio handling
+                    if (battlemapData.backgroundImage && battlemapData.imageAspectRatio) {
+                        // We have both image and cached aspect ratio, update display immediately
+                        updateAspectRatioDisplay();
+                        // Still calculate dimensions to ensure accuracy
+                        calculateImageDimensions(battlemapData.backgroundImage);
+                    } else if (battlemapData.backgroundImage) {
+                        // We have image but no cached ratio, calculate it
+                        calculateImageDimensions(battlemapData.backgroundImage);
+                    } else {
+                        // No background image, generate grid only
+                        document.getElementById('imageRatio').textContent = 'Select background first';
+                        generateBattlemapGrid();
+                    }
+                    
+                    closeBattlemapSelectionModal();
+                    console.log('Battlemap loaded successfully:', battlemapName);
+                }
+            } catch (error) {
+                console.error('Error loading battlemap:', error);
+                alert('Error loading battlemap: ' + error.message);
             }
         }
 
@@ -4724,6 +4904,7 @@
                     portrait: player.portrait,
                     icon: '👤',
                     initiative: 0, // Players start with blank initiative
+                    speed: player.speed || 30, // Include movement speed
                     source: 'party'
                 });
             });
@@ -5171,6 +5352,7 @@
 
         // Battlemap Functionality
         let battlemapData = {
+            name: 'Untitled Battlemap',
             backgroundImage: null,
             gridWidth: 20,
             gridHeight: 15,
@@ -5187,6 +5369,14 @@
                 centerX: 0.5, // 0.5 = center of grid
                 centerY: 0.5,
                 lastMovedToken: null
+            },
+            movementRadius: {
+                active: false,
+                centerX: 0,
+                centerY: 0,
+                radius: 6, // Default 30ft = 6 cells
+                tokenName: '',
+                movementSpeed: 30
             }
         };
 
@@ -5214,6 +5404,25 @@
                     cell.className = 'battlemap-cell';
                     cell.dataset.x = x;
                     cell.dataset.y = y;
+                    
+                    // Check if this cell is within movement radius
+                    if (battlemapData.movementRadius && battlemapData.movementRadius.active) {
+                        const centerX = battlemapData.movementRadius.centerX;
+                        const centerY = battlemapData.movementRadius.centerY;
+                        const radius = battlemapData.movementRadius.radius;
+                        
+                        // Calculate distance using Manhattan distance (grid movement)
+                        const distance = Math.abs(x - centerX) + Math.abs(y - centerY);
+                        
+                        if (distance <= radius) {
+                            cell.classList.add('movement-radius');
+                        }
+                        
+                        // Mark center cell
+                        if (x === centerX && y === centerY) {
+                            cell.classList.add('movement-center');
+                        }
+                    }
                     
                     // Check if this position has a token
                     const tokenKey = `${x}-${y}`;
@@ -5307,6 +5516,12 @@
             }
             
             container.appendChild(grid);
+        }
+
+        function updateBattlemapName() {
+            const nameInput = document.getElementById('battlemapName');
+            battlemapData.name = nameInput.value || 'Untitled Battlemap';
+            console.log('Battlemap name updated to:', battlemapData.name);
         }
 
         function updateBattlemapGrid() {
@@ -5410,6 +5625,18 @@
             console.log('Battlemap background set to:', imageName);
         }
 
+        function updateAspectRatioDisplay() {
+            if (battlemapData.imageAspectRatio) {
+                // Calculate approximate dimensions for display (assuming standard ratios)
+                const ratio = battlemapData.imageAspectRatio;
+                const displayWidth = Math.round(battlemapData.gridWidth);
+                const displayHeight = Math.round(battlemapData.gridWidth / ratio);
+                document.getElementById('imageRatio').textContent = `${displayWidth}×${displayHeight} (${ratio.toFixed(2)}:1)`;
+            } else {
+                document.getElementById('imageRatio').textContent = 'Select background first';
+            }
+        }
+
         function calculateImageDimensions(imagePath) {
             const img = new Image();
             img.onload = function() {
@@ -5490,8 +5717,18 @@
         function clearBattlemap() {
             if (Object.keys(battlemapData.tokens).length > 0 || battlemapData.backgroundImage) {
                 if (confirm('Clear all tokens and background from the battlemap?')) {
+                    battlemapData.name = 'Untitled Battlemap';
                     battlemapData.tokens = {};
                     battlemapData.backgroundImage = null;
+                    battlemapData.imageAspectRatio = null;
+                    battlemapData.movementRadius.active = false;
+                    
+                    // Update UI elements
+                    document.getElementById('battlemapName').value = battlemapData.name;
+                    document.getElementById('gridWidth').value = 20;
+                    document.getElementById('gridHeight').value = 15;
+                    document.getElementById('imageRatio').textContent = 'Select background first';
+                    
                     generateBattlemapGrid();
                     saveBattlemapData();
                 }
@@ -5719,6 +5956,15 @@
                 action: 'focusHere'
             });
             
+            // Clear movement radius option (when radius is active)
+            if (battlemapData.movementRadius.active) {
+                menuItems.push({
+                    icon: '❌',
+                    text: 'Clear Movement Radius',
+                    action: 'clearMovementRadius'
+                });
+            }
+            
             if (token) {
                 // Cell has a token
                 menuItems.push({
@@ -5741,6 +5987,12 @@
                         action: 'hideToken'
                     });
                 }
+                
+                menuItems.push({
+                    icon: '🎯',
+                    text: 'Show Movement Radius',
+                    action: 'showMovementRadius'
+                });
                 
                 menuItems.push({
                     icon: '🗑️',
@@ -5802,6 +6054,9 @@
                 case 'focusHere':
                     focusOnTile(x, y);
                     break;
+                case 'clearMovementRadius':
+                    clearMovementRadius();
+                    break;
                 case 'addToken':
                     openBattlemapTokenModal(x, y);
                     break;
@@ -5835,9 +6090,75 @@
                         }
                     }
                     break;
+                case 'showMovementRadius':
+                    showTokenMovementRadius(x, y, token);
+                    break;
             }
             
             hideBattlemapContextMenu();
+        }
+
+        function getTokenMovementSpeed(tokenName) {
+            // First, try to match with initiative order
+            const initiativeEntry = initiativeOrder.find(entry => 
+                entry.name.toLowerCase() === tokenName.toLowerCase()
+            );
+            
+            if (initiativeEntry && initiativeEntry.speed) {
+                return initiativeEntry.speed;
+            }
+            
+            // If not in initiative, try to match with party data
+            const partyMember = partyData.find(player => 
+                player.name.toLowerCase() === tokenName.toLowerCase()
+            );
+            
+            if (partyMember && partyMember.speed) {
+                return partyMember.speed;
+            }
+            
+            // Default movement speed for D&D 5e
+            return 30;
+        }
+
+        function showTokenMovementRadius(x, y, token) {
+            // Clear any existing movement radius
+            clearMovementRadius();
+            
+            // Get movement speed for this token
+            const movementSpeed = getTokenMovementSpeed(token.name);
+            const radiusInCells = Math.floor(movementSpeed / 5); // 5 feet per cell
+            
+            console.log(`Showing movement radius for ${token.name}: ${movementSpeed}ft (${radiusInCells} cells)`);
+            
+            // Store movement radius state
+            battlemapData.movementRadius = {
+                active: true,
+                centerX: x,
+                centerY: y,
+                radius: radiusInCells,
+                tokenName: token.name,
+                movementSpeed: movementSpeed
+            };
+            
+            // Regenerate grid to show the radius
+            generateBattlemapGrid();
+            
+            // Update display if active
+            if (battlemapData.displayActive) {
+                showBattlemapOnDisplay();
+            }
+        }
+
+        function clearMovementRadius() {
+            if (battlemapData.movementRadius) {
+                battlemapData.movementRadius.active = false;
+                generateBattlemapGrid();
+                
+                if (battlemapData.displayActive) {
+                    showBattlemapOnDisplay();
+                }
+            }
         }
 
         function focusOnTile(x, y) {
@@ -5883,6 +6204,8 @@
                 if (battlemapData.moveMode.active) {
                     exitTokenMoveMode();
                     generateBattlemapGrid();
+                } else if (battlemapData.movementRadius.active) {
+                    clearMovementRadius();
                 } else {
                     // Close any open battlemap modals and context menu
                     hideBattlemapContextMenu();
@@ -6170,8 +6493,12 @@
             if (!currentDirectory) return;
             
             try {
-                await window.electronAPI.saveBattlemapData(currentDirectory, battlemapData);
-                console.log('Battlemap data saved');
+                // Generate filename from battlemap name
+                const safeName = battlemapData.name.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').toLowerCase();
+                const fileName = `${safeName}_battlemap.json`;
+                
+                await window.electronAPI.saveBattlemapData(currentDirectory, battlemapData, fileName);
+                console.log('Battlemap data saved as:', fileName);
             } catch (error) {
                 console.error('Error saving battlemap data:', error);
             }
@@ -6184,6 +6511,7 @@
                 const data = await window.electronAPI.loadBattlemapData(currentDirectory);
                 if (data) {
                     battlemapData = {
+                        name: data.name || 'Untitled Battlemap',
                         backgroundImage: data.backgroundImage || null,
                         gridWidth: data.gridWidth || 20,
                         gridHeight: data.gridHeight || 15,
@@ -6200,16 +6528,34 @@
                             centerX: 0.5,
                             centerY: 0.5,
                             lastMovedToken: null
+                        },
+                        movementRadius: data.movementRadius || {
+                            active: false,
+                            centerX: 0,
+                            centerY: 0,
+                            radius: 6, // Default 30ft = 6 cells
+                            tokenName: '',
+                            movementSpeed: 30
                         }
                     };
                     
                     // Update UI elements
+                    document.getElementById('battlemapName').value = battlemapData.name;
                     document.getElementById('gridWidth').value = battlemapData.gridWidth;
                     document.getElementById('gridHeight').value = battlemapData.gridHeight;
                     
-                    // If we have an image, recalculate its aspect ratio
-                    if (battlemapData.backgroundImage) {
+                    // Update aspect ratio display
+                    if (battlemapData.backgroundImage && battlemapData.imageAspectRatio) {
+                        // We have both image and cached aspect ratio, update display immediately
+                        updateAspectRatioDisplay();
+                        // Still calculate dimensions to ensure accuracy
                         calculateImageDimensions(battlemapData.backgroundImage);
+                    } else if (battlemapData.backgroundImage) {
+                        // We have image but no cached ratio, calculate it
+                        calculateImageDimensions(battlemapData.backgroundImage);
+                    } else {
+                        // No background image, reset display
+                        document.getElementById('imageRatio').textContent = 'Select background first';
                     }
                     
                     generateBattlemapGrid();
@@ -6224,6 +6570,8 @@
         document.getElementById('selectLocationBtn').addEventListener('click', selectBattlemapBackground);
         document.getElementById('clearBattlemapBtn').addEventListener('click', clearBattlemap);
         document.getElementById('saveBattlemapBtn').addEventListener('click', saveBattlemapData);
+        document.getElementById('loadBattlemapBtn').addEventListener('click', loadBattlemapList);
+        document.getElementById('loadBattlemapBtn').addEventListener('click', loadBattlemapList);
         document.getElementById('toggleBattlemapDisplay').addEventListener('click', toggleBattlemapDisplay);
         document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
         document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);

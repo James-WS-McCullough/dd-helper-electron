@@ -2613,11 +2613,11 @@
                             <div class="grid-dimension-controls">
                                 <div class="grid-size-input">
                                     <label for="gridWidth">Grid Width:</label>
-                                    <input type="number" id="gridWidth" min="5" max="50" value="20" onchange="updateBattlemapGrid()">
+                                    <input type="number" id="gridWidth" min="5" value="20" onchange="updateBattlemapGrid()">
                                 </div>
                                 <div class="grid-size-input">
                                     <label for="gridHeight">Grid Height:</label>
-                                    <input type="number" id="gridHeight" min="5" max="50" value="15" disabled readonly>
+                                    <input type="number" id="gridHeight" min="5" value="15" disabled readonly>
                                     <small style="color: #bbb; margin-left: 8px;">(Auto from image)</small>
                                 </div>
                                 <div id="aspectRatioInfo" class="aspect-ratio-info">
@@ -4756,7 +4756,8 @@
                             centerY: 0,
                             radius: 6, // Default 30ft = 6 cells
                             tokenName: '',
-                            movementSpeed: 30
+                            movementSpeed: 30,
+                            isAutomatic: false
                         }
                     };
                     
@@ -5376,7 +5377,8 @@
                 centerY: 0,
                 radius: 6, // Default 30ft = 6 cells
                 tokenName: '',
-                movementSpeed: 30
+                movementSpeed: 30,
+                isAutomatic: false // Track if this was shown automatically during move mode
             }
         };
 
@@ -5533,7 +5535,7 @@
                 // No image yet - use manual width value
                 const width = parseInt(document.getElementById('gridWidth').value);
                 
-                if (width >= 5 && width <= 50) {
+                if (width >= 5) { // Only minimum limit, no maximum
                     // Remove tokens that are outside new grid bounds
                     const newTokens = {};
                     Object.entries(battlemapData.tokens).forEach(([key, token]) => {
@@ -5665,7 +5667,7 @@
             
             // Always use width-based mode - user sets width, calculate height from aspect ratio
             const width = parseInt(document.getElementById('gridWidth').value);
-            const calculatedHeight = Math.max(5, Math.min(50, Math.round(width / aspectRatio)));
+            const calculatedHeight = Math.max(5, Math.round(width / aspectRatio)); // Only minimum limit, no maximum
             
             battlemapData.gridHeight = calculatedHeight;
             document.getElementById('gridHeight').value = calculatedHeight;
@@ -5731,6 +5733,16 @@
                     
                     generateBattlemapGrid();
                     saveBattlemapData();
+                    
+                    // Update display if active
+                    if (battlemapData.displayActive) {
+                        hideBattlemapFromDisplay();
+                        // Set displayActive to false since we cleared the background
+                        battlemapData.displayActive = false;
+                        const button = document.getElementById('toggleBattlemapDisplay');
+                        button.textContent = '📺 Show on Display';
+                        button.style.background = '';
+                    }
                 }
             }
         }
@@ -5742,6 +5754,15 @@
             battlemapData.moveMode.selectedToken = token;
             
             console.log(`Entering move mode for ${token.name} at ${x},${y}`);
+            
+            // Show movement radius automatically (dashboard only, unless already manually shown)
+            const wasManuallyShown = battlemapData.movementRadius.active && !battlemapData.movementRadius.isAutomatic;
+            showAutomaticMovementRadius(x, y, token);
+            
+            // If radius was manually shown before, update display too
+            if (wasManuallyShown && battlemapData.displayActive) {
+                showBattlemapOnDisplay();
+            }
             
             // Regenerate grid to show move mode styling
             generateBattlemapGrid();
@@ -5777,6 +5798,9 @@
             
             // Exit move mode
             exitTokenMoveMode();
+            
+            // Clear all movement radiuses after move is completed
+            clearMovementRadius();
             
             // Save and regenerate
             saveBattlemapData();
@@ -6131,14 +6155,15 @@
             
             console.log(`Showing movement radius for ${token.name}: ${movementSpeed}ft (${radiusInCells} cells)`);
             
-            // Store movement radius state
+            // Store movement radius state (marked as manual)
             battlemapData.movementRadius = {
                 active: true,
                 centerX: x,
                 centerY: y,
                 radius: radiusInCells,
                 tokenName: token.name,
-                movementSpeed: movementSpeed
+                movementSpeed: movementSpeed,
+                isAutomatic: false // This is manually triggered
             };
             
             // Regenerate grid to show the radius
@@ -6148,6 +6173,37 @@
             if (battlemapData.displayActive) {
                 showBattlemapOnDisplay();
             }
+        }
+
+        function showAutomaticMovementRadius(x, y, token) {
+            // Don't override manual movement radius with automatic one
+            if (battlemapData.movementRadius.active && !battlemapData.movementRadius.isAutomatic) {
+                console.log('Manual movement radius is active, not showing automatic radius');
+                return;
+            }
+            
+            // Get movement speed for this token
+            const movementSpeed = getTokenMovementSpeed(token.name);
+            const radiusInCells = Math.floor(movementSpeed / 5); // 5 feet per cell
+            
+            console.log(`Showing automatic movement radius for ${token.name}: ${movementSpeed}ft (${radiusInCells} cells)`);
+            
+            // Store movement radius state (marked as automatic)
+            battlemapData.movementRadius = {
+                active: true,
+                centerX: x,
+                centerY: y,
+                radius: radiusInCells,
+                tokenName: token.name,
+                movementSpeed: movementSpeed,
+                isAutomatic: true // This is automatically triggered during move mode
+            };
+            
+            // Regenerate grid to show the radius (dashboard only)
+            generateBattlemapGrid();
+            
+            // Don't update display for automatic movement radius unless it was already manually shown
+            // (The display should only show automatic radius if user had manually shown one before entering move mode)
         }
 
         function clearMovementRadius() {
@@ -6202,6 +6258,10 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (battlemapData.moveMode.active) {
+                    // Clear automatic movement radius when canceling move mode
+                    if (battlemapData.movementRadius.active && battlemapData.movementRadius.isAutomatic) {
+                        clearMovementRadius();
+                    }
                     exitTokenMoveMode();
                     generateBattlemapGrid();
                 } else if (battlemapData.movementRadius.active) {
@@ -6267,13 +6327,14 @@
         }
 
         function showBattlemapOnDisplay() {
-            // Send battlemap data to display window including zoom
+            // Send battlemap data to display window including zoom and movement radius
             window.electronAPI.displayBattlemap({
                 backgroundImage: battlemapData.backgroundImage,
                 gridWidth: battlemapData.gridWidth,
                 gridHeight: battlemapData.gridHeight,
                 tokens: battlemapData.tokens,
-                zoom: battlemapData.displayZoom
+                zoom: battlemapData.displayZoom,
+                movementRadius: battlemapData.movementRadius
             });
             
             console.log('Displaying battlemap on screen with zoom:', battlemapData.displayZoom);
@@ -6512,10 +6573,10 @@
                 if (data) {
                     battlemapData = {
                         name: data.name || 'Untitled Battlemap',
-                        backgroundImage: data.backgroundImage || null,
+                        backgroundImage: null, // Always start empty - user must select background
                         gridWidth: data.gridWidth || 20,
                         gridHeight: data.gridHeight || 15,
-                        imageAspectRatio: data.imageAspectRatio || null,
+                        imageAspectRatio: null, // Reset aspect ratio since no background is loaded
                         tokens: data.tokens || {},
                         moveMode: {
                             active: false,
@@ -6535,7 +6596,8 @@
                             centerY: 0,
                             radius: 6, // Default 30ft = 6 cells
                             tokenName: '',
-                            movementSpeed: 30
+                            movementSpeed: 30,
+                            isAutomatic: false
                         }
                     };
                     
@@ -6544,19 +6606,8 @@
                     document.getElementById('gridWidth').value = battlemapData.gridWidth;
                     document.getElementById('gridHeight').value = battlemapData.gridHeight;
                     
-                    // Update aspect ratio display
-                    if (battlemapData.backgroundImage && battlemapData.imageAspectRatio) {
-                        // We have both image and cached aspect ratio, update display immediately
-                        updateAspectRatioDisplay();
-                        // Still calculate dimensions to ensure accuracy
-                        calculateImageDimensions(battlemapData.backgroundImage);
-                    } else if (battlemapData.backgroundImage) {
-                        // We have image but no cached ratio, calculate it
-                        calculateImageDimensions(battlemapData.backgroundImage);
-                    } else {
-                        // No background image, reset display
-                        document.getElementById('imageRatio').textContent = 'Select background first';
-                    }
+                    // Always start with no background image - user must select one
+                    document.getElementById('imageRatio').textContent = 'Select background first';
                     
                     generateBattlemapGrid();
                     console.log('Battlemap data loaded');

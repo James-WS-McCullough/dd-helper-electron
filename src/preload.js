@@ -35,7 +35,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // Battlemap data methods
   saveBattlemapData: (directoryPath, battlemapData, fileName) =>
-    ipcRenderer.invoke("save-battlemap-data", directoryPath, battlemapData, fileName),
+    ipcRenderer.invoke(
+      "save-battlemap-data",
+      directoryPath,
+      battlemapData,
+      fileName
+    ),
   loadBattlemapData: (directoryPath) =>
     ipcRenderer.invoke("load-battlemap-data", directoryPath),
   getBattlemapFiles: (directoryPath) =>

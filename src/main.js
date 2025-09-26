@@ -483,12 +483,14 @@ ipcMain.handle("get-battlemap-files", async (event, directoryPath) => {
             battlemapData.gridWidth !== undefined &&
             battlemapData.gridHeight !== undefined
           ) {
-            const tokenCount = battlemapData.tokens ? Object.keys(battlemapData.tokens).length : 0;
-            
+            const tokenCount = battlemapData.tokens
+              ? Object.keys(battlemapData.tokens).length
+              : 0;
+
             battlemapFiles.push({
               filename: item.name,
               path: filePath,
-              name: item.name.replace('_battlemap.json', ''),
+              name: item.name.replace("_battlemap.json", ""),
               gridWidth: battlemapData.gridWidth,
               gridHeight: battlemapData.gridHeight,
               backgroundImage: battlemapData.backgroundImage,
@@ -561,29 +563,29 @@ ipcMain.handle(
 ipcMain.handle("load-battlemap-data", async (event, pathToLoad) => {
   try {
     let filePath;
-    
+
     // If pathToLoad ends with .json, it's a specific file path
-    if (pathToLoad.endsWith('.json')) {
+    if (pathToLoad.endsWith(".json")) {
       filePath = pathToLoad;
-      console.log('Loading specific battlemap file:', filePath);
+      console.log("Loading specific battlemap file:", filePath);
     } else {
       // It's a directory, try the legacy filename first
       filePath = path.join(pathToLoad, "battlemap.json");
-      console.log('Trying legacy battlemap file:', filePath);
-      
+      console.log("Trying legacy battlemap file:", filePath);
+
       // Check if legacy file exists, if not, try default
       try {
         await fs.access(filePath);
-        console.log('Legacy file found');
+        console.log("Legacy file found");
       } catch {
         // Legacy file doesn't exist, try default
         filePath = path.join(pathToLoad, "default_battlemap.json");
-        console.log('Legacy file not found, trying default:', filePath);
+        console.log("Legacy file not found, trying default:", filePath);
       }
     }
-    
+
     const data = await fs.readFile(filePath, "utf8");
-    console.log('Battlemap data loaded successfully');
+    console.log("Battlemap data loaded successfully");
     return JSON.parse(data);
   } catch (error) {
     console.error("Error loading battlemap data:", error);

@@ -6012,11 +6012,14 @@
                     });
                 }
                 
-                menuItems.push({
-                    icon: '🎯',
-                    text: 'Show Movement Radius',
-                    action: 'showMovementRadius'
-                });
+                // Only show movement radius option for visible tokens
+                if (!token.hidden) {
+                    menuItems.push({
+                        icon: '🎯',
+                        text: 'Show Movement Radius',
+                        action: 'showMovementRadius'
+                    });
+                }
                 
                 menuItems.push({
                     icon: '🗑️',

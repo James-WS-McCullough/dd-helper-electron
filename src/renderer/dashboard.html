@@ -13,61 +13,224 @@
             min-height: 100vh;
             overflow: hidden;
         }
-        
+
         .dashboard-container {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: auto 1fr auto;
+            grid-template-rows: 100vh;
             height: 100vh;
-            box-sizing: border-box;
+            position: relative;
+            transition: grid-template-columns 0.3s ease;
+        }
+
+        /* Sidebar Navigation */
+        .nav-sidebar {
+            width: 60px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .nav-sidebar.expanded {
+            width: 250px;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 60px;
+        }
+
+        .sidebar-toggle {
+            background: rgba(230, 126, 34, 0.8);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(230, 126, 34, 1);
+            transform: scale(1.05);
+        }
+
+        .sidebar-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e67e22;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-sidebar.expanded .sidebar-logo {
+            opacity: 1;
+        }
+
+        .nav-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+            min-height: 44px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: rgba(230, 126, 34, 0.5);
+        }
+
+        .nav-item.active {
+            background: rgba(230, 126, 34, 0.2);
+            border-left-color: #e67e22;
+        }
+
+        .nav-item-icon {
+            font-size: 24px;
+            width: 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .nav-item-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-sidebar.expanded .nav-item-label {
+            opacity: 1;
         }
         
         .main-content {
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
         }
-        
-        .tab-container {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-        
-        .tab-button {
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 8px 8px 0 0;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-        
-        .tab-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .tab-button.active {
-            background: rgba(255, 255, 255, 0.25);
-            border-bottom: 3px solid #f39c12;
-        }
-        
+
         .tab-content {
             flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0 10px 10px 10px;
-            padding: 20px;
             overflow: hidden;
             display: none;
+            position: relative;
         }
-        
+
         .tab-content.active {
             display: flex;
             flex-direction: column;
+        }
+
+        /* Right Sidebar (Live Panel) */
+        .live-panel-container {
+            width: 320px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, width 0.3s ease;
+            z-index: 90;
+            overflow: hidden;
+        }
+
+        .live-panel-container.collapsed {
+            transform: translateX(320px);
+            width: 0;
+        }
+
+        .live-panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .live-panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f39c12;
+            margin: 0;
+        }
+
+        .panel-toggle-btn {
+            background: rgba(243, 156, 18, 0.8);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+
+        .panel-toggle-btn:hover {
+            background: rgba(243, 156, 18, 1);
+            transform: scale(1.05);
+        }
+
+        /* Floating toggle button when sidebar is collapsed */
+        .floating-panel-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(243, 156, 18, 0.9);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            display: none;
+        }
+
+        .floating-panel-toggle.visible {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-panel-toggle:hover {
+            background: rgba(243, 156, 18, 1);
+            transform: scale(1.1);
         }
         
         /* Media Grid Styles */
@@ -353,26 +516,79 @@
         
         /* Live Panel Styles */
         .live-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 20px;
+            flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
         }
-        
-        .live-panel h2 {
-            margin-top: 0;
-            color: #f39c12;
+
+        .live-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .live-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .live-panel::-webkit-scrollbar-thumb {
+            background: rgba(243, 156, 18, 0.5);
+            border-radius: 4px;
+        }
+
+        .live-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(243, 156, 18, 0.7);
+        }
+
+        /* Accordion Sections */
+        .display-section {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-        
-        .display-section {
-            margin: 15px 0;
-            padding: 10px;
+            justify-content: space-between;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
             background: rgba(255, 255, 255, 0.02);
-            border-radius: 5px;
-            border-left: 4px solid transparent;
+            min-height: 44px;
+        }
+
+        .section-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-toggle {
+            font-size: 18px;
+            transition: transform 0.2s ease;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .display-section.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .display-section.collapsed .section-content {
+            max-height: 0;
+            padding: 0 20px;
         }
         
         .display-section.portraits { border-left-color: #e74c3c; }
@@ -2085,10 +2301,10 @@
 
         /* Battlemap Styles */
         .battlemap-container {
-            display: flex;
-            flex-direction: column;
+            position: relative;
+            width: 100%;
             height: 100%;
-            gap: 15px;
+            overflow: hidden;
         }
 
         .battlemap-header {
@@ -2096,14 +2312,111 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.15) 0%, rgba(0, 0, 0, 0.3) 100%);
             border-radius: 8px;
+            border-left: 4px solid #e67e22;
+            margin-bottom: 15px;
         }
 
         .battlemap-header h3 {
             margin: 0;
             color: #e67e22;
-            font-size: 20px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* Floating Toolbar for Battlemap */
+        .battlemap-floating-toolbar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .battlemap-floating-toolbar.minimized {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .battlemap-floating-toolbar.minimized .toolbar-section,
+        .battlemap-floating-toolbar.minimized .toolbar-minimize {
+            display: none;
+        }
+
+        .battlemap-floating-toolbar.minimized::before {
+            content: '⚙️';
+            font-size: 24px;
+        }
+
+        .toolbar-minimize {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toolbar-minimize:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .battlemap-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toolbar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .toolbar-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .battlemap-actions {
@@ -2112,28 +2425,43 @@
         }
 
         .battlemap-action-btn {
-            background: rgba(230, 126, 34, 0.7);
-            border: none;
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.8) 0%, rgba(211, 84, 0, 0.8) 100%);
+            border: 1px solid rgba(230, 126, 34, 0.4);
             color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
 
         .battlemap-action-btn:hover {
-            background: rgba(230, 126, 34, 0.9);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(230, 126, 34, 1) 0%, rgba(211, 84, 0, 1) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .battlemap-action-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .clear-battlemap {
-            background: rgba(231, 76, 60, 0.7);
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.8) 0%, rgba(192, 57, 43, 0.8) 100%);
+            border-color: rgba(231, 76, 60, 0.4);
         }
 
         .clear-battlemap:hover {
-            background: rgba(231, 76, 60, 0.9);
+            background: linear-gradient(135deg, rgba(231, 76, 60, 1) 0%, rgba(192, 57, 43, 1) 100%);
         }
 
         .battlemap-config {
@@ -2321,17 +2649,32 @@
 
         .battlemap-name-config {
             flex: 1;
-            margin-left: 10px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
         }
 
         .battlemap-name-config input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .battlemap-name-config input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #e67e22;
+            box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.2);
+        }
+
+        .battlemap-name-config input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
         }
 
         .battlemap-controls-row {
@@ -2396,12 +2739,54 @@
         }
 
         .battlemap-grid-container {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.2) 100%);
+            padding: 0;
             overflow: auto;
-            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .battlemap-grid-container::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .battlemap-grid-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .battlemap-grid-container::-webkit-scrollbar-thumb {
+            background: rgba(230, 126, 34, 0.5);
+            border-radius: 4px;
+        }
+
+        .battlemap-grid-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(230, 126, 34, 0.7);
+        }
+
+        .battlemap-grid-container .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            font-style: italic;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            max-width: 400px;
         }
 
         .battlemap-grid {
@@ -2547,26 +2932,154 @@
             opacity: 0.7;
             border-radius: 4px;
         }
+        /* Responsive Design */
+        @media screen and (max-width: 1200px) {
+            .live-panel-container {
+                width: 280px;
+            }
+
+            .battlemap-floating-toolbar {
+                flex-wrap: wrap;
+                max-width: calc(100% - 40px);
+            }
+
+            .toolbar-section {
+                flex-direction: row;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: auto 1fr;
+            }
+
+            .live-panel-container {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 200;
+                transform: translateX(100%);
+                width: 300px;
+            }
+
+            .live-panel-container:not(.collapsed) {
+                transform: translateX(0);
+                box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .battlemap-floating-toolbar {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-section {
+                width: 100%;
+            }
+
+            .toolbar-divider {
+                display: none;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .nav-sidebar,
+            .live-panel-container,
+            .battlemap-floating-toolbar,
+            .floating-panel-toggle {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0;
+                padding: 0;
+            }
+
+            .battlemap-grid-container {
+                overflow: visible;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .nav-sidebar,
+            .live-panel-container {
+                border-width: 2px;
+            }
+
+            .battlemap-action-btn {
+                border-width: 2px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <div class="main-content">
-            <div class="header">
-                <h1>🎲 D&D Helper Dashboard</h1>
-                <button id="refreshBtn">🔄 Refresh</button>
+        <!-- Left Sidebar Navigation -->
+        <nav class="nav-sidebar" id="navSidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"
+                        aria-label="Toggle navigation" aria-expanded="false">
+                    ☰
+                </button>
+                <span class="sidebar-logo">D&D Helper</span>
             </div>
-            
-            <div class="tab-container">
-                <button class="tab-button active" onclick="switchTab('media')">🖼️ Media</button>
-                <button class="tab-button" onclick="switchTab('audio')">🎵 Audio</button>
-                <button class="tab-button" onclick="switchTab('party')">👥 Party</button>
-                <button class="tab-button" onclick="switchTab('encounters')">⚔️ Encounters</button>
-                <button class="tab-button" onclick="switchTab('initiative')">🎲 Initiative</button>
-                <button class="tab-button" onclick="switchTab('battlemap')">🗺️ Battlemap</button>
+            <div class="nav-items">
+                <div class="nav-item active" onclick="switchTab('battlemap')" role="button" tabindex="0"
+                     aria-label="Battlemap" data-tab="battlemap">
+                    <span class="nav-item-icon">🗺️</span>
+                    <span class="nav-item-label">Battlemap</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('media')" role="button" tabindex="0"
+                     aria-label="Media" data-tab="media">
+                    <span class="nav-item-icon">🖼️</span>
+                    <span class="nav-item-label">Media</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('audio')" role="button" tabindex="0"
+                     aria-label="Audio" data-tab="audio">
+                    <span class="nav-item-icon">🎵</span>
+                    <span class="nav-item-label">Audio</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('party')" role="button" tabindex="0"
+                     aria-label="Party" data-tab="party">
+                    <span class="nav-item-icon">👥</span>
+                    <span class="nav-item-label">Party</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('encounters')" role="button" tabindex="0"
+                     aria-label="Encounters" data-tab="encounters">
+                    <span class="nav-item-icon">⚔️</span>
+                    <span class="nav-item-label">Encounters</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('initiative')" role="button" tabindex="0"
+                     aria-label="Initiative" data-tab="initiative">
+                    <span class="nav-item-icon">🎲</span>
+                    <span class="nav-item-label">Initiative</span>
+                </div>
             </div>
-            
-            <div id="mediaTab" class="tab-content active">
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="main-content" role="main">
+            <!-- Floating button to open right panel when collapsed -->
+            <button class="floating-panel-toggle" id="floatingPanelToggle" onclick="toggleLivePanel()"
+                    aria-label="Toggle live display panel">
+                🖥️
+            </button>
+
+            <div id="mediaTab" class="tab-content">
                 <div class="media-grid-container">
                     <div class="directory-nav">
                         <span class="breadcrumb" id="currentPath">Loading...</span>
@@ -2647,50 +3160,81 @@
                 </div>
             </div>
 
-            <div id="battlemapTab" class="tab-content">
+            <div id="battlemapTab" class="tab-content active">
                 <div class="battlemap-container">
-                    <div class="battlemap-header">
-                        <h3>🗺️ Battlemap</h3>
-                        <div class="battlemap-actions">
-                            <button id="selectLocationBtn" class="battlemap-action-btn" style="display: none;">📍 Select Background</button>
-                            <button id="saveBattlemapBtn" class="battlemap-action-btn">� Save Map</button>
-                            <button id="loadBattlemapBtn" class="battlemap-action-btn">📂 Load Map</button>
-                            <button id="clearBattlemapBtn" class="battlemap-action-btn clear-battlemap">🗑️ Clear Map</button>
-                            <button id="battlemapInfoBtn" class="battlemap-action-btn">ℹ️ Map Info</button>
+                    <!-- Map name in top-left corner -->
+                    <div class="battlemap-header" style="position: absolute; top: 20px; left: 20px; z-index: 40; padding: 10px 15px; max-width: 300px;">
+                        <div class="battlemap-name-config" style="margin: 0;">
+                            <input type="text" id="battlemapName" value="Untitled Battlemap" onchange="updateBattlemapName()" placeholder="Map name..."
+                                   aria-label="Battlemap name">
                         </div>
                     </div>
-                    <div class="battlemap-config">
-                        <div class="grid-config">
-                            <div class="grid-dimension-controls">
-                                <div class="grid-size-input" style="display: none;">
-                                    <label for="gridWidth">Grid Width:</label>
-                                    <input type="number" id="gridWidth" min="5" value="20" onchange="updateBattlemapGrid()">
-                                </div>
-                                <div class="grid-size-input">
-                                    <label for="gridHeight">Grid Height:</label>
-                                    <input type="number" id="gridHeight" min="5" value="15" disabled readonly style="display: none;">
-                                </div>
-                                <div id="aspectRatioInfo" class="aspect-ratio-info" style="display: none;">
-                                    <small>Image ratio: <span id="imageRatio">Select background first</span></small>
-                                </div>
-                            </div>
-                            <div class="battlemap-controls-row">
-                                <button id="toggleBattlemapDisplay" class="battlemap-action-btn">� Show on Display</button>
-                                <div class="battlemap-name-config" style="display: none;">
-                                    <input type="text" id="battlemapName" value="Untitled Battlemap" onchange="updateBattlemapName()" placeholder="Map name...">
-                                </div>
-                            </div>
-                            <div class="zoom-controls">
-                                <button id="zoomOutBtn" class="battlemap-action-btn" onclick="zoomOut()">🔍- Zoom Out</button>
-                                <button id="resetZoomBtn" class="battlemap-action-btn" onclick="resetZoom()">🎯 Reset View</button>
-                                <button id="zoomInBtn" class="battlemap-action-btn" onclick="zoomIn()">🔍+ Zoom In</button>
-                            </div>
-                            <div class="focus-controls">
-                                <button class="battlemap-action-btn" onclick="openCharacterFocusModal()">🎯 Focus Character</button>
-                                <button class="battlemap-action-btn" onclick="panCenter()">📍 Center Map</button>
+
+                    <!-- Floating Toolbar -->
+                    <div class="battlemap-floating-toolbar" id="battlemapToolbar" role="toolbar" aria-label="Battlemap controls" onclick="if(this.classList.contains('minimized')) toggleBattlemapToolbar()">
+                        <button class="toolbar-minimize" onclick="event.stopPropagation(); toggleBattlemapToolbar()"
+                                aria-label="Minimize toolbar" title="Minimize toolbar">
+                            ─
+                        </button>
+                        <div class="toolbar-divider"></div>
+
+                        <!-- File Operations -->
+                        <div class="toolbar-section">
+                            <div class="toolbar-buttons">
+                                <button id="saveBattlemapBtn" class="battlemap-action-btn" title="Save Map (Ctrl+S)">💾</button>
+                                <button id="loadBattlemapBtn" class="battlemap-action-btn" title="Load Map (Ctrl+O)">📂</button>
+                                <button id="clearBattlemapBtn" class="battlemap-action-btn clear-battlemap" title="Clear Map">🗑️</button>
                             </div>
                         </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- View Controls -->
+                        <div class="toolbar-section">
+                            <div class="toolbar-buttons">
+                                <button id="zoomOutBtn" class="battlemap-action-btn" onclick="zoomOut()" title="Zoom Out (-)">➖</button>
+                                <button id="resetZoomBtn" class="battlemap-action-btn" onclick="resetZoom()" title="Reset View (0)">🎯</button>
+                                <button id="zoomInBtn" class="battlemap-action-btn" onclick="zoomIn()" title="Zoom In (+)">➕</button>
+                            </div>
+                        </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- Navigation -->
+                        <div class="toolbar-section">
+                            <div class="toolbar-buttons">
+                                <button class="battlemap-action-btn" onclick="openCharacterFocusModal()" title="Focus Character (F)">🎯</button>
+                                <button class="battlemap-action-btn" onclick="panCenter()" title="Center Map (C)">📍</button>
+                            </div>
+                        </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- Display Controls -->
+                        <div class="toolbar-section">
+                            <div class="toolbar-buttons">
+                                <button id="toggleBattlemapDisplay" class="battlemap-action-btn" title="Show on Display (D)">📺</button>
+                                <button id="battlemapInfoBtn" class="battlemap-action-btn" title="Map Info (I)">ℹ️</button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Grid Controls -->
+                        <div class="grid-dimension-controls" style="display: none;">
+                            <div class="grid-size-input">
+                                <label for="gridWidth">Grid Width:</label>
+                                <input type="number" id="gridWidth" min="5" value="20" onchange="updateBattlemapGrid()">
+                            </div>
+                            <div class="grid-size-input">
+                                <label for="gridHeight">Grid Height:</label>
+                                <input type="number" id="gridHeight" min="5" value="15" disabled readonly>
+                            </div>
+                            <div id="aspectRatioInfo" class="aspect-ratio-info">
+                                <small>Image ratio: <span id="imageRatio">Select background first</span></small>
+                            </div>
+                        </div>
+                        <button id="selectLocationBtn" class="battlemap-action-btn" style="display: none;">📍 Select Background</button>
                     </div>
+
                     <div id="battlemapContainer" class="battlemap-grid-container">
                         <div class="empty-state">Select a location background to start building your battlemap!</div>
                     </div>
@@ -2698,54 +3242,108 @@
             </div>
         </div>
         
-        <div class="live-panel">
-            <h2>🖥️ Live Display</h2>
-            
-            <div class="display-section portraits">
-                <h3>👥 Portraits</h3>
-                <div id="portraitsList">
-                    <div class="empty-state">No portraits displayed</div>
-                </div>
-                <button class="clear-btn" onclick="clearDisplayElement('portraits')" style="width: 100%; margin-top: 10px;">Clear All Portraits</button>
+        <!-- Right Sidebar - Live Display Panel -->
+        <aside class="live-panel-container" id="livePanelContainer" role="complementary" aria-label="Live display">
+            <div class="live-panel-header">
+                <h2 class="live-panel-title">🖥️ Live Display</h2>
+                <button class="panel-toggle-btn" onclick="toggleLivePanel()" aria-label="Toggle live panel">
+                    ✕
+                </button>
             </div>
-            
-            <div class="display-section background">
-                <h3>🖼️ Background</h3>
-                <div id="backgroundDisplay">
-                    <div class="empty-state">No background set</div>
+
+            <div class="live-panel">
+                <!-- Portraits Section -->
+                <div class="display-section portraits">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="true">
+                        <h3>👥 Portraits</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="portraitsList">
+                            <div class="empty-state">No portraits displayed</div>
+                        </div>
+                        <button class="clear-btn" onclick="clearDisplayElement('portraits')"
+                                style="width: 100%; margin-top: 10px;">Clear All Portraits</button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="display-section event">
-                <h3>🎬 Current Event</h3>
-                <div id="eventDisplay">
-                    <div class="empty-state">No event playing</div>
+
+                <!-- Background Section -->
+                <div class="display-section background collapsed">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="false">
+                        <h3>🖼️ Background</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="backgroundDisplay">
+                            <div class="empty-state">No background set</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="display-section audio">
-                <h3>🔄 Background Sounds</h3>
-                <div id="backgroundSoundDisplay">
-                    <div class="empty-state">No background sounds</div>
+
+                <!-- Current Event Section -->
+                <div class="display-section event collapsed">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="false">
+                        <h3>🎬 Current Event</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="eventDisplay">
+                            <div class="empty-state">No event playing</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="display-section audio">
-                <h3>🎵 Background Music</h3>
-                <div id="backgroundMusicDisplay">
-                    <div class="empty-state">No background music</div>
+
+                <!-- Background Sounds Section -->
+                <div class="display-section audio collapsed">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="false">
+                        <h3>🔄 Background Sounds</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="backgroundSoundDisplay">
+                            <div class="empty-state">No background sounds</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="display-section audio">
-                <h3>🔊 Sound Effects</h3>
-                <div id="soundEffectsDisplay">
-                    <div class="empty-state">No active sound effects</div>
+
+                <!-- Background Music Section -->
+                <div class="display-section audio collapsed">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="false">
+                        <h3>🎵 Background Music</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="backgroundMusicDisplay">
+                            <div class="empty-state">No background music</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Sound Effects Section -->
+                <div class="display-section audio collapsed">
+                    <div class="section-header" onclick="toggleSection(this)" role="button" tabindex="0"
+                         aria-expanded="false">
+                        <h3>🔊 Sound Effects</h3>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-content">
+                        <div id="soundEffectsDisplay">
+                            <div class="empty-state">No active sound effects</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="clear-all-btn" onclick="clearDisplayElement('all')"
+                        style="margin: 15px 20px; width: calc(100% - 40px);">
+                    🗑️ Clear Entire Display
+                </button>
             </div>
-            
-            <button class="clear-all-btn" onclick="clearDisplayElement('all')">🗑️ Clear Entire Display</button>
-        </div>
+        </aside>
 
     <!-- Audio Players -->
     <div class="audio-container" style="display: none;">
@@ -3005,22 +3603,54 @@
         let currentAudioPath = []; // Track audio navigation separately
         
         // Tab switching functionality
+        // Toggle sidebar navigation
+        function toggleSidebar() {
+            const sidebar = document.getElementById('navSidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const isExpanded = sidebar.classList.toggle('expanded');
+            toggle.setAttribute('aria-expanded', isExpanded);
+        }
+
+        // Toggle live panel
+        function toggleLivePanel() {
+            const panel = document.getElementById('livePanelContainer');
+            const floatingBtn = document.getElementById('floatingPanelToggle');
+            const isCollapsed = panel.classList.toggle('collapsed');
+            floatingBtn.classList.toggle('visible', isCollapsed);
+        }
+
+        // Toggle battlemap toolbar
+        function toggleBattlemapToolbar() {
+            const toolbar = document.getElementById('battlemapToolbar');
+            toolbar.classList.toggle('minimized');
+        }
+
+        // Toggle accordion section
+        function toggleSection(headerElement) {
+            const section = headerElement.parentElement;
+            const isCollapsed = section.classList.toggle('collapsed');
+            headerElement.setAttribute('aria-expanded', !isCollapsed);
+        }
+
         function switchTab(tabName) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
-            // Remove active class from all tab buttons
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
+
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
             });
-            
+
             // Show selected tab content
             document.getElementById(tabName + 'Tab').classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
+
+            // Add active class to clicked nav item
+            const navItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
             
             // Re-render audio list when switching to audio tab
             if (tabName === 'audio' && fileStructure) {
@@ -3068,15 +3698,23 @@
                     loadInitiativeState();
                     loadBattlemapData();
                 } else {
-                    // If no cached directory, prompt for one
-                    document.getElementById('fileExplorer').innerHTML = 
-                        '<div class="error">No directory found. Please select a directory to continue.</div>' +
-                        '<button onclick="selectNewDirectory()" style="margin-top: 20px;">📁 Select Directory</button>';
+                    // If no cached directory, show message in media grid
+                    const mediaGrid = document.getElementById('mediaGrid');
+                    if (mediaGrid) {
+                        mediaGrid.innerHTML =
+                            '<div class="error" style="text-align: center; padding: 40px;">' +
+                            '<p style="margin-bottom: 20px;">No directory found. Please select a directory to continue.</p>' +
+                            '<button onclick="selectNewDirectory()" class="battlemap-action-btn">📁 Select Directory</button>' +
+                            '</div>';
+                    }
                 }
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
-                document.getElementById('fileExplorer').innerHTML = 
-                    '<div class="error">Error initializing dashboard: ' + error.message + '</div>';
+                const mediaGrid = document.getElementById('mediaGrid');
+                if (mediaGrid) {
+                    mediaGrid.innerHTML =
+                        '<div class="error" style="text-align: center; padding: 40px;">Error initializing dashboard: ' + error.message + '</div>';
+                }
             }
         }
 
@@ -6446,8 +7084,57 @@
                 }
             }
             
+            // Global keyboard shortcuts
+            // Toggle sidebar with Alt+S
+            if (e.altKey && e.key === 's') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+
+            // Toggle live panel with Alt+L
+            if (e.altKey && e.key === 'l') {
+                e.preventDefault();
+                toggleLivePanel();
+            }
+
             // Zoom shortcuts when battlemap tab is active
             if (document.getElementById('battlemapTab').classList.contains('active')) {
+                // Save map with Ctrl+S
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    document.getElementById('saveBattlemapBtn').click();
+                }
+
+                // Load map with Ctrl+O
+                if (e.ctrlKey && e.key === 'o') {
+                    e.preventDefault();
+                    document.getElementById('loadBattlemapBtn').click();
+                }
+
+                // Focus character with F
+                if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    openCharacterFocusModal();
+                }
+
+                // Center map with C
+                if (e.key === 'c' || e.key === 'C') {
+                    e.preventDefault();
+                    panCenter();
+                }
+
+                // Toggle display with D
+                if (e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
+                    document.getElementById('toggleBattlemapDisplay').click();
+                }
+
+                // Show info with I
+                if (e.key === 'i' || e.key === 'I') {
+                    e.preventDefault();
+                    document.getElementById('battlemapInfoBtn').click();
+                }
+
                 if (e.key === '=' || e.key === '+') {
                     e.preventDefault();
                     zoomIn();
@@ -6467,10 +7154,30 @@
             const zoomInBtn = document.getElementById('zoomInBtn');
             const zoomOutBtn = document.getElementById('zoomOutBtn');
             const resetZoomBtn = document.getElementById('resetZoomBtn');
-            
+
             if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
             if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
             if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+
+            // Add keyboard navigation for nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        item.click();
+                    }
+                });
+            });
+
+            // Add keyboard navigation for section headers
+            document.querySelectorAll('.section-header').forEach(header => {
+                header.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSection(header);
+                    }
+                });
+            });
         });
 
         // Battlemap Display Toggle
@@ -6880,13 +7587,20 @@
             }
         });
 
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            loadFileStructure();
-        });
-        
-        document.getElementById('refreshBtn2').addEventListener('click', () => {
-            loadFileStructure();
-        });
+        // Refresh button event listeners (only attach if elements exist)
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                loadFileStructure();
+            });
+        }
+
+        const refreshBtn2 = document.getElementById('refreshBtn2');
+        if (refreshBtn2) {
+            refreshBtn2.addEventListener('click', () => {
+                loadFileStructure();
+            });
+        }
 
         // Initialize dashboard on load
         initializeDashboard();

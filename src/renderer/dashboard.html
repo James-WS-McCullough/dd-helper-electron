@@ -2320,17 +2320,8 @@
         }
 
         .battlemap-name-config {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 6px;
-        }
-
-        .battlemap-name-config label {
-            display: block;
-            margin-bottom: 5px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
+            flex: 1;
+            margin-left: 10px;
         }
 
         .battlemap-name-config input {
@@ -2340,7 +2331,68 @@
             border-radius: 4px;
             background: rgba(0, 0, 0, 0.3);
             color: white;
+            font-size: 14px;
+        }
+
+        .battlemap-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        /* Battlemap Info Modal Styles */
+        .battlemap-info-content {
+            padding: 20px;
+        }
+
+        .battlemap-info-content h4 {
+            color: #e67e22;
+            margin: 20px 0 10px 0;
             font-size: 16px;
+            border-bottom: 1px solid rgba(230, 126, 34, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .battlemap-info-content h4:first-of-type {
+            margin-top: 0;
+        }
+
+        .background-image-section {
+            margin-bottom: 20px;
+        }
+
+        .current-background-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .background-preview {
+            width: 120px;
+            height: 80px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-background-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .battlemap-name-config label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
         }
 
         .battlemap-grid-container {
@@ -2600,33 +2652,34 @@
                     <div class="battlemap-header">
                         <h3>🗺️ Battlemap</h3>
                         <div class="battlemap-actions">
-                            <button id="selectLocationBtn" class="battlemap-action-btn">📍 Select Background</button>
+                            <button id="selectLocationBtn" class="battlemap-action-btn" style="display: none;">📍 Select Background</button>
+                            <button id="saveBattlemapBtn" class="battlemap-action-btn">� Save Map</button>
+                            <button id="loadBattlemapBtn" class="battlemap-action-btn">📂 Load Map</button>
                             <button id="clearBattlemapBtn" class="battlemap-action-btn clear-battlemap">🗑️ Clear Map</button>
+                            <button id="battlemapInfoBtn" class="battlemap-action-btn">ℹ️ Map Info</button>
                         </div>
                     </div>
                     <div class="battlemap-config">
-                        <div class="battlemap-name-config">
-                            <label for="battlemapName">Battlemap Name:</label>
-                            <input type="text" id="battlemapName" value="Untitled Battlemap" onchange="updateBattlemapName()">
-                        </div>
                         <div class="grid-config">
                             <div class="grid-dimension-controls">
-                                <div class="grid-size-input">
+                                <div class="grid-size-input" style="display: none;">
                                     <label for="gridWidth">Grid Width:</label>
                                     <input type="number" id="gridWidth" min="5" value="20" onchange="updateBattlemapGrid()">
                                 </div>
                                 <div class="grid-size-input">
                                     <label for="gridHeight">Grid Height:</label>
-                                    <input type="number" id="gridHeight" min="5" value="15" disabled readonly>
-                                    <small style="color: #bbb; margin-left: 8px;">(Auto from image)</small>
+                                    <input type="number" id="gridHeight" min="5" value="15" disabled readonly style="display: none;">
                                 </div>
-                                <div id="aspectRatioInfo" class="aspect-ratio-info">
+                                <div id="aspectRatioInfo" class="aspect-ratio-info" style="display: none;">
                                     <small>Image ratio: <span id="imageRatio">Select background first</span></small>
                                 </div>
                             </div>
-                            <button id="saveBattlemapBtn" class="battlemap-action-btn">💾 Save Map</button>
-                            <button id="loadBattlemapBtn" class="battlemap-action-btn">📂 Load Map</button>
-                            <button id="toggleBattlemapDisplay" class="battlemap-action-btn">📺 Show on Display</button>
+                            <div class="battlemap-controls-row">
+                                <button id="toggleBattlemapDisplay" class="battlemap-action-btn">� Show on Display</button>
+                                <div class="battlemap-name-config" style="display: none;">
+                                    <input type="text" id="battlemapName" value="Untitled Battlemap" onchange="updateBattlemapName()" placeholder="Map name...">
+                                </div>
+                            </div>
                             <div class="zoom-controls">
                                 <button id="zoomOutBtn" class="battlemap-action-btn" onclick="zoomOut()">🔍- Zoom Out</button>
                                 <button id="resetZoomBtn" class="battlemap-action-btn" onclick="resetZoom()">🎯 Reset View</button>
@@ -2891,6 +2944,50 @@
             <div class="character-focus-content">
                 <div class="character-list" id="characterFocusList">
                     <!-- Characters will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battlemap Info Modal -->
+    <div id="battlemapInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🗺️ Map Configuration</h3>
+                <button class="close" onclick="closeBattlemapInfoModal()">✕</button>
+            </div>
+            <div class="battlemap-info-content">
+                <div class="battlemap-name-config">
+                    <label for="battlemapNameModal">Map Name:</label>
+                    <input type="text" id="battlemapNameModal" value="Untitled Battlemap" onchange="updateBattlemapNameFromModal()">
+                </div>
+                
+                <div class="background-image-section">
+                    <h4>Background Image</h4>
+                    <div class="current-background-display">
+                        <div id="currentBackgroundPreview" class="background-preview">
+                            <span class="no-background-text">No background selected</span>
+                        </div>
+                        <button id="changeBackgroundBtn" class="battlemap-action-btn" onclick="selectBattlemapBackground()">📍 Change Background</button>
+                    </div>
+                </div>
+                
+                <div class="grid-config">
+                    <h4>Grid Dimensions</h4>
+                    <div class="grid-dimension-controls">
+                        <div class="grid-size-input">
+                            <label for="gridWidthModal">Grid Width:</label>
+                            <input type="number" id="gridWidthModal" min="5" value="20" onchange="updateBattlemapGridFromModal()">
+                        </div>
+                        <div class="grid-size-input">
+                            <label for="gridHeightModal">Grid Height:</label>
+                            <input type="number" id="gridHeightModal" min="5" value="15" disabled readonly>
+                            <small style="color: #bbb; margin-left: 8px;">(Auto from image)</small>
+                        </div>
+                        <div id="aspectRatioInfoModal" class="aspect-ratio-info">
+                            <small>Image ratio: <span id="imageRatioModal">Select background first</span></small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4761,10 +4858,15 @@
                         }
                     };
                     
-                    // Update UI elements
-                    document.getElementById('battlemapName').value = battlemapData.name;
-                    document.getElementById('gridWidth').value = battlemapData.gridWidth;
-                    document.getElementById('gridHeight').value = battlemapData.gridHeight;
+                    // Update UI elements if they exist
+                    const battlemapNameInput = document.getElementById('battlemapName');
+                    if (battlemapNameInput) battlemapNameInput.value = battlemapData.name;
+                    
+                    const gridWidthInput = document.getElementById('gridWidth');
+                    if (gridWidthInput) gridWidthInput.value = battlemapData.gridWidth;
+                    
+                    const gridHeightInput = document.getElementById('gridHeight');
+                    if (gridHeightInput) gridHeightInput.value = battlemapData.gridHeight;
                     
                     // Regenerate the battlemap with proper aspect ratio handling
                     if (battlemapData.backgroundImage && battlemapData.imageAspectRatio) {
@@ -5532,8 +5634,10 @@
                 // Image-based mode - calculate height from width and aspect ratio
                 updateGridDimensionsFromImage();
             } else {
-                // No image yet - use manual width value
-                const width = parseInt(document.getElementById('gridWidth').value);
+                // No image yet - use manual width value from modal
+                const mainWidth = document.getElementById('gridWidth');
+                const modalWidth = document.getElementById('gridWidthModal');
+                const width = parseInt((mainWidth && mainWidth.value) || (modalWidth && modalWidth.value) || 20);
                 
                 if (width >= 5) { // Only minimum limit, no maximum
                     // Remove tokens that are outside new grid bounds
@@ -5670,10 +5774,18 @@
             const calculatedHeight = Math.max(5, Math.round(width / aspectRatio)); // Only minimum limit, no maximum
             
             battlemapData.gridHeight = calculatedHeight;
-            document.getElementById('gridHeight').value = calculatedHeight;
+            
+            // Update both main and modal inputs if they exist
+            const mainGridHeight = document.getElementById('gridHeight');
+            if (mainGridHeight) mainGridHeight.value = calculatedHeight;
+            
+            const modalGridHeight = document.getElementById('gridHeightModal');
+            if (modalGridHeight) modalGridHeight.value = calculatedHeight;
             
             // Update the data and regenerate grid
-            battlemapData.gridWidth = parseInt(document.getElementById('gridWidth').value);
+            const mainGridWidth = document.getElementById('gridWidth');
+            const modalGridWidth = document.getElementById('gridWidthModal');
+            battlemapData.gridWidth = parseInt((mainGridWidth && mainGridWidth.value) || (modalGridWidth && modalGridWidth.value) || 20);
             battlemapData.gridHeight = calculatedHeight;
             generateBattlemapGrid();
         }
@@ -5960,6 +6072,62 @@
             const success = focusOnCharacter(characterName);
             if (success) {
                 closeCharacterFocusModal();
+            }
+        }
+
+        // Map Info Modal Functions
+        function openBattlemapInfoModal() {
+            const modal = document.getElementById('battlemapInfoModal');
+            
+            // Sync data to modal inputs
+            document.getElementById('battlemapNameModal').value = battlemapData.name;
+            document.getElementById('gridWidthModal').value = battlemapData.gridWidth;
+            document.getElementById('gridHeightModal').value = battlemapData.gridHeight;
+            document.getElementById('imageRatioModal').textContent = 
+                battlemapData.imageAspectRatio ? 
+                `${battlemapData.imageAspectRatio.toFixed(2)} : 1` : 
+                'Select background first';
+            
+            // Update background preview
+            const preview = document.getElementById('currentBackgroundPreview');
+            if (battlemapData.backgroundImage) {
+                preview.style.backgroundImage = `url('file://${battlemapData.backgroundImage}')`;
+                preview.innerHTML = '';
+            } else {
+                preview.style.backgroundImage = '';
+                preview.innerHTML = '<span class="no-background-text">No background selected</span>';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeBattlemapInfoModal() {
+            const modal = document.getElementById('battlemapInfoModal');
+            modal.classList.remove('active');
+        }
+
+        function updateBattlemapNameFromModal() {
+            const name = document.getElementById('battlemapNameModal').value;
+            battlemapData.name = name || 'Untitled Battlemap';
+            // Also update the hidden main input (if it still exists)
+            const mainInput = document.getElementById('battlemapName');
+            if (mainInput) {
+                mainInput.value = battlemapData.name;
+            }
+        }
+
+        function updateBattlemapGridFromModal() {
+            const width = parseInt(document.getElementById('gridWidthModal').value);
+            if (width >= 5) {
+                // Update main inputs if they exist
+                const mainGridWidth = document.getElementById('gridWidth');
+                if (mainGridWidth) mainGridWidth.value = width;
+                
+                // Call the main update function
+                updateBattlemapGrid();
+                
+                // Update modal display
+                document.getElementById('gridHeightModal').value = battlemapData.gridHeight;
             }
         }
 
@@ -6604,13 +6772,16 @@
                         }
                     };
                     
-                    // Update UI elements
-                    document.getElementById('battlemapName').value = battlemapData.name;
-                    document.getElementById('gridWidth').value = battlemapData.gridWidth;
-                    document.getElementById('gridHeight').value = battlemapData.gridHeight;
+                    // Update UI elements if they exist
+                    const gridWidthInput = document.getElementById('gridWidth');
+                    if (gridWidthInput) gridWidthInput.value = battlemapData.gridWidth;
+                    
+                    const gridHeightInput = document.getElementById('gridHeight');
+                    if (gridHeightInput) gridHeightInput.value = battlemapData.gridHeight;
                     
                     // Always start with no background image - user must select one
-                    document.getElementById('imageRatio').textContent = 'Select background first';
+                    const imageRatioElement = document.getElementById('imageRatio');
+                    if (imageRatioElement) imageRatioElement.textContent = 'Select background first';
                     
                     generateBattlemapGrid();
                     console.log('Battlemap data loaded');
@@ -6625,7 +6796,7 @@
         document.getElementById('clearBattlemapBtn').addEventListener('click', clearBattlemap);
         document.getElementById('saveBattlemapBtn').addEventListener('click', saveBattlemapData);
         document.getElementById('loadBattlemapBtn').addEventListener('click', loadBattlemapList);
-        document.getElementById('loadBattlemapBtn').addEventListener('click', loadBattlemapList);
+        document.getElementById('battlemapInfoBtn').addEventListener('click', openBattlemapInfoModal);
         document.getElementById('toggleBattlemapDisplay').addEventListener('click', toggleBattlemapDisplay);
         document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
         document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);

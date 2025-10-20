@@ -108,6 +108,38 @@ export interface ElectronAPI {
   ) => Promise<boolean>
 
   // ============================================
+  // PIN BOARD MANAGEMENT
+  // ============================================
+
+  /**
+   * Save pin board to file in directory root
+   * @param directoryPath - Root directory path
+   * @param boardName - Name of the board
+   * @param pins - Pin data to save
+   * @returns Success status
+   */
+  savePinBoard: (
+    directoryPath: string,
+    boardName: string,
+    pins: any[]
+  ) => Promise<boolean>
+
+  /**
+   * Load pin board from file
+   * @param directoryPath - Root directory path
+   * @param boardName - Name of the board
+   * @returns Pin data or null
+   */
+  loadPinBoard: (directoryPath: string, boardName: string) => Promise<any[] | null>
+
+  /**
+   * Get list of available pin boards
+   * @param directoryPath - Root directory path
+   * @returns List of board names
+   */
+  getAvailablePinBoards: (directoryPath: string) => Promise<string[]>
+
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
 

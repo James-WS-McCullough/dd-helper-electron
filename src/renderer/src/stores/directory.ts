@@ -15,6 +15,10 @@ export const useDirectoryStore = defineStore('directory', () => {
   const isScanning = ref(false)
   const scanError = ref<string | null>(null)
 
+  // Navigation state (persists across route changes)
+  const currentImagesFolderPath = ref<string>('')
+  const currentAudioFolderPath = ref<string>('')
+
   // Getters
   const hasDirectory = computed(() => currentDirectory.value !== null)
   const hasMediaTree = computed(() => mediaTree.value !== null)
@@ -86,12 +90,28 @@ export const useDirectoryStore = defineStore('directory', () => {
     scanError.value = null
   }
 
+  /**
+   * Set the current folder path for images tab
+   */
+  function setImagesFolderPath(path: string): void {
+    currentImagesFolderPath.value = path
+  }
+
+  /**
+   * Set the current folder path for audio tab
+   */
+  function setAudioFolderPath(path: string): void {
+    currentAudioFolderPath.value = path
+  }
+
   return {
     // State
     currentDirectory,
     mediaTree,
     isScanning,
     scanError,
+    currentImagesFolderPath,
+    currentAudioFolderPath,
 
     // Getters
     hasDirectory,
@@ -101,6 +121,8 @@ export const useDirectoryStore = defineStore('directory', () => {
     initialize,
     selectDirectory,
     scanCurrentDirectory,
-    clearDirectory
+    clearDirectory,
+    setImagesFolderPath,
+    setAudioFolderPath
   }
 })

@@ -387,3 +387,84 @@ export async function getBattlemapFiles(directoryPath: string): Promise<Battlema
     return []
   }
 }
+
+/**
+ * Save pin board to JSON file
+ */
+export async function savePinBoard(
+  directoryPath: string,
+  boardName: string,
+  pins: any[]
+): Promise<boolean> {
+  try {
+    // Sanitize board name
+    const sanitizedName = boardName.replace(/[^a-z0-9_-]/gi, '_')
+    const fileName = `pinboard_${sanitizedName}.json`
+    const filePath = join(directoryPath, fileName)
+
+    const data = {
+      name: boardName,
+      pins,
+      savedAt: new Date().toISOString()
+    }
+
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
+    console.log(`Pin board saved: ${filePath}`)
+    return true
+  } catch (error) {
+    console.error('Error saving pin board:', error)
+    return false
+  }
+}
+
+/**
+ * Load pin board from JSON file
+ */
+export async function loadPinBoard(
+  directoryPath: string,
+  boardName: string
+): Promise<any[] | null> {
+  try {
+    // Sanitize board name
+    const sanitizedName = boardName.replace(/[^a-z0-9_-]/gi, '_')
+    const fileName = `pinboard_${sanitizedName}.json`
+    const filePath = join(directoryPath, fileName)
+
+    const content = await fs.readFile(filePath, 'utf-8')
+    const data = JSON.parse(content)
+    return data.pins || []
+  } catch (error) {
+    console.error('Error loading pin board:', error)
+    return null
+  }
+}
+
+/**
+ * Get list of available pin boards in directory
+ */
+export async function getAvailablePinBoards(directoryPath: string): Promise<string[]> {
+  try {
+    const files = await fs.readdir(directoryPath)
+    const pinBoards: string[] = []
+
+    for (const file of files) {
+      if (file.startsWith('pinboard_') && file.endsWith('.json')) {
+        try {
+          const filePath = join(directoryPath, file)
+          const content = await fs.readFile(filePath, 'utf-8')
+          const data = JSON.parse(content)
+          if (data.name) {
+            pinBoards.push(data.name)
+          }
+        } catch (error) {
+          console.log(`Skipping invalid pin board file: ${file}`)
+        }
+      }
+    }
+
+    return pinBoards.sort()
+  } catch (error) {
+    console.error('Error getting pin boards:', error)
+    return []
+  }
+}

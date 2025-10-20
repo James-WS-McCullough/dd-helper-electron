@@ -21,6 +21,12 @@ const electronAPI = {
   setFocusedPortrait: (portraitPath) => electron.ipcRenderer.invoke("set-focused-portrait", portraitPath),
   setAudioVolume: (audioType, audioId, volume) => electron.ipcRenderer.invoke("set-audio-volume", audioType, audioId, volume),
   // ============================================
+  // PIN BOARD MANAGEMENT
+  // ============================================
+  savePinBoard: (directoryPath, boardName, pins) => electron.ipcRenderer.invoke("save-pin-board", directoryPath, boardName, pins),
+  loadPinBoard: (directoryPath, boardName) => electron.ipcRenderer.invoke("load-pin-board", directoryPath, boardName),
+  getAvailablePinBoards: (directoryPath) => electron.ipcRenderer.invoke("get-available-pin-boards", directoryPath),
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
   savePartyData: (filePath, partyData) => electron.ipcRenderer.invoke("save-party-data", filePath, partyData),

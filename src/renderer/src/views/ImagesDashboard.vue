@@ -196,15 +196,15 @@ const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
 const pinsStore = usePinsStore()
 
-// Current folder path (absolute path from directory)
-const currentFolderPath = ref<string>('')
+// Current folder path (persisted in store)
+const currentFolderPath = computed(() => directoryStore.currentImagesFolderPath)
 
 // Watch for folder query parameter (from pinned items)
 watch(
   () => route.query.folder,
   (folder) => {
     if (folder && typeof folder === 'string') {
-      currentFolderPath.value = folder
+      directoryStore.setImagesFolderPath(folder)
     }
   },
   { immediate: true }
@@ -311,27 +311,27 @@ function navigateInto(folder: MediaFile) {
   clearSearch()
 
   if (currentFolderPath.value) {
-    currentFolderPath.value = `${currentFolderPath.value}/${folder.displayName}`
+    directoryStore.setImagesFolderPath(`${currentFolderPath.value}/${folder.displayName}`)
   } else {
-    currentFolderPath.value = folder.displayName
+    directoryStore.setImagesFolderPath(folder.displayName)
   }
 }
 
 function navigateUp() {
   const parts = currentFolderPath.value.split('/').filter(p => p)
   parts.pop() // Remove last part
-  currentFolderPath.value = parts.join('/')
+  directoryStore.setImagesFolderPath(parts.join('/'))
 }
 
 // Navigate to root
 function navigateToRoot() {
-  currentFolderPath.value = ''
+  directoryStore.setImagesFolderPath('')
 }
 
 // Navigate to a specific breadcrumb segment
 function navigateToBreadcrumb(segmentIndex: number) {
   const segments = breadcrumbSegments.value.slice(0, segmentIndex + 1)
-  currentFolderPath.value = segments.join('/')
+  directoryStore.setImagesFolderPath(segments.join('/'))
 }
 
 async function handleMediaSelect(media: MediaFile) {

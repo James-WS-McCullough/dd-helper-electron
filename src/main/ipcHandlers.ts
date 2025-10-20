@@ -21,7 +21,10 @@ import {
   loadInitiativeData,
   saveBattlemapData,
   loadBattlemapData,
-  getBattlemapFiles
+  getBattlemapFiles,
+  savePinBoard,
+  loadPinBoard,
+  getAvailablePinBoards
 } from './fileOperations'
 
 // Display state management
@@ -266,6 +269,22 @@ export function registerIpcHandlers(): void {
       return true
     }
   )
+
+  // ============================================
+  // PIN BOARD MANAGEMENT
+  // ============================================
+
+  ipcMain.handle('save-pin-board', async (_event, directoryPath: string, boardName: string, pins: any[]) => {
+    return await savePinBoard(directoryPath, boardName, pins)
+  })
+
+  ipcMain.handle('load-pin-board', async (_event, directoryPath: string, boardName: string) => {
+    return await loadPinBoard(directoryPath, boardName)
+  })
+
+  ipcMain.handle('get-available-pin-boards', async (_event, directoryPath: string) => {
+    return await getAvailablePinBoards(directoryPath)
+  })
 
   // ============================================
   // PARTY DATA MANAGEMENT

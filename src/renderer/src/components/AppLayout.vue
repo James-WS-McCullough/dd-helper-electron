@@ -19,16 +19,6 @@
           <span class="font-medium">{{ item.label }}</span>
         </router-link>
       </nav>
-
-      <div class="p-4 border-t border-gray-700">
-        <button
-          @click="openDisplayWindow"
-          class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
-        >
-          <span class="text-xl">📺</span>
-          <span>Display Window</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Main Content with Pins Sidebar -->
@@ -50,12 +40,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDirectoryStore, useDisplayStore, usePinsStore } from '../stores'
+import { useDirectoryStore, usePinsStore } from '../stores'
 import DisplayStatusBar from './DisplayStatusBar.vue'
 import PinsSidebar from './PinsSidebar.vue'
 
 const directoryStore = useDirectoryStore()
-const displayStore = useDisplayStore()
 const pinsStore = usePinsStore()
 
 const directoryName = computed(() => {
@@ -74,8 +63,4 @@ const navItems = [
   { path: '/initiative', icon: '🎯', label: 'Initiative' },
   { path: '/battlemap', icon: '🗺️', label: 'Battlemap' }
 ]
-
-async function openDisplayWindow() {
-  await displayStore.openDisplayWindow()
-}
 </script>

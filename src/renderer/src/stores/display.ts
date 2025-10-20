@@ -169,6 +169,15 @@ export const useDisplayStore = defineStore('display', () => {
   }
 
   /**
+   * Clear all images (backgrounds and events)
+   */
+  async function clearAllImages(): Promise<boolean> {
+    await clearBackground()
+    await clearEvent()
+    return true
+  }
+
+  /**
    * Set the focused portrait
    */
   async function setFocusedPortrait(portraitPath: string | null): Promise<boolean> {
@@ -226,6 +235,7 @@ export const useDisplayStore = defineStore('display', () => {
     clearPortrait,
     clearBackground,
     clearEvent,
+    clearAllImages,
     clearBackgroundMusic,
     clearBackgroundSound,
     clearAllBackgroundSounds,

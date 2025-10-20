@@ -62,7 +62,7 @@
               </button>
               <button
                 @click="displayStore.clearPortrait(portrait.path)"
-                class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
+                class="p-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
               >
                 ✕
               </button>
@@ -138,13 +138,15 @@
           </div>
         </div>
 
-        <!-- Clear All Button -->
+        <!-- Menu Button -->
         <div v-if="hasActiveDisplay" class="flex-shrink-0 ml-auto">
           <button
-            @click="clearAllContent()"
-            class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
+            ref="menuButton"
+            @click="toggleMenu"
+            class="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            title="Display Options"
           >
-            Clear All
+            <span class="text-2xl">☰</span>
           </button>
         </div>
         </div>
@@ -152,8 +154,83 @@
     </div>
   </transition>
 
-  <!-- Volume Control Tooltips (Outside scrolling container) -->
+  <!-- Popup Menus (Outside scrolling container) -->
   <Teleport to="body">
+    <!-- Display Options Menu -->
+    <div
+      v-if="showMenu && menuPosition"
+      :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }"
+      class="display-options-menu fixed bg-gray-900 border-2 border-gray-700 rounded-lg shadow-2xl p-2 z-[10000] w-64"
+      @click.stop
+    >
+      <div class="space-y-1">
+        <!-- Clear All -->
+        <button
+          @click="clearAllContent(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-red-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">🗑️</span>
+          <span>Clear All</span>
+        </button>
+
+        <!-- Clear All Portraits -->
+        <button
+          @click="clearAllPortraits(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-red-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">👤</span>
+          <span>Clear All Portraits</span>
+        </button>
+
+        <!-- Clear All Images -->
+        <button
+          @click="clearAllImages(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-red-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">🖼️</span>
+          <span>Clear All Images</span>
+        </button>
+
+        <!-- Clear All Audio -->
+        <button
+          @click="clearAllAudio(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-red-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">🎵</span>
+          <span>Clear All Audio</span>
+        </button>
+
+        <div class="border-t border-gray-700 my-2"></div>
+
+        <!-- Pin as Preset -->
+        <button
+          @click="pinAsPreset(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-blue-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">📌</span>
+          <span>Pin as Preset</span>
+        </button>
+
+        <!-- Pin Images as Preset -->
+        <button
+          @click="pinImagesAsPreset(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-blue-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">🖼️</span>
+          <span>Pin Images as Preset</span>
+        </button>
+
+        <!-- Pin Audio as Preset -->
+        <button
+          @click="pinAudioAsPreset(); closeMenu()"
+          class="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-blue-600/20 transition-colors flex items-center gap-3"
+        >
+          <span class="text-xl">🎵</span>
+          <span>Pin Audio as Preset</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Background Music Volume Control -->
     <div
       v-if="volumeControlId === 'backgroundMusic' && volumeControlPosition"
@@ -207,28 +284,45 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useDisplayStore } from '../stores'
+import { useDisplayStore, usePinsStore } from '../stores'
 import { getGMDisplayNameFromPath } from '../utils/displayNames'
 import type { MediaItem } from '../types'
 
 const displayStore = useDisplayStore()
+const pinsStore = usePinsStore()
 
 // Volume control state
 const volumeControlId = ref<string | null>(null)
 const volumeControlPosition = ref<{ x: number; y: number } | null>(null)
 
+// Menu state
+const showMenu = ref(false)
+const menuPosition = ref<{ x: number; y: number } | null>(null)
+const menuButton = ref<HTMLElement | null>(null)
+
 // Card refs
 const backgroundMusicCard = ref<HTMLElement | null>(null)
 const soundCardRefs = new Map<string, HTMLElement>()
 
-// Close volume control when clicking outside
+// Close volume control and menu when clicking outside
 function handleClickOutside(event: MouseEvent) {
+  const target = event.target as HTMLElement
+
+  // Close volume control if clicking outside
   if (volumeControlId.value) {
-    // Check if click was outside the volume control
-    const target = event.target as HTMLElement
     if (!target.closest('.volume-control-popup') && !target.closest('.audio-card-clickable')) {
       volumeControlId.value = null
       volumeControlPosition.value = null
+    }
+  }
+
+  // Close menu if clicking outside
+  if (showMenu.value) {
+    const clickedInsideMenu = target.closest('.display-options-menu')
+    const clickedInsideButton = menuButton.value?.contains(target)
+    if (!clickedInsideMenu && !clickedInsideButton) {
+      showMenu.value = false
+      menuPosition.value = null
     }
   }
 }
@@ -278,6 +372,157 @@ async function clearAllContent(): Promise<void> {
     displayStore.clearAllBackgroundSounds(),
     displayStore.clearAllSoundEffects()
   ])
+}
+
+// Clear all portraits
+async function clearAllPortraits(): Promise<void> {
+  await displayStore.clearAllPortraits()
+}
+
+// Clear all images (backgrounds and events)
+async function clearAllImages(): Promise<void> {
+  await displayStore.clearAllImages()
+}
+
+// Clear all audio
+async function clearAllAudio(): Promise<void> {
+  await Promise.all([
+    displayStore.clearBackgroundMusic(),
+    displayStore.clearAllBackgroundSounds(),
+    displayStore.clearAllSoundEffects()
+  ])
+}
+
+// Toggle menu
+function toggleMenu(): void {
+  if (showMenu.value) {
+    closeMenu()
+  } else {
+    showMenu.value = true
+    if (menuButton.value) {
+      menuPosition.value = calculateMenuPosition(menuButton.value)
+    }
+  }
+}
+
+// Close menu
+function closeMenu(): void {
+  showMenu.value = false
+  menuPosition.value = null
+}
+
+// Calculate position for menu
+function calculateMenuPosition(buttonEl: HTMLElement): { x: number; y: number } | null {
+  const rect = buttonEl.getBoundingClientRect()
+  const menuWidth = 256 // w-64 = 16rem = 256px
+  const menuHeight = 400 // approximate height
+  const margin = 12
+
+  // Position above the button by default
+  let x = rect.left + (rect.width / 2) - (menuWidth / 2)
+  let y = rect.top - menuHeight - margin
+
+  // Prevent going off the left edge
+  if (x < margin) {
+    x = margin
+  }
+
+  // Prevent going off the right edge
+  const maxX = window.innerWidth - menuWidth - margin
+  if (x > maxX) {
+    x = maxX
+  }
+
+  // Prevent going off the top edge
+  if (y < margin) {
+    y = rect.bottom + margin // Show below instead
+  }
+
+  return { x, y }
+}
+
+// Generate preset name from current state
+function generatePresetName(): string {
+  const items: string[] = []
+
+  if (displayStore.displayState.background) {
+    items.push(getGMDisplayNameFromPath(displayStore.displayState.background.path, displayStore.displayState.background.displayName))
+  }
+
+  if (displayStore.displayState.portraits.length > 0) {
+    const portraitNames = displayStore.displayState.portraits
+      .slice(0, 2)
+      .map(p => getGMDisplayNameFromPath(p.path, p.displayName))
+    items.push(...portraitNames)
+  }
+
+  if (displayStore.displayState.backgroundMusic) {
+    items.push(getGMDisplayNameFromPath(displayStore.displayState.backgroundMusic.path, displayStore.displayState.backgroundMusic.displayName))
+  }
+
+  if (items.length === 0) {
+    return 'Empty Preset'
+  }
+
+  const name = items.slice(0, 3).join(', ')
+  return items.length > 3 ? `${name}...` : name
+}
+
+// Pin current state as preset
+function pinAsPreset(): void {
+  const preset = {
+    id: `preset-${Date.now()}`,
+    type: 'preset' as const,
+    category: 'presets' as const,
+    path: '', // Not used for presets
+    displayName: generatePresetName(),
+    displayState: JSON.parse(JSON.stringify(displayStore.displayState))
+  }
+  pinsStore.addPin(preset)
+}
+
+// Pin images only as preset
+function pinImagesAsPreset(): void {
+  const name = generatePresetName()
+  const preset = {
+    id: `preset-images-${Date.now()}`,
+    type: 'preset-images' as const,
+    category: 'presets' as const,
+    path: '',
+    displayName: `Images: ${name}`,
+    displayState: {
+      background: displayStore.displayState.background,
+      event: displayStore.displayState.event,
+      portraits: displayStore.displayState.portraits,
+      focusedPortraitPath: displayStore.displayState.focusedPortraitPath,
+      backgroundMusic: null,
+      backgroundSounds: [],
+      soundEffects: []
+    }
+  }
+  pinsStore.addPin(preset)
+}
+
+// Pin audio only as preset
+function pinAudioAsPreset(): void {
+  const name = generatePresetName()
+  const preset = {
+    id: `preset-audio-${Date.now()}`,
+    type: 'preset-audio' as const,
+    category: 'presets' as const,
+    path: '',
+    displayName: `Audio: ${name}`,
+    displayState: {
+      background: null,
+      event: null,
+      portraits: [],
+      focusedPortraitPath: null,
+      backgroundMusic: displayStore.displayState.backgroundMusic,
+      backgroundSounds: displayStore.displayState.backgroundSounds,
+      soundEffects: displayStore.displayState.soundEffects
+    }
+  }
+  pinsStore.addPin(preset)
 }
 
 // Set sound card ref

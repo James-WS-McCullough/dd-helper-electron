@@ -219,15 +219,15 @@ const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
 const pinsStore = usePinsStore()
 
-// Current folder navigation state
-const currentFolderPath = ref<string | null>(null)
+// Current folder navigation state (persisted in store)
+const currentFolderPath = computed(() => directoryStore.currentAudioFolderPath)
 
 // Watch for folder query parameter (from pinned items)
 watch(
   () => route.query.folder,
   (folder) => {
     if (folder && typeof folder === 'string') {
-      currentFolderPath.value = folder
+      directoryStore.setAudioFolderPath(folder)
     }
   },
   { immediate: true }
@@ -376,7 +376,7 @@ function clearSearch() {
 function navigateToFolder(folder: MediaFile) {
   // Clear search when navigating into a folder
   clearSearch()
-  currentFolderPath.value = folder.path
+  directoryStore.setAudioFolderPath(folder.path)
 }
 
 // Navigate up one level
@@ -389,15 +389,15 @@ function navigateUp() {
 
   if (segments.length === 0) {
     // Go to root
-    currentFolderPath.value = null
+    directoryStore.setAudioFolderPath('')
   } else {
-    currentFolderPath.value = segments.join('/')
+    directoryStore.setAudioFolderPath(segments.join('/'))
   }
 }
 
 // Navigate to root
 function navigateToRoot() {
-  currentFolderPath.value = null
+  directoryStore.setAudioFolderPath('')
 }
 
 // Navigate to a specific breadcrumb segment
@@ -406,7 +406,7 @@ function navigateToBreadcrumb(segmentIndex: number) {
 
   // Build path up to and including the clicked segment
   const segments = breadcrumbSegments.value.slice(0, segmentIndex + 1)
-  currentFolderPath.value = directoryStore.currentDirectory + '/' + segments.join('/')
+  directoryStore.setAudioFolderPath(directoryStore.currentDirectory + '/' + segments.join('/'))
 }
 
 async function handleMediaSelect(media: MediaFile) {

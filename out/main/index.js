@@ -442,6 +442,61 @@ async function getBattlemapFiles(directoryPath) {
     return [];
   }
 }
+async function savePinBoard(directoryPath, boardName, pins) {
+  try {
+    const sanitizedName = boardName.replace(/[^a-z0-9_-]/gi, "_");
+    const fileName = `pinboard_${sanitizedName}.json`;
+    const filePath = path.join(directoryPath, fileName);
+    const data = {
+      name: boardName,
+      pins,
+      savedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
+    console.log(`Pin board saved: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.error("Error saving pin board:", error);
+    return false;
+  }
+}
+async function loadPinBoard(directoryPath, boardName) {
+  try {
+    const sanitizedName = boardName.replace(/[^a-z0-9_-]/gi, "_");
+    const fileName = `pinboard_${sanitizedName}.json`;
+    const filePath = path.join(directoryPath, fileName);
+    const content = await fs.promises.readFile(filePath, "utf-8");
+    const data = JSON.parse(content);
+    return data.pins || [];
+  } catch (error) {
+    console.error("Error loading pin board:", error);
+    return null;
+  }
+}
+async function getAvailablePinBoards(directoryPath) {
+  try {
+    const files = await fs.promises.readdir(directoryPath);
+    const pinBoards = [];
+    for (const file of files) {
+      if (file.startsWith("pinboard_") && file.endsWith(".json")) {
+        try {
+          const filePath = path.join(directoryPath, file);
+          const content = await fs.promises.readFile(filePath, "utf-8");
+          const data = JSON.parse(content);
+          if (data.name) {
+            pinBoards.push(data.name);
+          }
+        } catch (error) {
+          console.log(`Skipping invalid pin board file: ${file}`);
+        }
+      }
+    }
+    return pinBoards.sort();
+  } catch (error) {
+    console.error("Error getting pin boards:", error);
+    return [];
+  }
+}
 let displayState = {
   portraits: [],
   focusedPortraitPath: null,
@@ -623,6 +678,15 @@ function registerIpcHandlers() {
       return true;
     }
   );
+  electron.ipcMain.handle("save-pin-board", async (_event, directoryPath, boardName, pins) => {
+    return await savePinBoard(directoryPath, boardName, pins);
+  });
+  electron.ipcMain.handle("load-pin-board", async (_event, directoryPath, boardName) => {
+    return await loadPinBoard(directoryPath, boardName);
+  });
+  electron.ipcMain.handle("get-available-pin-boards", async (_event, directoryPath) => {
+    return await getAvailablePinBoards(directoryPath);
+  });
   electron.ipcMain.handle("save-party-data", async (_event, filePath, partyData) => {
     return await savePartyData(filePath, partyData);
   });

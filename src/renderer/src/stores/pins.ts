@@ -6,15 +6,17 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useDirectoryStore } from './directory'
 
 export interface PinnedItem {
-  id: string // unique identifier (path)
-  type: 'image' | 'video' | 'audio' | 'folder'
-  category: 'images' | 'audio' // which dashboard it belongs to
+  id: string // unique identifier (path or preset id)
+  type: 'image' | 'video' | 'audio' | 'folder' | 'preset' | 'preset-images' | 'preset-audio'
+  category: 'images' | 'audio' | 'presets' // which dashboard it belongs to
   path: string
   displayName: string
   mediaType?: string
   mediaSubtype?: string
+  displayState?: any // For presets, stores the DisplayState
 }
 
 export const usePinsStore = defineStore('pins', () => {
@@ -68,6 +70,56 @@ export const usePinsStore = defineStore('pins', () => {
     }
   }
 
+  // Rename a pin
+  function renamePin(id: string, newName: string) {
+    const pin = pinnedItems.value.find(item => item.id === id)
+    if (pin) {
+      pin.displayName = newName
+      savePins()
+    }
+  }
+
+  // Save pin board to file
+  async function savePinBoard(boardName: string): Promise<void> {
+    const directoryStore = useDirectoryStore()
+    if (!directoryStore.currentDirectory) return
+
+    // Serialize to plain JSON to remove Vue reactivity proxies
+    const plainPins = JSON.parse(JSON.stringify(pinnedItems.value))
+
+    await window.electronAPI.savePinBoard(
+      directoryStore.currentDirectory,
+      boardName,
+      plainPins
+    )
+  }
+
+  // Load pin board from file
+  async function loadPinBoard(boardName: string): Promise<void> {
+    const directoryStore = useDirectoryStore()
+    if (!directoryStore.currentDirectory) return
+
+    const pins = await window.electronAPI.loadPinBoard(
+      directoryStore.currentDirectory,
+      boardName
+    )
+
+    if (pins) {
+      pinnedItems.value = pins
+      savePins()
+    }
+  }
+
+  // Get available pin boards
+  async function getAvailablePinBoards(): Promise<string[]> {
+    const directoryStore = useDirectoryStore()
+    if (!directoryStore.currentDirectory) return []
+
+    return await window.electronAPI.getAvailablePinBoards(
+      directoryStore.currentDirectory
+    )
+  }
+
   // Get pins by category
   const imagePins = computed(() =>
     pinnedItems.value.filter(item => item.category === 'images')
@@ -77,6 +129,10 @@ export const usePinsStore = defineStore('pins', () => {
     pinnedItems.value.filter(item => item.category === 'audio')
   )
 
+  const presetPins = computed(() =>
+    pinnedItems.value.filter(item => item.category === 'presets')
+  )
+
   // Initialize on first use
   loadPins()
 
@@ -84,10 +140,15 @@ export const usePinsStore = defineStore('pins', () => {
     pinnedItems,
     imagePins,
     audioPins,
+    presetPins,
     isPinned,
     addPin,
     removePin,
     togglePin,
-    loadPins
+    renamePin,
+    loadPins,
+    savePinBoard,
+    loadPinBoard,
+    getAvailablePinBoards
   }
 })

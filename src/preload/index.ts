@@ -55,6 +55,19 @@ const electronAPI: ElectronAPI = {
   ) => ipcRenderer.invoke('set-audio-volume', audioType, audioId, volume),
 
   // ============================================
+  // PIN BOARD MANAGEMENT
+  // ============================================
+
+  savePinBoard: (directoryPath: string, boardName: string, pins: any[]) =>
+    ipcRenderer.invoke('save-pin-board', directoryPath, boardName, pins),
+
+  loadPinBoard: (directoryPath: string, boardName: string) =>
+    ipcRenderer.invoke('load-pin-board', directoryPath, boardName),
+
+  getAvailablePinBoards: (directoryPath: string) =>
+    ipcRenderer.invoke('get-available-pin-boards', directoryPath),
+
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
 

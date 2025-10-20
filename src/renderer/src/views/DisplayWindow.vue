@@ -99,7 +99,7 @@
 
     <!-- Placeholder when nothing is displayed -->
     <div
-      v-if="!displayStore.hasBackground && !displayStore.hasEvent && !displayStore.hasPortraits"
+      v-if="!displayStore.hasBackground && !displayStore.hasEvent && !displayStore.hasPortraits && showPlaceholder"
       class="absolute inset-0 flex items-center justify-center z-0"
     >
       <div class="text-center text-gray-600">
@@ -117,6 +117,9 @@ import { useDisplayStore } from '../stores'
 import type { DisplayState, MediaItem } from '../types'
 
 const displayStore = useDisplayStore()
+
+// Placeholder visibility (hide after 10 seconds)
+const showPlaceholder = ref(true)
 
 // Audio element refs
 const musicRefs = new Map<string, HTMLAudioElement>()
@@ -409,6 +412,11 @@ onMounted(() => {
 
   // Initialize the store to get current state
   displayStore.initialize()
+
+  // Hide placeholder text after 10 seconds
+  setTimeout(() => {
+    showPlaceholder.value = false
+  }, 10000)
 })
 
 onUnmounted(() => {

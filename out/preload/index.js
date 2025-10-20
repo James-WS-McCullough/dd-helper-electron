@@ -19,6 +19,7 @@ const electronAPI = {
   clearDisplayElement: (elementType, elementPath) => electron.ipcRenderer.invoke("clear-display-element", elementType, elementPath),
   getDisplayState: () => electron.ipcRenderer.invoke("get-display-state"),
   setFocusedPortrait: (portraitPath) => electron.ipcRenderer.invoke("set-focused-portrait", portraitPath),
+  setAudioVolume: (audioType, audioId, volume) => electron.ipcRenderer.invoke("set-audio-volume", audioType, audioId, volume),
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
@@ -59,11 +60,15 @@ const electronAPI = {
   onHideBattlemap: (callback) => {
     electron.ipcRenderer.on("hide-battlemap", callback);
   },
+  onSetAudioVolume: (callback) => {
+    electron.ipcRenderer.on("set-audio-volume", callback);
+  },
   removeDisplayListeners: () => {
     electron.ipcRenderer.removeAllListeners("update-display");
     electron.ipcRenderer.removeAllListeners("display-state-updated");
     electron.ipcRenderer.removeAllListeners("display-battlemap");
     electron.ipcRenderer.removeAllListeners("hide-battlemap");
+    electron.ipcRenderer.removeAllListeners("set-audio-volume");
   }
 };
 if (process.contextIsolated) {

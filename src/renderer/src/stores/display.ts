@@ -181,6 +181,22 @@ export const useDisplayStore = defineStore('display', () => {
   }
 
   /**
+   * Set audio volume for a specific audio item
+   */
+  async function setAudioVolume(
+    audioType: 'backgroundMusic' | 'backgroundSound',
+    audioId: string | null,
+    volume: number
+  ): Promise<boolean> {
+    try {
+      return await window.electronAPI.setAudioVolume(audioType, audioId, volume)
+    } catch (error) {
+      console.error('Failed to set audio volume:', error)
+      return false
+    }
+  }
+
+  /**
    * Clean up listeners when store is destroyed
    */
   function dispose(): void {
@@ -217,6 +233,7 @@ export const useDisplayStore = defineStore('display', () => {
     clearAllSoundEffects,
     clearAll,
     setFocusedPortrait,
+    setAudioVolume,
     dispose
   }
 })

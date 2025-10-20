@@ -94,6 +94,19 @@ export interface ElectronAPI {
    */
   setFocusedPortrait: (portraitPath: string | null) => Promise<boolean>
 
+  /**
+   * Set audio volume for a specific audio item
+   * @param audioType - Type of audio (backgroundMusic or backgroundSound)
+   * @param audioId - ID of the audio item (null for backgroundMusic)
+   * @param volume - Volume level (0-1)
+   * @returns Success status
+   */
+  setAudioVolume: (
+    audioType: 'backgroundMusic' | 'backgroundSound',
+    audioId: string | null,
+    volume: number
+  ) => Promise<boolean>
+
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
@@ -244,6 +257,19 @@ export interface ElectronAPI {
    * @param callback - Callback function
    */
   onHideBattlemap: (callback: (event: any) => void) => void
+
+  /**
+   * Listen for audio volume changes
+   * @param callback - Callback function
+   */
+  onSetAudioVolume: (
+    callback: (
+      event: any,
+      audioType: 'backgroundMusic' | 'backgroundSound',
+      audioId: string | null,
+      volume: number
+    ) => void
+  ) => void
 
   /**
    * Remove all display listeners

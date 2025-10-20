@@ -31,6 +31,7 @@ export interface MediaItem {
   subtype: MediaSubtype
   displayName: string
   id?: number  // For sound effects and background sounds (Date.now())
+  volume?: number  // Volume level 0-1 (default 1)
 }
 
 export interface MediaExtensions {

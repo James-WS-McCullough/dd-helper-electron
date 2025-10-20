@@ -601,6 +601,28 @@ function registerIpcHandlers() {
     }
     return true;
   });
+  electron.ipcMain.handle(
+    "set-audio-volume",
+    (_event, audioType, audioId, volume) => {
+      if (audioType === "backgroundMusic" && displayState.backgroundMusic) {
+        displayState.backgroundMusic.volume = volume;
+      } else if (audioType === "backgroundSound" && audioId) {
+        const sound = displayState.backgroundSounds.find((s) => String(s.id) === audioId);
+        if (sound) {
+          sound.volume = volume;
+        }
+      }
+      const displayWindow2 = getDisplayWindow();
+      if (hasDisplayWindow() && displayWindow2) {
+        displayWindow2.webContents.send("set-audio-volume", audioType, audioId, volume);
+      }
+      const mainWindow2 = getMainWindow();
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("display-state-updated", displayState);
+      }
+      return true;
+    }
+  );
   electron.ipcMain.handle("save-party-data", async (_event, filePath, partyData) => {
     return await savePartyData(filePath, partyData);
   });

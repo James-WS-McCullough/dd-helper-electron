@@ -1,126 +1,56 @@
 <template>
   <AppLayout>
     <div class="flex h-full">
-      <!-- Media Tree Browser (Left Side) -->
-      <div class="w-80 border-r border-gray-700 bg-gray-800 flex flex-col">
-        <div class="p-4 border-b border-gray-700">
-          <h2 class="text-lg font-semibold text-white">Audio Files</h2>
-          <p class="text-sm text-gray-400">Browse by folder</p>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4">
-          <div v-if="directoryStore.isScanning" class="flex items-center justify-center h-32">
-            <div class="text-center">
-              <div class="animate-spin h-8 w-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-2"></div>
-              <p class="text-gray-400">Scanning directory...</p>
-            </div>
-          </div>
-
-          <div v-else-if="filteredMediaTree" class="space-y-1">
-            <MediaTreeNode
-              :node="filteredMediaTree"
-              :depth="0"
-              @select-media="handleMediaSelect"
-            />
-          </div>
-
-          <div v-else class="text-center py-8 text-gray-400">
-            <p>No audio files found</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Audio List Display (Right Side) -->
+      <!-- Audio List Display (Full Width) -->
       <div class="flex-1 flex flex-col overflow-hidden">
         <!-- Header with Display State -->
         <div class="p-4 border-b border-gray-700 bg-gray-800">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="text-lg font-semibold text-white">Audio Library</h2>
-              <p class="text-sm text-gray-400">
-                {{ allAudioMedia.length }} audio file{{ allAudioMedia.length !== 1 ? 's' : '' }}
-              </p>
-            </div>
-            <button
-              v-if="hasActiveAudio"
-              @click="clearAllAudio"
-              class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
-            >
-              Clear All Audio
-            </button>
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-white">Audio Library</h2>
+            <p class="text-sm text-gray-400">
+              {{ currentFolderAudioCount }} audio file{{ currentFolderAudioCount !== 1 ? 's' : '' }} in current folder
+            </p>
           </div>
 
-          <!-- Active Audio Display -->
-          <div v-if="hasActiveAudio" class="space-y-2">
-            <!-- Background Music -->
-            <div v-if="displayStore.hasBackgroundMusic" class="bg-pink-500/20 border border-pink-500/50 rounded-lg p-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <span class="text-2xl">🎵</span>
-                  <div>
-                    <p class="text-sm font-medium text-pink-200">Background Music</p>
-                    <p class="text-xs text-pink-300">{{ displayStore.displayState.backgroundMusic ? getGMDisplayNameFromPath(displayStore.displayState.backgroundMusic.path, displayStore.displayState.backgroundMusic.displayName) : '' }}</p>
-                  </div>
-                </div>
-                <button
-                  @click="displayStore.clearBackgroundMusic()"
-                  class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors"
-                >
-                  Stop
-                </button>
-              </div>
-            </div>
+          <!-- Folder Navigation Bar -->
+          <div v-if="!directoryStore.isScanning" class="bg-gray-900 rounded-lg p-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Back Button -->
+              <button
+                v-if="!isInRoot"
+                @click="navigateUp"
+                class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <span>←</span>
+                <span>Back</span>
+              </button>
 
-            <!-- Background Sounds -->
-            <div v-if="displayStore.backgroundSoundCount > 0" class="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-xl">🔊</span>
-                  <p class="text-sm font-medium text-yellow-200">Background Sounds ({{ displayStore.backgroundSoundCount }})</p>
-                </div>
-                <button
-                  @click="displayStore.clearAllBackgroundSounds()"
-                  class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors"
-                >
-                  Clear All
-                </button>
-              </div>
-              <div class="space-y-1">
-                <div
-                  v-for="sound in displayStore.displayState.backgroundSounds"
-                  :key="sound.id"
-                  class="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1"
-                >
-                  <p class="text-xs text-yellow-100">{{ getGMDisplayNameFromPath(sound.path, sound.displayName) }}</p>
-                  <button
-                    @click="displayStore.clearBackgroundSound(String(sound.id))"
-                    class="text-xs text-red-400 hover:text-red-300"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
+              <!-- Subfolder Chips -->
+              <button
+                v-for="folder in currentSubfolders"
+                :key="folder.path"
+                @click="navigateToFolder(folder)"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <span>📁</span>
+                <span>{{ folder.displayName }}</span>
+              </button>
 
-            <!-- Sound Effects -->
-            <div v-if="displayStore.soundEffectCount > 0" class="bg-orange-500/20 border border-orange-500/50 rounded-lg p-3">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">💥</span>
-                <p class="text-sm font-medium text-orange-200">
-                  Active Sound Effects ({{ displayStore.soundEffectCount }})
-                </p>
+              <!-- Empty State -->
+              <div v-if="currentSubfolders.length === 0 && isInRoot" class="text-sm text-gray-400">
+                No subfolders
               </div>
-              <p class="text-xs text-orange-300 mt-1">Sound effects play once and auto-remove</p>
             </div>
           </div>
         </div>
 
         <!-- Audio List -->
         <div class="flex-1 overflow-y-auto p-4 bg-gray-900">
-          <div v-if="allAudioMedia.length > 0" class="space-y-2">
+          <div v-if="currentFolderAudio.length > 0" class="space-y-2">
             <div
-              v-for="audio in allAudioMedia"
+              v-for="audio in currentFolderAudio"
               :key="audio.path"
+              data-testid="audio-item"
               @click="handleMediaSelect(audio)"
               class="group flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-blue-500"
             >
@@ -152,7 +82,8 @@
           <div v-else class="flex items-center justify-center h-full">
             <div class="text-center text-gray-500">
               <p class="text-xl mb-2">🎵</p>
-              <p>No audio files found in the selected directory</p>
+              <p>No audio files in this folder</p>
+              <p v-if="currentSubfolders.length > 0" class="text-sm mt-2">Select a folder above to explore</p>
             </div>
           </div>
         </div>
@@ -162,33 +93,104 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import MediaTreeNode from '../components/MediaTreeNode.vue'
 import { useDirectoryStore, useDisplayStore } from '../stores'
-import { filterAudioMedia, getAllAudioMedia } from '../utils/mediaFilters'
-import { getGMDisplayName, getGMDisplayNameFromPath } from '../utils/displayNames'
+import { filterAudioMedia } from '../utils/mediaFilters'
+import { getGMDisplayName } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
 
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
 
+// Current folder navigation state
+const currentFolderPath = ref<string | null>(null)
+
+// Get the filtered audio tree
 const filteredMediaTree = computed(() => {
   if (!directoryStore.mediaTree) return null
   return filterAudioMedia(directoryStore.mediaTree)
 })
 
-const allAudioMedia = computed(() => {
-  return getAllAudioMedia(directoryStore.mediaTree)
+// Get the current folder object
+const currentFolder = computed<MediaFile | null>(() => {
+  if (!filteredMediaTree.value) return null
+
+  // If no path selected, return root
+  if (!currentFolderPath.value) {
+    return filteredMediaTree.value
+  }
+
+  // Find folder by path
+  return findFolderByPath(filteredMediaTree.value, currentFolderPath.value)
 })
 
-const hasActiveAudio = computed(() => {
-  return (
-    displayStore.hasBackgroundMusic ||
-    displayStore.backgroundSoundCount > 0 ||
-    displayStore.soundEffectCount > 0
+// Check if we're in the root
+const isInRoot = computed(() => {
+  return !currentFolderPath.value
+})
+
+// Get subfolders in current folder
+const currentSubfolders = computed<MediaFile[]>(() => {
+  if (!currentFolder.value || !currentFolder.value.children) return []
+
+  // Since we're already in a filtered audio tree, any folder here contains audio
+  return currentFolder.value.children.filter(
+    (child) => child.type === 'folder'
   )
 })
+
+// Get audio files in current folder (not recursive)
+const currentFolderAudio = computed<MediaFile[]>(() => {
+  if (!currentFolder.value || !currentFolder.value.children) return []
+
+  // Files in the filtered tree are already audio files
+  return currentFolder.value.children.filter(
+    (child) => child.type === 'file'
+  )
+})
+
+// Count of audio files in current folder
+const currentFolderAudioCount = computed(() => {
+  return currentFolderAudio.value.length
+})
+
+// Helper function to find folder by path
+function findFolderByPath(node: MediaFile, targetPath: string): MediaFile | null {
+  if (node.path === targetPath) return node
+
+  if (node.children) {
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        const found = findFolderByPath(child, targetPath)
+        if (found) return found
+      }
+    }
+  }
+
+  return null
+}
+
+// Navigate to a folder
+function navigateToFolder(folder: MediaFile) {
+  currentFolderPath.value = folder.path
+}
+
+// Navigate up one level
+function navigateUp() {
+  if (!currentFolderPath.value) return
+
+  // Get parent path by removing last segment
+  const segments = currentFolderPath.value.split('/')
+  segments.pop()
+
+  if (segments.length === 0) {
+    // Go to root
+    currentFolderPath.value = null
+  } else {
+    currentFolderPath.value = segments.join('/')
+  }
+}
 
 async function handleMediaSelect(media: MediaFile) {
   if (media.type === 'file') {
@@ -199,14 +201,6 @@ async function handleMediaSelect(media: MediaFile) {
       media.displayName
     )
   }
-}
-
-async function clearAllAudio() {
-  await Promise.all([
-    displayStore.clearBackgroundMusic(),
-    displayStore.clearAllBackgroundSounds(),
-    displayStore.clearAllSoundEffects()
-  ])
 }
 
 function getBadgeClass(subtype: MediaSubtype): string {

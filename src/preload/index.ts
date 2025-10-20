@@ -48,6 +48,12 @@ const electronAPI: ElectronAPI = {
   setFocusedPortrait: (portraitPath: string | null) =>
     ipcRenderer.invoke('set-focused-portrait', portraitPath),
 
+  setAudioVolume: (
+    audioType: 'backgroundMusic' | 'backgroundSound',
+    audioId: string | null,
+    volume: number
+  ) => ipcRenderer.invoke('set-audio-volume', audioType, audioId, volume),
+
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
@@ -119,11 +125,23 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('hide-battlemap', callback)
   },
 
+  onSetAudioVolume: (
+    callback: (
+      event: IpcRendererEvent,
+      audioType: 'backgroundMusic' | 'backgroundSound',
+      audioId: string | null,
+      volume: number
+    ) => void
+  ) => {
+    ipcRenderer.on('set-audio-volume', callback)
+  },
+
   removeDisplayListeners: () => {
     ipcRenderer.removeAllListeners('update-display')
     ipcRenderer.removeAllListeners('display-state-updated')
     ipcRenderer.removeAllListeners('display-battlemap')
     ipcRenderer.removeAllListeners('hide-battlemap')
+    ipcRenderer.removeAllListeners('set-audio-volume')
   }
 }
 

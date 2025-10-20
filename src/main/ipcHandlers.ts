@@ -233,6 +233,40 @@ export function registerIpcHandlers(): void {
     return true
   })
 
+  ipcMain.handle(
+    'set-audio-volume',
+    (
+      _event,
+      audioType: 'backgroundMusic' | 'backgroundSound',
+      audioId: string | null,
+      volume: number
+    ) => {
+      // Update volume in display state
+      if (audioType === 'backgroundMusic' && displayState.backgroundMusic) {
+        displayState.backgroundMusic.volume = volume
+      } else if (audioType === 'backgroundSound' && audioId) {
+        const sound = displayState.backgroundSounds.find((s) => String(s.id) === audioId)
+        if (sound) {
+          sound.volume = volume
+        }
+      }
+
+      // Send update to display window to actually change the audio volume
+      const displayWindow = getDisplayWindow()
+      if (hasDisplayWindow() && displayWindow) {
+        displayWindow.webContents.send('set-audio-volume', audioType, audioId, volume)
+      }
+
+      // Update main window with new state
+      const mainWindow = getMainWindow()
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('display-state-updated', displayState)
+      }
+
+      return true
+    }
+  )
+
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================

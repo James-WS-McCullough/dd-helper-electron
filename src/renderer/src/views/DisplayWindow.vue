@@ -71,17 +71,24 @@
     </div>
 
     <!-- Audio Elements -->
+    <!-- Background Music (current and fading out) -->
     <audio
-      v-if="displayStore.hasBackgroundMusic"
-      :src="`media://${displayStore.displayState.backgroundMusic?.path}`"
+      v-for="music in allBackgroundMusic"
+      :key="music.path"
+      :ref="(el) => setMusicRef(music.path, el)"
+      :src="`media://${music.path}`"
+      :volume="music.volume ?? 1"
       autoplay
       loop
     />
 
+    <!-- Background Sounds (active + fading out) -->
     <audio
-      v-for="sound in displayStore.displayState.backgroundSounds"
+      v-for="sound in [...displayStore.displayState.backgroundSounds, ...fadingOutBackgroundSounds]"
       :key="sound.id"
+      :ref="(el) => setAudioRef(`backgroundSound-${sound.id}`, el)"
       :src="`media://${sound.path}`"
+      :volume="sound.volume ?? 1"
       autoplay
       loop
     />
@@ -90,6 +97,7 @@
       v-for="effect in displayStore.displayState.soundEffects"
       :key="effect.id"
       :src="`media://${effect.path}`"
+      :volume="effect.volume ?? 1"
       autoplay
       @ended="displayStore.clearSoundEffect(String(effect.id))"
     />
@@ -109,11 +117,101 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed, ref, watch } from 'vue'
 import { useDisplayStore } from '../stores'
-import type { DisplayState } from '../types'
+import type { DisplayState, MediaItem } from '../types'
 
 const displayStore = useDisplayStore()
+
+// Audio element refs
+const musicRefs = new Map<string, HTMLAudioElement>()
+const audioRefs = new Map<string, HTMLAudioElement>()
+const fadingAudioElements = new Set<HTMLAudioElement>()
+
+// Local state for audio items that are fading out (keep them mounted)
+const fadingOutBackgroundMusic = ref<any>(null)
+const fadingOutBackgroundSounds = ref<any[]>([])
+
+// Combined list of all background music (current + fading out)
+const allBackgroundMusic = computed<MediaItem[]>(() => {
+  const result: MediaItem[] = []
+  if (displayStore.displayState.backgroundMusic) {
+    result.push(displayStore.displayState.backgroundMusic)
+  }
+  if (fadingOutBackgroundMusic.value) {
+    result.push(fadingOutBackgroundMusic.value)
+  }
+  return result
+})
+
+// Fade constants
+const FADE_DURATION = 1500 // 1.5 seconds
+const FADE_INTERVAL = 50 // Update every 50ms
+
+// Function to set music ref (by path)
+function setMusicRef(path: string, el: any) {
+  if (el && el instanceof HTMLAudioElement) {
+    musicRefs.set(path, el)
+  } else {
+    musicRefs.delete(path)
+  }
+}
+
+// Function to set audio ref for looping sounds
+function setAudioRef(id: string, el: any) {
+  if (el && el instanceof HTMLAudioElement) {
+    audioRefs.set(id, el)
+  } else {
+    audioRefs.delete(id)
+  }
+}
+
+// Fade out an audio element
+async function fadeOutAudio(audioElement: HTMLAudioElement): Promise<void> {
+  if (fadingAudioElements.has(audioElement)) return
+  fadingAudioElements.add(audioElement)
+
+  const startVolume = audioElement.volume
+  const steps = FADE_DURATION / FADE_INTERVAL
+  const volumeDecrement = startVolume / steps
+
+  return new Promise((resolve) => {
+    const fadeInterval = setInterval(() => {
+      if (audioElement.volume > volumeDecrement) {
+        audioElement.volume = Math.max(0, audioElement.volume - volumeDecrement)
+      } else {
+        audioElement.volume = 0
+        audioElement.pause()
+        clearInterval(fadeInterval)
+        fadingAudioElements.delete(audioElement)
+        resolve()
+      }
+    }, FADE_INTERVAL)
+  })
+}
+
+// Fade in an audio element
+async function fadeInAudio(audioElement: HTMLAudioElement, targetVolume: number): Promise<void> {
+  if (fadingAudioElements.has(audioElement)) return
+  fadingAudioElements.add(audioElement)
+
+  audioElement.volume = 0
+  const steps = FADE_DURATION / FADE_INTERVAL
+  const volumeIncrement = targetVolume / steps
+
+  return new Promise((resolve) => {
+    const fadeInterval = setInterval(() => {
+      if (audioElement.volume < targetVolume - volumeIncrement) {
+        audioElement.volume = Math.min(targetVolume, audioElement.volume + volumeIncrement)
+      } else {
+        audioElement.volume = targetVolume
+        clearInterval(fadeInterval)
+        fadingAudioElements.delete(audioElement)
+        resolve()
+      }
+    }, FADE_INTERVAL)
+  })
+}
 
 // Get portraits that are not focused
 const otherPortraits = computed(() => {
@@ -130,12 +228,123 @@ function cleanDisplayName(displayName: string): string {
   return displayName.replace(/_/g, ' ')
 }
 
+// Handle volume change from IPC
+function handleVolumeChange(
+  _event: any,
+  audioType: 'backgroundMusic' | 'backgroundSound',
+  audioId: string | null,
+  volume: number
+) {
+  if (audioType === 'backgroundMusic') {
+    // Update volume for current music (if it exists)
+    const currentMusic = displayStore.displayState.backgroundMusic
+    if (currentMusic) {
+      const audioElement = musicRefs.get(currentMusic.path)
+      if (audioElement) {
+        audioElement.volume = volume
+      }
+    }
+  } else if (audioType === 'backgroundSound' && audioId) {
+    const audioElement = audioRefs.get(`backgroundSound-${audioId}`)
+    if (audioElement) {
+      audioElement.volume = volume
+    }
+  }
+}
+
+// Watch for background music changes (cross-fade or fade-out)
+watch(
+  () => displayStore.displayState.backgroundMusic,
+  async (newMusic, oldMusic) => {
+    if (oldMusic && !newMusic) {
+      // Music is being removed - fade it out
+      fadingOutBackgroundMusic.value = oldMusic
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      const oldAudioElement = musicRefs.get(oldMusic.path)
+      if (oldAudioElement) {
+        await fadeOutAudio(oldAudioElement)
+      }
+      fadingOutBackgroundMusic.value = null
+    } else if (oldMusic && newMusic && oldMusic.path !== newMusic.path) {
+      // Music is changing - cross-fade
+      // Set the old music as "fading out" so both elements stay mounted
+      fadingOutBackgroundMusic.value = oldMusic
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Get references to both audio elements
+      const oldAudioElement = musicRefs.get(oldMusic.path)
+      const newAudioElement = musicRefs.get(newMusic.path)
+
+      // Start fade out of old music and fade in of new music in parallel
+      const fadeOutPromise = oldAudioElement
+        ? fadeOutAudio(oldAudioElement)
+        : Promise.resolve()
+
+      const fadeInPromise = (async () => {
+        if (newAudioElement) {
+          const targetVolume = newMusic.volume ?? 1
+          // Start new music at 0 volume
+          newAudioElement.volume = 0
+          await new Promise(resolve => setTimeout(resolve, 50))
+          await fadeInAudio(newAudioElement, targetVolume)
+        }
+      })()
+
+      // Wait for both fades to complete
+      await Promise.all([fadeOutPromise, fadeInPromise])
+
+      // Clean up fading out state
+      fadingOutBackgroundMusic.value = null
+    }
+  }
+)
+
+// Watch for background sounds removal (fade-out)
+watch(
+  () => displayStore.displayState.backgroundSounds,
+  async (newSounds, oldSounds) => {
+    if (!oldSounds) return
+
+    // Find sounds that were removed
+    const removedSounds = oldSounds.filter(
+      oldSound => !newSounds.some(newSound => newSound.id === oldSound.id)
+    )
+
+    if (removedSounds.length > 0) {
+      // Add to fading out list
+      fadingOutBackgroundSounds.value = [...fadingOutBackgroundSounds.value, ...removedSounds]
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Fade out each removed sound
+      const fadePromises = removedSounds.map(async sound => {
+        const audioElement = audioRefs.get(`backgroundSound-${sound.id}`)
+        if (audioElement) {
+          await fadeOutAudio(audioElement)
+        }
+        // Remove from fading out list
+        fadingOutBackgroundSounds.value = fadingOutBackgroundSounds.value.filter(
+          s => s.id !== sound.id
+        )
+      })
+
+      await Promise.all(fadePromises)
+    }
+  },
+  { deep: true }
+)
+
 // Listen for display updates from the main process
 onMounted(() => {
   // Set up listener for direct updates to this display window
   window.electronAPI.onUpdateDisplay((_event, state: DisplayState) => {
     displayStore.displayState = state
   })
+
+  // Listen for volume changes
+  window.electronAPI.onSetAudioVolume(handleVolumeChange)
 
   // Initialize the store to get current state
   displayStore.initialize()

@@ -3,10 +3,31 @@
     <div class="flex flex-col h-full">
       <!-- Header -->
       <div class="p-4 border-b border-gray-700 bg-gray-800">
-        <h2 class="text-lg font-semibold text-white">Gallery</h2>
+        <div class="flex items-center gap-4 mb-3">
+          <h2 class="text-lg font-semibold text-white">Gallery</h2>
+
+          <!-- Search Bar -->
+          <div class="flex-1 relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search images, videos, and folders..."
+              class="w-full px-4 py-2 pr-10 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none placeholder-gray-400"
+            />
+            <button
+              v-if="searchQuery"
+              @click="clearSearch"
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors"
+              title="Clear search"
+            >
+              <span class="text-xl">✕</span>
+            </button>
+          </div>
+        </div>
+
         <div class="flex items-center justify-between">
           <p class="text-sm text-gray-400">
-            {{ currentFolderPath || 'Root' }}
+            {{ isSearching ? `Search results for "${searchQuery}"` : (currentFolderPath || 'Root') }}
           </p>
           <p class="text-sm text-gray-400">
             {{ currentItems.files.length }} image{{ currentItems.files.length !== 1 ? 's' : '' }} · {{ currentItems.folders.length }} folder{{ currentItems.folders.length !== 1 ? 's' : '' }}
@@ -24,9 +45,9 @@
         </div>
 
         <div v-else-if="currentItems.folders.length > 0 || currentItems.files.length > 0 || currentFolderPath" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          <!-- Back Button -->
+          <!-- Back Button (only show when not searching) -->
           <div
-            v-if="currentFolderPath"
+            v-if="currentFolderPath && !isSearching"
             @click="navigateUp"
             class="group relative aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all flex items-center justify-center"
           >
@@ -74,7 +95,7 @@
               <!-- Overlay -->
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="absolute bottom-0 left-0 right-0 p-3">
-                  <p class="text-white text-sm font-medium truncate">{{ media.displayName }}</p>
+                  <p class="text-white text-sm font-medium truncate">{{ getGMDisplayName(media) }}</p>
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-xs px-2 py-0.5 rounded" :class="getBadgeClass(media.mediaSubtype)">
                       {{ media.mediaSubtype }}
@@ -111,6 +132,7 @@ import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import { useDirectoryStore, useDisplayStore } from '../stores'
 import { filterVisualMedia } from '../utils/mediaFilters'
+import { getGMDisplayName } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
 
 const directoryStore = useDirectoryStore()
@@ -119,9 +141,48 @@ const displayStore = useDisplayStore()
 // Current folder path (relative to root, empty string = root)
 const currentFolderPath = ref<string>('')
 
+// Search query
+const searchQuery = ref<string>('')
+
 const filteredMediaTree = computed(() => {
   if (!directoryStore.mediaTree) return null
   return filterVisualMedia(directoryStore.mediaTree)
+})
+
+// Check if we're currently searching
+const isSearching = computed(() => searchQuery.value.trim().length > 0)
+
+// Search through the entire tree for matching items
+function searchMediaTree(node: MediaFile, query: string): MediaFile[] {
+  const results: MediaFile[] = []
+  const lowerQuery = query.toLowerCase()
+
+  if (!node.children) return results
+
+  for (const child of node.children) {
+    // Get the GM-friendly display name for comparison
+    const displayName = getGMDisplayName(child).toLowerCase()
+    const fileName = child.path.split('/').pop()?.toLowerCase() || ''
+
+    // Check if this item matches the search query
+    if (displayName.includes(lowerQuery) || fileName.includes(lowerQuery)) {
+      results.push(child)
+    }
+
+    // If it's a folder, search recursively
+    if (child.type === 'folder') {
+      const childResults = searchMediaTree(child, query)
+      results.push(...childResults)
+    }
+  }
+
+  return results
+}
+
+// Get search results
+const searchResults = computed<MediaFile[]>(() => {
+  if (!isSearching.value || !filteredMediaTree.value) return []
+  return searchMediaTree(filteredMediaTree.value, searchQuery.value)
 })
 
 // Get the current folder node based on currentFolderPath
@@ -142,8 +203,17 @@ const currentFolderNode = computed<MediaFile | null>(() => {
   return node
 })
 
-// Get immediate children (folders and files) of current folder
+// Get immediate children (folders and files) of current folder OR search results
 const currentItems = computed<{ folders: MediaFile[], files: MediaFile[] }>(() => {
+  // If searching, return search results
+  if (isSearching.value) {
+    const results = searchResults.value
+    const folders = results.filter(c => c.type === 'folder')
+    const files = results.filter(c => c.type === 'file')
+    return { folders, files }
+  }
+
+  // Otherwise, return current folder contents
   const node = currentFolderNode.value
   if (!node || !node.children) {
     return { folders: [], files: [] }
@@ -155,8 +225,15 @@ const currentItems = computed<{ folders: MediaFile[], files: MediaFile[] }>(() =
   return { folders, files }
 })
 
+function clearSearch() {
+  searchQuery.value = ''
+}
+
 function navigateInto(folder: MediaFile) {
   if (folder.type !== 'folder') return
+
+  // Clear search when navigating into a folder
+  clearSearch()
 
   if (currentFolderPath.value) {
     currentFolderPath.value = `${currentFolderPath.value}/${folder.displayName}`

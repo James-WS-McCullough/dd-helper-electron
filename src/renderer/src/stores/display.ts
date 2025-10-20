@@ -12,6 +12,7 @@ export const useDisplayStore = defineStore('display', () => {
   // State
   const displayState = ref<DisplayState>({
     portraits: [],
+    focusedPortraitPath: null,
     background: null,
     event: null,
     backgroundSounds: [],
@@ -28,6 +29,10 @@ export const useDisplayStore = defineStore('display', () => {
   const hasBackgroundMusic = computed(() => displayState.value.backgroundMusic !== null)
   const backgroundSoundCount = computed(() => displayState.value.backgroundSounds.length)
   const soundEffectCount = computed(() => displayState.value.soundEffects.length)
+  const focusedPortrait = computed(() => {
+    if (!displayState.value.focusedPortraitPath) return null
+    return displayState.value.portraits.find(p => p.path === displayState.value.focusedPortraitPath) || null
+  })
 
   // Actions
 
@@ -164,6 +169,18 @@ export const useDisplayStore = defineStore('display', () => {
   }
 
   /**
+   * Set the focused portrait
+   */
+  async function setFocusedPortrait(portraitPath: string | null): Promise<boolean> {
+    try {
+      return await window.electronAPI.setFocusedPortrait(portraitPath)
+    } catch (error) {
+      console.error('Failed to set focused portrait:', error)
+      return false
+    }
+  }
+
+  /**
    * Clean up listeners when store is destroyed
    */
   function dispose(): void {
@@ -182,6 +199,7 @@ export const useDisplayStore = defineStore('display', () => {
     hasBackgroundMusic,
     backgroundSoundCount,
     soundEffectCount,
+    focusedPortrait,
 
     // Actions
     initialize,
@@ -198,6 +216,7 @@ export const useDisplayStore = defineStore('display', () => {
     clearSoundEffect,
     clearAllSoundEffects,
     clearAll,
+    setFocusedPortrait,
     dispose
   }
 })

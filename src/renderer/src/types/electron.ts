@@ -87,6 +87,13 @@ export interface ElectronAPI {
    */
   getDisplayState: () => Promise<DisplayState>
 
+  /**
+   * Set the focused portrait
+   * @param portraitPath - Path to portrait to focus, or null to clear focus
+   * @returns Success status
+   */
+  setFocusedPortrait: (portraitPath: string | null) => Promise<boolean>
+
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================

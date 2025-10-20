@@ -59,7 +59,7 @@
                   <span class="text-2xl">🎵</span>
                   <div>
                     <p class="text-sm font-medium text-pink-200">Background Music</p>
-                    <p class="text-xs text-pink-300">{{ displayStore.displayState.backgroundMusic?.displayName }}</p>
+                    <p class="text-xs text-pink-300">{{ displayStore.displayState.backgroundMusic ? getGMDisplayNameFromPath(displayStore.displayState.backgroundMusic.path, displayStore.displayState.backgroundMusic.displayName) : '' }}</p>
                   </div>
                 </div>
                 <button
@@ -91,7 +91,7 @@
                   :key="sound.id"
                   class="flex items-center justify-between bg-gray-800/50 rounded px-2 py-1"
                 >
-                  <p class="text-xs text-yellow-100">{{ sound.displayName }}</p>
+                  <p class="text-xs text-yellow-100">{{ getGMDisplayNameFromPath(sound.path, sound.displayName) }}</p>
                   <button
                     @click="displayStore.clearBackgroundSound(String(sound.id))"
                     class="text-xs text-red-400 hover:text-red-300"
@@ -131,7 +131,7 @@
 
               <!-- Info -->
               <div class="flex-1 min-w-0">
-                <p class="text-white font-medium truncate">{{ audio.displayName }}</p>
+                <p class="text-white font-medium truncate">{{ getGMDisplayName(audio) }}</p>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-xs px-2 py-0.5 rounded" :class="getBadgeClass(audio.mediaSubtype)">
                     {{ audio.mediaSubtype }}
@@ -167,6 +167,7 @@ import AppLayout from '../components/AppLayout.vue'
 import MediaTreeNode from '../components/MediaTreeNode.vue'
 import { useDirectoryStore, useDisplayStore } from '../stores'
 import { filterAudioMedia, getAllAudioMedia } from '../utils/mediaFilters'
+import { getGMDisplayName, getGMDisplayNameFromPath } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
 
 const directoryStore = useDirectoryStore()

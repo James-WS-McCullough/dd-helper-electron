@@ -45,6 +45,9 @@ const electronAPI: ElectronAPI = {
 
   getDisplayState: () => ipcRenderer.invoke('get-display-state'),
 
+  setFocusedPortrait: (portraitPath: string | null) =>
+    ipcRenderer.invoke('set-focused-portrait', portraitPath),
+
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================

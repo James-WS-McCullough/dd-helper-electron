@@ -33,7 +33,7 @@
             </div>
             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
               <p class="text-white text-xs font-medium truncate">Background</p>
-              <p class="text-gray-300 text-xs truncate">{{ displayStore.displayState.background?.displayName }}</p>
+              <p class="text-gray-300 text-xs truncate">{{ displayStore.displayState.background ? getGMDisplayNameFromPath(displayStore.displayState.background.path, displayStore.displayState.background.displayName) : '' }}</p>
             </div>
           </div>
         </div>
@@ -44,23 +44,31 @@
           :key="portrait.path"
           class="flex-shrink-0 relative group"
         >
-          <div class="relative w-32 h-20 bg-gray-900 rounded-lg overflow-hidden">
+          <div class="relative w-32 h-20 bg-gray-900 rounded-lg overflow-hidden" :class="{ 'ring-2 ring-blue-500': isFocused(portrait.path) }">
             <img
               :src="`media://${portrait.path}`"
               :alt="portrait.displayName"
               class="w-full h-full object-cover"
             />
-            <div class="absolute top-1 right-1">
+            <div class="absolute top-1 left-1 right-1 flex items-center justify-between gap-1">
+              <button
+                @click="handleFocusToggle(portrait.path)"
+                class="p-1 rounded-full text-white text-xs transition-colors"
+                :class="isFocused(portrait.path) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'"
+                :title="isFocused(portrait.path) ? 'Focused' : 'Focus this portrait'"
+              >
+                👁️
+              </button>
               <button
                 @click="displayStore.clearPortrait(portrait.path)"
-                class="p-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
+                class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
               >
                 ✕
               </button>
             </div>
             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
               <p class="text-white text-xs font-medium truncate">Portrait</p>
-              <p class="text-gray-300 text-xs truncate">{{ portrait.displayName }}</p>
+              <p class="text-gray-300 text-xs truncate">{{ getGMDisplayNameFromPath(portrait.path, portrait.displayName) }}</p>
             </div>
           </div>
         </div>
@@ -82,6 +90,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useDisplayStore } from '../stores'
+import { getGMDisplayNameFromPath } from '../utils/displayNames'
 
 const displayStore = useDisplayStore()
 
@@ -94,6 +103,21 @@ onMounted(() => {
 const hasActiveDisplay = computed(() => {
   return displayStore.hasBackground || displayStore.hasPortraits
 })
+
+// Check if a portrait is focused
+function isFocused(portraitPath: string): boolean {
+  return displayStore.displayState.focusedPortraitPath === portraitPath
+}
+
+// Handle focus toggle
+async function handleFocusToggle(portraitPath: string): Promise<void> {
+  // If already focused, clear the focus; otherwise set it
+  if (isFocused(portraitPath)) {
+    await displayStore.setFocusedPortrait(null)
+  } else {
+    await displayStore.setFocusedPortrait(portraitPath)
+  }
+}
 </script>
 
 <style scoped>

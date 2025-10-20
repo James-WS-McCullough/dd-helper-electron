@@ -27,6 +27,7 @@ import {
 // Display state management
 let displayState: DisplayState = {
   portraits: [],
+  focusedPortraitPath: null,
   background: null,
   event: null,
   backgroundSounds: [],
@@ -113,6 +114,8 @@ export function registerIpcHandlers(): void {
       if (mediaType === 'image' && mediaSubtype === 'portrait') {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== mediaPath)
         displayState.portraits.push(mediaData)
+        // Set newly added portrait as focused
+        displayState.focusedPortraitPath = mediaPath
       } else if (
         (mediaType === 'image' || mediaType === 'video') &&
         mediaSubtype === 'background'
@@ -143,8 +146,14 @@ export function registerIpcHandlers(): void {
     if (elementType === 'portraits') {
       if (elementPath) {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== elementPath)
+        // Clear focus if removing the focused portrait
+        if (displayState.focusedPortraitPath === elementPath) {
+          // Set focus to the first remaining portrait, or null if none
+          displayState.focusedPortraitPath = displayState.portraits.length > 0 ? displayState.portraits[0].path : null
+        }
       } else {
         displayState.portraits = []
+        displayState.focusedPortraitPath = null
       }
     } else if (elementType === 'background') {
       displayState.background = null
@@ -171,6 +180,7 @@ export function registerIpcHandlers(): void {
     } else if (elementType === 'all') {
       displayState = {
         portraits: [],
+        focusedPortraitPath: null,
         background: null,
         event: null,
         backgroundSounds: [],
@@ -194,6 +204,31 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('get-display-state', () => {
     return displayState
+  })
+
+  ipcMain.handle('set-focused-portrait', (_event, portraitPath: string | null) => {
+    // Verify the portrait exists if a path is provided
+    if (portraitPath !== null) {
+      const portraitExists = displayState.portraits.some((p) => p.path === portraitPath)
+      if (!portraitExists) {
+        console.warn(`Portrait with path ${portraitPath} not found in display state`)
+        return false
+      }
+    }
+
+    displayState.focusedPortraitPath = portraitPath
+
+    const displayWindow = getDisplayWindow()
+    if (hasDisplayWindow() && displayWindow) {
+      displayWindow.webContents.send('update-display', displayState)
+    }
+
+    const mainWindow = getMainWindow()
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('display-state-updated', displayState)
+    }
+
+    return true
   })
 
   // ============================================

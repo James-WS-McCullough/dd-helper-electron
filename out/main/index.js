@@ -444,6 +444,7 @@ async function getBattlemapFiles(directoryPath) {
 }
 let displayState = {
   portraits: [],
+  focusedPortraitPath: null,
   background: null,
   event: null,
   backgroundSounds: [],
@@ -502,6 +503,7 @@ function registerIpcHandlers() {
       if (mediaType === "image" && mediaSubtype === "portrait") {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== mediaPath);
         displayState.portraits.push(mediaData);
+        displayState.focusedPortraitPath = mediaPath;
       } else if ((mediaType === "image" || mediaType === "video") && mediaSubtype === "background") {
         displayState.background = mediaData;
       } else if (mediaType === "video" && mediaSubtype === "event") {
@@ -525,8 +527,12 @@ function registerIpcHandlers() {
     if (elementType === "portraits") {
       if (elementPath) {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== elementPath);
+        if (displayState.focusedPortraitPath === elementPath) {
+          displayState.focusedPortraitPath = displayState.portraits.length > 0 ? displayState.portraits[0].path : null;
+        }
       } else {
         displayState.portraits = [];
+        displayState.focusedPortraitPath = null;
       }
     } else if (elementType === "background") {
       displayState.background = null;
@@ -553,6 +559,7 @@ function registerIpcHandlers() {
     } else if (elementType === "all") {
       displayState = {
         portraits: [],
+        focusedPortraitPath: null,
         background: null,
         event: null,
         backgroundSounds: [],
@@ -572,6 +579,25 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle("get-display-state", () => {
     return displayState;
+  });
+  electron.ipcMain.handle("set-focused-portrait", (_event, portraitPath) => {
+    if (portraitPath !== null) {
+      const portraitExists = displayState.portraits.some((p) => p.path === portraitPath);
+      if (!portraitExists) {
+        console.warn(`Portrait with path ${portraitPath} not found in display state`);
+        return false;
+      }
+    }
+    displayState.focusedPortraitPath = portraitPath;
+    const displayWindow2 = getDisplayWindow();
+    if (hasDisplayWindow() && displayWindow2) {
+      displayWindow2.webContents.send("update-display", displayState);
+    }
+    const mainWindow2 = getMainWindow();
+    if (mainWindow2 && !mainWindow2.isDestroyed()) {
+      mainWindow2.webContents.send("display-state-updated", displayState);
+    }
+    return true;
   });
   electron.ipcMain.handle("save-party-data", async (_event, filePath, partyData) => {
     return await savePartyData(filePath, partyData);

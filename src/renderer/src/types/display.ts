@@ -9,6 +9,7 @@ import type { Battlemap } from './battlemap'
 
 export interface DisplayState {
   portraits: MediaItem[]
+  focusedPortraitPath: string | null
   background: MediaItem | null
   event: MediaItem | null
   backgroundSounds: MediaItem[]

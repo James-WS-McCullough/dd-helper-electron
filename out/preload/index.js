@@ -18,6 +18,7 @@ const electronAPI = {
   displayMedia: (mediaPath, mediaType, mediaSubtype, displayName) => electron.ipcRenderer.invoke("display-media", mediaPath, mediaType, mediaSubtype, displayName),
   clearDisplayElement: (elementType, elementPath) => electron.ipcRenderer.invoke("clear-display-element", elementType, elementPath),
   getDisplayState: () => electron.ipcRenderer.invoke("get-display-state"),
+  setFocusedPortrait: (portraitPath) => electron.ipcRenderer.invoke("set-focused-portrait", portraitPath),
   // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================

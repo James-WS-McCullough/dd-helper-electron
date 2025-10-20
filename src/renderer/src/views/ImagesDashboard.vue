@@ -26,9 +26,33 @@
         </div>
 
         <div class="flex items-center justify-between">
-          <p class="text-sm text-gray-400">
-            {{ isSearching ? `Search results for "${searchQuery}"` : (currentFolderPath || 'Root') }}
-          </p>
+          <div class="flex items-center gap-1">
+            <template v-if="isSearching">
+              <p class="text-sm text-gray-400">
+                Search results for "{{ searchQuery }}"
+              </p>
+            </template>
+            <template v-else>
+              <!-- Interactive Breadcrumb -->
+              <div class="flex items-center gap-1 text-sm">
+                <button
+                  @click="navigateToRoot"
+                  class="text-gray-400 hover:text-white transition-colors"
+                >
+                  Root
+                </button>
+                <template v-for="(segment, index) in breadcrumbSegments" :key="index">
+                  <span class="text-gray-600">/</span>
+                  <button
+                    @click="navigateToBreadcrumb(index)"
+                    class="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {{ segment }}
+                  </button>
+                </template>
+              </div>
+            </template>
+          </div>
           <p class="text-sm text-gray-400">
             {{ currentItems.files.length }} image{{ currentItems.files.length !== 1 ? 's' : '' }} · {{ currentItems.folders.length }} folder{{ currentItems.folders.length !== 1 ? 's' : '' }}
           </p>
@@ -138,11 +162,17 @@ import type { MediaFile, MediaSubtype } from '../types'
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
 
-// Current folder path (relative to root, empty string = root)
+// Current folder path (absolute path from directory)
 const currentFolderPath = ref<string>('')
 
 // Search query
 const searchQuery = ref<string>('')
+
+// Get breadcrumb segments (path parts)
+const breadcrumbSegments = computed<string[]>(() => {
+  if (!currentFolderPath.value) return []
+  return currentFolderPath.value.split('/').filter(s => s.length > 0)
+})
 
 const filteredMediaTree = computed(() => {
   if (!directoryStore.mediaTree) return null
@@ -246,6 +276,17 @@ function navigateUp() {
   const parts = currentFolderPath.value.split('/').filter(p => p)
   parts.pop() // Remove last part
   currentFolderPath.value = parts.join('/')
+}
+
+// Navigate to root
+function navigateToRoot() {
+  currentFolderPath.value = ''
+}
+
+// Navigate to a specific breadcrumb segment
+function navigateToBreadcrumb(segmentIndex: number) {
+  const segments = breadcrumbSegments.value.slice(0, segmentIndex + 1)
+  currentFolderPath.value = segments.join('/')
 }
 
 async function handleMediaSelect(media: MediaFile) {

@@ -55,6 +55,17 @@
                   <span class="text-gray-600 mx-2">·</span>
                   <span class="text-gray-400">{{ currentFolderAudioCount }} audio file{{ currentFolderAudioCount !== 1 ? 's' : '' }}</span>
                 </div>
+
+                <!-- Pin Current Folder Button -->
+                <button
+                  v-if="currentFolderPath"
+                  @click="togglePinCurrentFolder"
+                  class="ml-2 px-2 py-1 rounded text-xs transition-colors"
+                  :class="isPinned(currentFolderPath) ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'"
+                  :title="isPinned(currentFolderPath) ? 'Unpin this folder' : 'Pin this folder'"
+                >
+                  {{ isPinned(currentFolderPath) ? '📌 Pinned' : '📍 Pin' }}
+                </button>
               </template>
             </div>
           </div>
@@ -98,31 +109,42 @@
             <div
               v-for="folder in currentDisplayItems.folders"
               :key="folder.path"
-              @click="navigateToFolder(folder)"
-              class="group flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-yellow-500"
+              class="group flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-blue-500 relative"
             >
-              <!-- Icon -->
-              <div class="flex-shrink-0 w-12 h-12 bg-yellow-900/30 rounded-lg flex items-center justify-center text-2xl">
-                📁
-              </div>
+              <div @click="navigateToFolder(folder)" class="flex items-center gap-4 flex-1">
+                <!-- Icon -->
+                <div class="flex-shrink-0 w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center text-2xl">
+                  📁
+                </div>
 
-              <!-- Info -->
-              <div class="flex-1 min-w-0">
-                <p class="text-white font-medium truncate">{{ getGMDisplayName(folder) }}</p>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-xs px-2 py-0.5 rounded bg-yellow-500/30 text-yellow-200">
-                    folder
-                  </span>
-                  <span class="text-xs text-gray-400 truncate">{{ getFileName(folder.path) }}</span>
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                  <p class="text-white font-medium truncate">{{ getGMDisplayName(folder) }}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-xs px-2 py-0.5 rounded bg-blue-500/30 text-blue-200">
+                      folder
+                    </span>
+                    <span class="text-xs text-gray-400 truncate">{{ getFileName(folder.path) }}</span>
+                  </div>
+                </div>
+
+                <!-- Navigate Icon -->
+                <div class="flex-shrink-0">
+                  <div class="w-10 h-10 bg-blue-600 group-hover:bg-blue-500 rounded-full flex items-center justify-center transition-colors">
+                    <span class="text-white text-xl">→</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Navigate Icon -->
-              <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-yellow-600 group-hover:bg-yellow-500 rounded-full flex items-center justify-center transition-colors">
-                  <span class="text-white text-xl">→</span>
-                </div>
-              </div>
+              <!-- Pin Button -->
+              <button
+                @click.stop="togglePinFolder(folder)"
+                class="flex-shrink-0 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                :class="isFolderPinned(folder) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'"
+                :title="isFolderPinned(folder) ? 'Unpin' : 'Pin'"
+              >
+                <span class="text-white">{{ isFolderPinned(folder) ? '📌' : '📍' }}</span>
+              </button>
             </div>
 
             <!-- Audio Files -->
@@ -130,31 +152,42 @@
               v-for="audio in currentDisplayItems.files"
               :key="audio.path"
               data-testid="audio-item"
-              @click="handleMediaSelect(audio)"
-              class="group flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-blue-500"
+              class="group flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-750 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-blue-500 relative"
             >
-              <!-- Icon -->
-              <div class="flex-shrink-0 w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center text-2xl">
-                🎵
-              </div>
+              <div @click="handleMediaSelect(audio)" class="flex items-center gap-4 flex-1">
+                <!-- Icon -->
+                <div class="flex-shrink-0 w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center text-2xl">
+                  🎵
+                </div>
 
-              <!-- Info -->
-              <div class="flex-1 min-w-0">
-                <p class="text-white font-medium truncate">{{ getGMDisplayName(audio) }}</p>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-xs px-2 py-0.5 rounded" :class="getBadgeClass(audio.mediaSubtype)">
-                    {{ audio.mediaSubtype }}
-                  </span>
-                  <span class="text-xs text-gray-400 truncate">{{ getFileName(audio.path) }}</span>
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                  <p class="text-white font-medium truncate">{{ getGMDisplayName(audio) }}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-xs px-2 py-0.5 rounded" :class="getBadgeClass(audio.mediaSubtype)">
+                      {{ audio.mediaSubtype }}
+                    </span>
+                    <span class="text-xs text-gray-400 truncate">{{ getFileName(audio.path) }}</span>
+                  </div>
+                </div>
+
+                <!-- Play Button -->
+                <div class="flex-shrink-0">
+                  <div class="w-10 h-10 bg-blue-600 group-hover:bg-blue-500 rounded-full flex items-center justify-center transition-colors">
+                    <span class="text-white text-xl">▶</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Play Button -->
-              <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-blue-600 group-hover:bg-blue-500 rounded-full flex items-center justify-center transition-colors">
-                  <span class="text-white text-xl">▶</span>
-                </div>
-              </div>
+              <!-- Pin Button -->
+              <button
+                @click.stop="togglePinAudio(audio)"
+                class="flex-shrink-0 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                :class="pinsStore.isPinned(audio.path) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'"
+                :title="pinsStore.isPinned(audio.path) ? 'Unpin' : 'Pin'"
+              >
+                <span class="text-white">{{ pinsStore.isPinned(audio.path) ? '📌' : '📍' }}</span>
+              </button>
             </div>
           </div>
 
@@ -172,18 +205,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
-import { useDirectoryStore, useDisplayStore } from '../stores'
+import { useDirectoryStore, useDisplayStore, usePinsStore } from '../stores'
 import { filterAudioMedia } from '../utils/mediaFilters'
 import { getGMDisplayName } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
+import type { PinnedItem } from '../stores/pins'
 
+const route = useRoute()
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
+const pinsStore = usePinsStore()
 
 // Current folder navigation state
 const currentFolderPath = ref<string | null>(null)
+
+// Watch for folder query parameter (from pinned items)
+watch(
+  () => route.query.folder,
+  (folder) => {
+    if (folder && typeof folder === 'string') {
+      currentFolderPath.value = folder
+    }
+  },
+  { immediate: true }
+)
 
 // Search query
 const searchQuery = ref<string>('')
@@ -388,5 +436,72 @@ function getBadgeClass(subtype: MediaSubtype): string {
 
 function getFileName(path: string): string {
   return path.split('/').pop() || path
+}
+
+// Get display name for current folder
+function getCurrentFolderDisplayName(): string {
+  if (!currentFolderPath.value) return 'Root'
+  const segments = breadcrumbSegments.value
+  return segments[segments.length - 1] || 'Root'
+}
+
+// Check if path is pinned
+function isPinned(path: string): boolean {
+  return pinsStore.isPinned(path)
+}
+
+// Get relative path for a folder
+function getFolderRelativePath(folder: MediaFile): string {
+  return currentFolderPath.value
+    ? `${currentFolderPath.value}/${folder.displayName}`
+    : folder.displayName
+}
+
+// Check if a folder is pinned (using relative path)
+function isFolderPinned(folder: MediaFile): boolean {
+  return pinsStore.isPinned(getFolderRelativePath(folder))
+}
+
+// Pin/unpin a folder
+function togglePinFolder(folder: MediaFile) {
+  // Build relative path (same logic as navigateInto)
+  const relativePath = getFolderRelativePath(folder)
+
+  const pin: PinnedItem = {
+    id: relativePath,
+    type: 'folder',
+    category: 'audio',
+    path: relativePath,
+    displayName: getGMDisplayName(folder)
+  }
+  pinsStore.togglePin(pin)
+}
+
+// Pin/unpin current folder
+function togglePinCurrentFolder() {
+  if (!currentFolderPath.value) return
+
+  const pin: PinnedItem = {
+    id: currentFolderPath.value,
+    type: 'folder',
+    category: 'audio',
+    path: currentFolderPath.value,
+    displayName: getCurrentFolderDisplayName()
+  }
+  pinsStore.togglePin(pin)
+}
+
+// Pin/unpin an audio file
+function togglePinAudio(audio: MediaFile) {
+  const pin: PinnedItem = {
+    id: audio.path,
+    type: 'audio',
+    category: 'audio',
+    path: audio.path,
+    displayName: getGMDisplayName(audio),
+    mediaType: audio.mediaType,
+    mediaSubtype: audio.mediaSubtype
+  }
+  pinsStore.togglePin(pin)
 }
 </script>

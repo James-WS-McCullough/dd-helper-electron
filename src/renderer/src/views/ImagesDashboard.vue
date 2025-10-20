@@ -26,7 +26,7 @@
         </div>
 
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
             <template v-if="isSearching">
               <p class="text-sm text-gray-400">
                 Search results for "{{ searchQuery }}"
@@ -51,6 +51,17 @@
                   </button>
                 </template>
               </div>
+
+              <!-- Pin Current Folder Button -->
+              <button
+                v-if="currentFolderPath"
+                @click="togglePinCurrentFolder"
+                class="ml-2 px-2 py-1 rounded text-xs transition-colors"
+                :class="isPinned(currentFolderPath) ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'"
+                :title="isPinned(currentFolderPath) ? 'Unpin this folder' : 'Pin this folder'"
+              >
+                {{ isPinned(currentFolderPath) ? '📌 Pinned' : '📍 Pin' }}
+              </button>
             </template>
           </div>
           <p class="text-sm text-gray-400">
@@ -85,13 +96,22 @@
           <div
             v-for="folder in currentItems.folders"
             :key="folder.path"
-            @click="navigateInto(folder)"
-            class="group relative aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-yellow-500 transition-all flex items-center justify-center"
+            class="group relative aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all flex items-center justify-center"
           >
-            <div class="text-center px-2">
+            <div @click="navigateInto(folder)" class="text-center px-2 w-full h-full flex flex-col items-center justify-center">
               <span class="text-6xl">📁</span>
               <p class="text-white text-sm font-medium mt-2 truncate">{{ folder.displayName }}</p>
             </div>
+
+            <!-- Pin Button -->
+            <button
+              @click.stop="togglePinFolder(folder)"
+              class="absolute top-2 right-2 p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100"
+              :class="isFolderPinned(folder) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'"
+              :title="isFolderPinned(folder) ? 'Unpin' : 'Pin'"
+            >
+              <span class="text-white text-sm">{{ isFolderPinned(folder) ? '📌' : '📍' }}</span>
+            </button>
           </div>
 
           <!-- Images and Videos -->
@@ -118,6 +138,16 @@
 
               <!-- Overlay -->
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <!-- Pin Button -->
+                <button
+                  @click.stop="togglePinMedia(media)"
+                  class="absolute top-2 right-2 p-1.5 rounded-full transition-all"
+                  :class="pinsStore.isPinned(media.path) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'"
+                  :title="pinsStore.isPinned(media.path) ? 'Unpin' : 'Pin'"
+                >
+                  <span class="text-white text-sm">{{ pinsStore.isPinned(media.path) ? '📌' : '📍' }}</span>
+                </button>
+
                 <div class="absolute bottom-0 left-0 right-0 p-3">
                   <p class="text-white text-sm font-medium truncate">{{ getGMDisplayName(media) }}</p>
                   <div class="flex items-center gap-2 mt-1">
@@ -152,18 +182,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
-import { useDirectoryStore, useDisplayStore } from '../stores'
+import { useDirectoryStore, useDisplayStore, usePinsStore } from '../stores'
 import { filterVisualMedia } from '../utils/mediaFilters'
 import { getGMDisplayName } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
+import type { PinnedItem } from '../stores/pins'
 
+const route = useRoute()
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
+const pinsStore = usePinsStore()
 
 // Current folder path (absolute path from directory)
 const currentFolderPath = ref<string>('')
+
+// Watch for folder query parameter (from pinned items)
+watch(
+  () => route.query.folder,
+  (folder) => {
+    if (folder && typeof folder === 'string') {
+      currentFolderPath.value = folder
+    }
+  },
+  { immediate: true }
+)
 
 // Search query
 const searchQuery = ref<string>('')
@@ -312,5 +357,72 @@ function getBadgeClass(subtype: MediaSubtype): string {
   }
 
   return classes[subtype] || classes.default
+}
+
+// Get display name for current folder
+function getCurrentFolderDisplayName(): string {
+  if (!currentFolderPath.value) return 'Root'
+  const segments = breadcrumbSegments.value
+  return segments[segments.length - 1] || 'Root'
+}
+
+// Check if path is pinned
+function isPinned(path: string): boolean {
+  return pinsStore.isPinned(path)
+}
+
+// Get relative path for a folder
+function getFolderRelativePath(folder: MediaFile): string {
+  return currentFolderPath.value
+    ? `${currentFolderPath.value}/${folder.displayName}`
+    : folder.displayName
+}
+
+// Check if a folder is pinned (using relative path)
+function isFolderPinned(folder: MediaFile): boolean {
+  return pinsStore.isPinned(getFolderRelativePath(folder))
+}
+
+// Pin/unpin a folder
+function togglePinFolder(folder: MediaFile) {
+  // Build relative path (same logic as navigateInto)
+  const relativePath = getFolderRelativePath(folder)
+
+  const pin: PinnedItem = {
+    id: relativePath,
+    type: 'folder',
+    category: 'images',
+    path: relativePath,
+    displayName: getGMDisplayName(folder)
+  }
+  pinsStore.togglePin(pin)
+}
+
+// Pin/unpin current folder
+function togglePinCurrentFolder() {
+  if (!currentFolderPath.value) return
+
+  const pin: PinnedItem = {
+    id: currentFolderPath.value,
+    type: 'folder',
+    category: 'images',
+    path: currentFolderPath.value,
+    displayName: getCurrentFolderDisplayName()
+  }
+  pinsStore.togglePin(pin)
+}
+
+// Pin/unpin a media file
+function togglePinMedia(media: MediaFile) {
+  const pin: PinnedItem = {
+    id: media.path,
+    type: media.mediaType === 'video' ? 'video' : 'image',
+    category: 'images',
+    path: media.path,
+    displayName: getGMDisplayName(media),
+    mediaType: media.mediaType,
+    mediaSubtype: media.mediaSubtype
+  }
+  pinsStore.togglePin(pin)
 }
 </script>

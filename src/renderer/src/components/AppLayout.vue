@@ -31,23 +31,32 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col overflow-hidden">
-      <slot />
-    </main>
+    <!-- Main Content with Pins Sidebar -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="flex-1 flex overflow-hidden">
+        <main class="flex-1 flex flex-col overflow-hidden">
+          <slot />
+        </main>
 
-    <!-- Global Display Status Bar -->
-    <DisplayStatusBar />
+        <!-- Pins Sidebar (only show when there are pinned items) -->
+        <PinsSidebar v-if="pinsStore.pinnedItems.length > 0" />
+      </div>
+
+      <!-- Global Display Status Bar -->
+      <DisplayStatusBar />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDirectoryStore, useDisplayStore } from '../stores'
+import { useDirectoryStore, useDisplayStore, usePinsStore } from '../stores'
 import DisplayStatusBar from './DisplayStatusBar.vue'
+import PinsSidebar from './PinsSidebar.vue'
 
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
+const pinsStore = usePinsStore()
 
 const directoryName = computed(() => {
   if (directoryStore.currentDirectory) {

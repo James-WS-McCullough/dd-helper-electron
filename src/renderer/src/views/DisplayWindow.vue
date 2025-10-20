@@ -77,8 +77,6 @@
       :key="music.path"
       :ref="(el) => setMusicRef(music.path, el)"
       :src="`media://${music.path}`"
-      :volume="music.volume ?? 1"
-      autoplay
       loop
     />
 
@@ -88,17 +86,14 @@
       :key="sound.id"
       :ref="(el) => setAudioRef(`backgroundSound-${sound.id}`, el)"
       :src="`media://${sound.path}`"
-      :volume="sound.volume ?? 1"
-      autoplay
       loop
     />
 
     <audio
       v-for="effect in displayStore.displayState.soundEffects"
       :key="effect.id"
+      :ref="(el) => setEffectRef(`soundEffect-${effect.id}`, el)"
       :src="`media://${effect.path}`"
-      :volume="effect.volume ?? 1"
-      autoplay
       @ended="displayStore.clearSoundEffect(String(effect.id))"
     />
 
@@ -126,6 +121,7 @@ const displayStore = useDisplayStore()
 // Audio element refs
 const musicRefs = new Map<string, HTMLAudioElement>()
 const audioRefs = new Map<string, HTMLAudioElement>()
+const effectRefs = new Map<string, HTMLAudioElement>()
 const fadingAudioElements = new Set<HTMLAudioElement>()
 
 // Local state for audio items that are fading out (keep them mounted)
@@ -148,10 +144,28 @@ const allBackgroundMusic = computed<MediaItem[]>(() => {
 const FADE_DURATION = 1500 // 1.5 seconds
 const FADE_INTERVAL = 50 // Update every 50ms
 
+// Track which music/sounds are being faded in
+const fadingInPaths = new Set<string>()
+
 // Function to set music ref (by path)
 function setMusicRef(path: string, el: any) {
   if (el && el instanceof HTMLAudioElement) {
+    const isNew = !musicRefs.has(path)
     musicRefs.set(path, el)
+
+    // Start playback if this is a new element
+    if (isNew) {
+      // Check if this should fade in (it's the current music, not fading out)
+      if (displayStore.displayState.backgroundMusic?.path === path && fadingInPaths.has(path)) {
+        el.volume = 0
+        el.play().catch(err => console.error('Failed to play music:', err))
+      } else if (fadingOutBackgroundMusic.value?.path !== path) {
+        // Normal playback for existing/old music
+        const targetVolume = displayStore.displayState.backgroundMusic?.volume ?? 1
+        el.volume = targetVolume
+        el.play().catch(err => console.error('Failed to play music:', err))
+      }
+    }
   } else {
     musicRefs.delete(path)
   }
@@ -160,9 +174,42 @@ function setMusicRef(path: string, el: any) {
 // Function to set audio ref for looping sounds
 function setAudioRef(id: string, el: any) {
   if (el && el instanceof HTMLAudioElement) {
+    const isNew = !audioRefs.has(id)
     audioRefs.set(id, el)
+
+    // Start playback if this is a new element
+    if (isNew) {
+      // Find the sound in the state to get its volume
+      const soundId = id.replace('backgroundSound-', '')
+      const sound = displayStore.displayState.backgroundSounds.find(s => String(s.id) === soundId)
+      if (sound) {
+        el.volume = sound.volume ?? 1
+        el.play().catch(err => console.error('Failed to play sound:', err))
+      }
+    }
   } else {
     audioRefs.delete(id)
+  }
+}
+
+// Function to set audio ref for sound effects
+function setEffectRef(id: string, el: any) {
+  if (el && el instanceof HTMLAudioElement) {
+    const isNew = !effectRefs.has(id)
+    effectRefs.set(id, el)
+
+    // Start playback if this is a new element
+    if (isNew) {
+      // Find the effect in the state to get its volume
+      const effectId = id.replace('soundEffect-', '')
+      const effect = displayStore.displayState.soundEffects.find(e => String(e.id) === effectId)
+      if (effect) {
+        el.volume = effect.volume ?? 1
+        el.play().catch(err => console.error('Failed to play effect:', err))
+      }
+    }
+  } else {
+    effectRefs.delete(id)
   }
 }
 
@@ -268,6 +315,9 @@ watch(
       fadingOutBackgroundMusic.value = null
     } else if (oldMusic && newMusic && oldMusic.path !== newMusic.path) {
       // Music is changing - cross-fade
+      // Mark new music for fade-in (so it starts at volume 0)
+      fadingInPaths.add(newMusic.path)
+
       // Set the old music as "fading out" so both elements stay mounted
       fadingOutBackgroundMusic.value = oldMusic
 
@@ -285,9 +335,6 @@ watch(
       const fadeInPromise = (async () => {
         if (newAudioElement) {
           const targetVolume = newMusic.volume ?? 1
-          // Start new music at 0 volume
-          newAudioElement.volume = 0
-          await new Promise(resolve => setTimeout(resolve, 50))
           await fadeInAudio(newAudioElement, targetVolume)
         }
       })()
@@ -297,6 +344,20 @@ watch(
 
       // Clean up fading out state
       fadingOutBackgroundMusic.value = null
+      fadingInPaths.delete(newMusic.path)
+    } else if (!oldMusic && newMusic) {
+      // First music being added - mark for fade-in
+      fadingInPaths.add(newMusic.path)
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      const newAudioElement = musicRefs.get(newMusic.path)
+      if (newAudioElement) {
+        const targetVolume = newMusic.volume ?? 1
+        await fadeInAudio(newAudioElement, targetVolume)
+      }
+
+      fadingInPaths.delete(newMusic.path)
     }
   }
 )

@@ -2,7 +2,7 @@
   <transition name="slide-up">
     <div
       v-if="hasActiveDisplay"
-      class="fixed bottom-0 left-0 right-0 z-50"
+      class="relative z-50 flex-shrink-0"
     >
       <div class="bg-gray-800/95 backdrop-blur-lg border-t border-gray-700 shadow-2xl">
         <div class="flex items-center gap-4 p-3 overflow-x-auto overflow-y-visible">

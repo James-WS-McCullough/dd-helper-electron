@@ -1,4 +1,4 @@
-import { d as defineComponent, a as useDisplayStore, c as createElementBlock, e as createCommentVNode, f as unref, b as createBaseVNode, F as Fragment, k as renderList, o as openBlock, t as toDisplayString } from "./index-BJL_MLwK.js";
+import { d as defineComponent, a as useDisplayStore, p as onMounted, s as onUnmounted, c as createElementBlock, e as createCommentVNode, f as unref, b as createBaseVNode, F as Fragment, j as renderList, o as openBlock, t as toDisplayString } from "./index-D0_DqTAi.js";
 const _hoisted_1 = { class: "min-h-screen bg-black relative overflow-hidden" };
 const _hoisted_2 = {
   key: 0,
@@ -29,6 +29,15 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
   __name: "DisplayWindow",
   setup(__props) {
     const displayStore = useDisplayStore();
+    onMounted(() => {
+      window.electronAPI.onUpdateDisplay((_event, state) => {
+        displayStore.displayState = state;
+      });
+      displayStore.initialize();
+    });
+    onUnmounted(() => {
+      window.electronAPI.removeDisplayListeners();
+    });
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1, [
         unref(displayStore).hasBackground ? (openBlock(), createElementBlock("div", _hoisted_2, [

@@ -88,7 +88,25 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import { useDisplayStore } from '../stores'
+import type { DisplayState } from '../types'
 
 const displayStore = useDisplayStore()
+
+// Listen for display updates from the main process
+onMounted(() => {
+  // Set up listener for direct updates to this display window
+  window.electronAPI.onUpdateDisplay((_event, state: DisplayState) => {
+    displayStore.displayState = state
+  })
+
+  // Initialize the store to get current state
+  displayStore.initialize()
+})
+
+onUnmounted(() => {
+  // Clean up listeners when component is destroyed
+  window.electronAPI.removeDisplayListeners()
+})
 </script>

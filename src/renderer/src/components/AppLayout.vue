@@ -35,12 +35,16 @@
     <main class="flex-1 flex flex-col overflow-hidden">
       <slot />
     </main>
+
+    <!-- Global Display Status Bar -->
+    <DisplayStatusBar />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useDirectoryStore, useDisplayStore } from '../stores'
+import DisplayStatusBar from './DisplayStatusBar.vue'
 
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()

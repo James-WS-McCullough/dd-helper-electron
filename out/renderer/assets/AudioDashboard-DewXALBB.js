@@ -1,6 +1,90 @@
-import { _ as _sfc_main$1 } from "./AppLayout.vue_vue_type_script_setup_true_lang-DD_oOrCT.js";
-import { a as filterAudioMedia, b as getAllAudioMedia, _ as _sfc_main$2 } from "./mediaFilters-CG1o4w4k.js";
-import { d as defineComponent, u as useDirectoryStore, a as useDisplayStore, h as computed, i as createBlock, w as withCtx, o as openBlock, b as createBaseVNode, c as createElementBlock, f as unref, j as createVNode, e as createCommentVNode, t as toDisplayString, F as Fragment, k as renderList, n as normalizeClass } from "./index-BJL_MLwK.js";
+import { _ as _sfc_main$2 } from "./AppLayout.vue_vue_type_script_setup_true_lang-BcQ77D-u.js";
+import { d as defineComponent, r as ref, k as resolveComponent, c as createElementBlock, o as openBlock, b as createBaseVNode, e as createCommentVNode, t as toDisplayString, n as normalizeClass, l as normalizeStyle, F as Fragment, j as renderList, i as createBlock, u as useDirectoryStore, a as useDisplayStore, h as computed, w as withCtx, f as unref, m as createVNode } from "./index-D0_DqTAi.js";
+import { a as filterAudioMedia, g as getAllAudioMedia } from "./mediaFilters-Cv4opu4j.js";
+const _hoisted_1$1 = {
+  key: 0,
+  class: "text-gray-400 text-sm w-4"
+};
+const _hoisted_2$1 = {
+  key: 1,
+  class: "w-4"
+};
+const _hoisted_3$1 = { class: "text-lg" };
+const _hoisted_4$1 = { class: "text-sm text-gray-200 flex-1" };
+const _hoisted_5$1 = { key: 0 };
+const _sfc_main$1 = /* @__PURE__ */ defineComponent({
+  __name: "MediaTreeNode",
+  props: {
+    node: {},
+    depth: {}
+  },
+  emits: ["select-media"],
+  setup(__props, { emit: __emit }) {
+    const props = __props;
+    const emit = __emit;
+    const isExpanded = ref(props.depth === 0);
+    function handleClick() {
+      if (props.node.type === "folder") {
+        isExpanded.value = !isExpanded.value;
+      } else {
+        emit("select-media", props.node);
+      }
+    }
+    function getIcon(node) {
+      if (node.type === "folder") return "📁";
+      switch (node.mediaType) {
+        case "image":
+          return "🖼️";
+        case "video":
+          return "🎬";
+        case "audio":
+          return "🎵";
+        default:
+          return "📄";
+      }
+    }
+    function getBadgeClass(subtype) {
+      const classes = {
+        portrait: "bg-blue-500/30 text-blue-200",
+        background: "bg-green-500/30 text-green-200",
+        event: "bg-purple-500/30 text-purple-200",
+        loop: "bg-yellow-500/30 text-yellow-200",
+        music: "bg-pink-500/30 text-pink-200",
+        sound: "bg-orange-500/30 text-orange-200",
+        default: "bg-gray-500/30 text-gray-200"
+      };
+      return classes[subtype] || classes.default;
+    }
+    return (_ctx, _cache) => {
+      const _component_MediaTreeNode = resolveComponent("MediaTreeNode", true);
+      return openBlock(), createElementBlock("div", null, [
+        createBaseVNode("div", {
+          onClick: handleClick,
+          class: "flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700 cursor-pointer transition-colors",
+          style: normalizeStyle({ paddingLeft: `${__props.depth * 1 + 0.75}rem` })
+        }, [
+          __props.node.type === "folder" ? (openBlock(), createElementBlock("span", _hoisted_1$1, toDisplayString(isExpanded.value ? "▼" : "▶"), 1)) : (openBlock(), createElementBlock("span", _hoisted_2$1)),
+          createBaseVNode("span", _hoisted_3$1, toDisplayString(getIcon(__props.node)), 1),
+          createBaseVNode("span", _hoisted_4$1, toDisplayString(__props.node.displayName || __props.node.name), 1),
+          __props.node.type === "file" ? (openBlock(), createElementBlock("span", {
+            key: 2,
+            class: normalizeClass(["text-xs px-2 py-0.5 rounded", getBadgeClass(__props.node.mediaSubtype)])
+          }, toDisplayString(__props.node.mediaSubtype), 3)) : createCommentVNode("", true)
+        ], 4),
+        isExpanded.value && __props.node.children && __props.node.children.length > 0 ? (openBlock(), createElementBlock("div", _hoisted_5$1, [
+          (openBlock(true), createElementBlock(Fragment, null, renderList(__props.node.children, (child) => {
+            return openBlock(), createBlock(_component_MediaTreeNode, {
+              key: child.path,
+              node: child,
+              depth: __props.depth + 1,
+              onSelectMedia: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("select-media", $event))
+            }, null, 8, ["node", "depth"]);
+          }), 128))
+        ])) : createCommentVNode("", true)
+      ]);
+    };
+  }
+});
 const _hoisted_1 = { class: "flex h-full" };
 const _hoisted_2 = { class: "w-80 border-r border-gray-700 bg-gray-800 flex flex-col" };
 const _hoisted_3 = { class: "flex-1 overflow-y-auto p-4" };
@@ -109,7 +193,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
       return path.split("/").pop() || path;
     }
     return (_ctx, _cache) => {
-      return openBlock(), createBlock(_sfc_main$1, null, {
+      return openBlock(), createBlock(_sfc_main$2, null, {
         default: withCtx(() => [
           createBaseVNode("div", _hoisted_1, [
             createBaseVNode("div", _hoisted_2, [
@@ -124,7 +208,7 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
                     createBaseVNode("p", { class: "text-gray-400" }, "Scanning directory...")
                   ], -1)
                 ])])) : filteredMediaTree.value ? (openBlock(), createElementBlock("div", _hoisted_5, [
-                  createVNode(_sfc_main$2, {
+                  createVNode(_sfc_main$1, {
                     node: filteredMediaTree.value,
                     depth: 0,
                     onSelectMedia: handleMediaSelect

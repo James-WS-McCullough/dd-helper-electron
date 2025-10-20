@@ -503,7 +503,9 @@ function registerIpcHandlers() {
       if (mediaType === "image" && mediaSubtype === "portrait") {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== mediaPath);
         displayState.portraits.push(mediaData);
-        displayState.focusedPortraitPath = mediaPath;
+        if (displayState.portraits.length === 1) {
+          displayState.focusedPortraitPath = mediaPath;
+        }
       } else if ((mediaType === "image" || mediaType === "video") && mediaSubtype === "background") {
         displayState.background = mediaData;
       } else if (mediaType === "video" && mediaSubtype === "event") {

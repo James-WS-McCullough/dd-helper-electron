@@ -34,31 +34,39 @@
     <!-- Portraits Layer -->
     <div v-if="displayStore.hasPortraits && !displayStore.hasEvent" class="absolute inset-0 z-20 flex flex-col p-8 gap-4">
       <!-- Focused Portrait (Large, Centered) - Takes 2/3 of screen -->
-      <div v-if="displayStore.focusedPortrait" class="flex-[2] flex items-center justify-center min-h-0">
-        <div class="bg-gray-900/80 rounded-lg p-3 backdrop-blur-sm flex flex-col items-center max-w-full max-h-full">
-          <img
-            :src="`media://${displayStore.focusedPortrait.path}`"
-            :alt="displayStore.focusedPortrait.displayName"
-            class="max-h-[50vh] max-w-[90vw] w-auto object-contain rounded"
-          />
-          <p class="text-white text-center text-6xl font-semibold mt-3">{{ cleanDisplayName(displayStore.focusedPortrait.displayName) }}</p>
-        </div>
+      <div class="flex-[2] flex items-center justify-center min-h-0">
+        <Transition name="portrait-focus" mode="out-in">
+          <div
+            v-if="displayStore.focusedPortrait"
+            :key="displayStore.focusedPortrait.path"
+            class="bg-gray-900/80 rounded-lg p-3 backdrop-blur-sm flex flex-col items-center max-w-full max-h-full"
+          >
+            <img
+              :src="`media://${displayStore.focusedPortrait.path}`"
+              :alt="displayStore.focusedPortrait.displayName"
+              class="max-h-[50vh] max-w-[90vw] w-auto object-contain rounded"
+            />
+            <p class="text-white text-center text-6xl font-semibold mt-3">{{ cleanDisplayName(displayStore.focusedPortrait.displayName) }}</p>
+          </div>
+        </Transition>
       </div>
 
       <!-- Other Portraits (Small Row at Bottom) - Takes ~1/3 of screen -->
-      <div v-if="otherPortraits.length > 0" class="flex-1 flex items-end justify-center gap-3 min-h-0">
-        <div
-          v-for="(portrait, index) in otherPortraits"
-          :key="index"
-          class="bg-gray-900/80 rounded-lg p-3 backdrop-blur-sm h-full flex flex-col items-center justify-end"
-        >
-          <img
-            :src="`media://${portrait.path}`"
-            :alt="portrait.displayName"
-            class="max-h-[calc(100%-4rem)] w-auto object-contain rounded"
-          />
-          <p class="text-white text-center text-4xl font-semibold mt-2 h-16 flex items-center">{{ cleanDisplayName(portrait.displayName) }}</p>
-        </div>
+      <div class="flex-1 flex items-end justify-center gap-3 min-h-0">
+        <TransitionGroup name="portrait-list" tag="div" class="flex items-end justify-center gap-3 h-full">
+          <div
+            v-for="portrait in otherPortraits"
+            :key="portrait.path"
+            class="bg-gray-900/80 rounded-lg p-3 backdrop-blur-sm h-full flex flex-col items-center justify-end portrait-card"
+          >
+            <img
+              :src="`media://${portrait.path}`"
+              :alt="portrait.displayName"
+              class="max-h-[calc(100%-4rem)] w-auto object-contain rounded"
+            />
+            <p class="text-white text-center text-4xl font-semibold mt-2 h-16 flex items-center">{{ cleanDisplayName(portrait.displayName) }}</p>
+          </div>
+        </TransitionGroup>
       </div>
     </div>
 
@@ -138,3 +146,47 @@ onUnmounted(() => {
   window.electronAPI.removeDisplayListeners()
 })
 </script>
+
+<style scoped>
+/* Focused Portrait Transitions */
+.portrait-focus-enter-active,
+.portrait-focus-leave-active {
+  transition: all 0.6s ease;
+}
+
+.portrait-focus-enter-from {
+  opacity: 0;
+  transform: translateY(30vh) scale(0.5);
+}
+
+.portrait-focus-leave-to {
+  opacity: 0;
+  transform: translateY(30vh) scale(0.5);
+}
+
+/* Unfocused Portrait List Transitions */
+.portrait-list-enter-active,
+.portrait-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.portrait-list-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.portrait-list-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* Move transition for repositioning */
+.portrait-list-move {
+  transition: transform 0.5s ease;
+}
+
+/* Ensure leaving items are taken out of layout flow */
+.portrait-list-leave-active {
+  position: absolute;
+}
+</style>

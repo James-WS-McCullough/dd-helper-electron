@@ -114,8 +114,10 @@ export function registerIpcHandlers(): void {
       if (mediaType === 'image' && mediaSubtype === 'portrait') {
         displayState.portraits = displayState.portraits.filter((p) => p.path !== mediaPath)
         displayState.portraits.push(mediaData)
-        // Set newly added portrait as focused
-        displayState.focusedPortraitPath = mediaPath
+        // Only set focus if there are no other portraits (first portrait)
+        if (displayState.portraits.length === 1) {
+          displayState.focusedPortraitPath = mediaPath
+        }
       } else if (
         (mediaType === 'image' || mediaType === 'video') &&
         mediaSubtype === 'background'

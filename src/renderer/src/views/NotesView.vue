@@ -385,6 +385,12 @@ function handleDiceClick(event: MouseEvent) {
     if (notation) {
       rollDiceNotation(notation)
     }
+  } else if (target.classList.contains('stat-dice-roller')) {
+    event.preventDefault()
+    const notation = target.getAttribute('data-notation')
+    if (notation) {
+      rollDiceNotation(notation)
+    }
   } else if (target.classList.contains('hp-button')) {
     event.preventDefault()
     handleHpButtonClick(target)
@@ -768,9 +774,10 @@ function processContentMarkup() {
     tempMarker.remove()
   }
 
-  // Remove all existing dice buttons, HP buttons, death saves, and styled spans to get clean text
+  // Remove all existing dice buttons, HP buttons, death saves, stat blocks, and styled spans to get clean text
   tempDiv.querySelectorAll('[data-dice-button]').forEach(button => button.remove())
   tempDiv.querySelectorAll('[data-hp-button]').forEach(button => button.remove())
+  tempDiv.querySelectorAll('[data-stat-button]').forEach(button => button.remove())
   tempDiv.querySelectorAll('.death-save-marker').forEach(button => button.remove())
   tempDiv.querySelectorAll('.death-saves').forEach(span => span.remove())
   tempDiv.querySelectorAll('.dice-notation').forEach(span => {
@@ -784,6 +791,17 @@ function processContentMarkup() {
       const textNode = document.createTextNode(tracker.textContent || '')
       container.parentNode?.replaceChild(textNode, container)
     }
+  })
+  // Replace stat block containers with just the original text pattern
+  tempDiv.querySelectorAll('.stat-block-container').forEach(container => {
+    const statItems = container.querySelectorAll('.stat-item')
+    const scores: string[] = []
+    statItems.forEach(item => {
+      const scoreText = (item.querySelector('.stat-score') as HTMLElement)?.textContent || '10'
+      scores.push(scoreText)
+    })
+    const textNode = document.createTextNode(`statblock[${scores.join(',')}]`)
+    container.parentNode?.replaceChild(textNode, container)
   })
 
   // Remove all markdown styling to get clean text
@@ -805,6 +823,12 @@ function processContentMarkup() {
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i]
+
+    // Process slash commands (replace /hp or \hp with their expansions)
+    // Support both forward slash and backslash
+    line = line.replace(/[/\\]hp\b/g, '50/50hp')
+    line = line.replace(/[/\\]dc\b/g, '/dc') // Placeholder for future
+    line = line.replace(/[/\\]statblock\b/g, 'statblock[10,10,10,10,10,10]')
 
     // Process markdown first (in order of precedence)
     // Bold: **text**
@@ -871,6 +895,61 @@ function processContentMarkup() {
         current: hpMatch[1],
         max: hpMatch[2],
         index: hpMatch.index
+      })
+    }
+
+    // Process stat blocks (e.g., statblock[10,14,16,12,8,18])
+    const statBlockPattern = /\bstatblock\[((?:\d+,){5}\d+)\]/gi
+    const statBlockMatches: Array<{ match: string; scores: number[]; index: number }> = []
+    let statBlockMatch: RegExpExecArray | null
+
+    while ((statBlockMatch = statBlockPattern.exec(originalLine)) !== null) {
+      const scoresStr = statBlockMatch[1]
+      const scores = scoresStr.split(',').map(s => parseInt(s, 10))
+      if (scores.length === 6) {
+        statBlockMatches.push({
+          match: statBlockMatch[0],
+          scores,
+          index: statBlockMatch.index
+        })
+      }
+    }
+
+    // Add stat blocks
+    for (const { match, scores } of statBlockMatches) {
+      const statBlockRegex = new RegExp(escapeRegex(match))
+      line = line.replace(statBlockRegex, () => {
+        const statBlockId = `statblock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+        // Calculate modifiers from ability scores: (score - 10) / 2, rounded down
+        const calculateModifier = (score: number) => Math.floor((score - 10) / 2)
+
+        const stats = [
+          { name: 'STR', icon: '💪', score: scores[0], modifier: calculateModifier(scores[0]) },
+          { name: 'DEX', icon: '🤸', score: scores[1], modifier: calculateModifier(scores[1]) },
+          { name: 'CON', icon: '🛡️', score: scores[2], modifier: calculateModifier(scores[2]) },
+          { name: 'INT', icon: '🧠', score: scores[3], modifier: calculateModifier(scores[3]) },
+          { name: 'WIS', icon: '👁️', score: scores[4], modifier: calculateModifier(scores[4]) },
+          { name: 'CHA', icon: '✨', score: scores[5], modifier: calculateModifier(scores[5]) }
+        ]
+
+        let html = `<span class="stat-block-container" data-statblock-id="${statBlockId}" contenteditable="false">`
+
+        stats.forEach(stat => {
+          const modStr = stat.modifier >= 0 ? `+${stat.modifier}` : `${stat.modifier}`
+          const diceNotation = stat.modifier >= 0 ? `d20+${stat.modifier}` : `d20${stat.modifier}`
+
+          html += `<span class="stat-item" data-stat-score="${stat.score}">`
+          html += `<span class="stat-icon" contenteditable="false">${stat.icon}</span>`
+          html += `<span class="stat-name" contenteditable="false">${stat.name}</span>`
+          html += `<span class="stat-score" contenteditable="true">${stat.score}</span>`
+          html += `<span class="stat-modifier-small" contenteditable="false">${modStr}</span>`
+          html += `<button class="stat-dice-roller" data-notation="${diceNotation}" data-stat-button="true" contenteditable="false">🎲 ${diceNotation}</button>`
+          html += `</span>`
+        })
+
+        html += `</span>`
+        return html
       })
     }
 
@@ -1284,6 +1363,106 @@ function onHpTooltipKeydown(event: KeyboardEvent) {
 }
 
 :deep(.death-save-marker):active {
+  transform: scale(1.0);
+}
+
+/* Stat block styling */
+:deep(.stat-block-container) {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 2px solid #8b5cf6;
+  border-radius: 12px;
+  margin: 8px 0;
+  box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
+}
+
+:deep(.stat-item) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid #6b7280;
+  transition: all 0.2s;
+}
+
+:deep(.stat-item):hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #8b5cf6;
+  transform: translateY(-2px);
+}
+
+:deep(.stat-icon) {
+  font-size: 24px;
+  line-height: 1;
+}
+
+:deep(.stat-name) {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+:deep(.stat-score) {
+  font-size: 28px;
+  font-weight: 900;
+  color: #8b5cf6;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1;
+  cursor: text;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+:deep(.stat-score):hover {
+  background: rgba(139, 92, 246, 0.2);
+  outline: 1px solid #8b5cf6;
+}
+
+:deep(.stat-score):focus {
+  background: rgba(139, 92, 246, 0.3);
+  outline: 2px solid #8b5cf6;
+}
+
+:deep(.stat-modifier-small) {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a78bfa;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+:deep(.stat-dice-roller) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+:deep(.stat-dice-roller):hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.5);
+}
+
+:deep(.stat-dice-roller):active {
   transform: scale(1.0);
 }
 

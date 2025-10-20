@@ -58,6 +58,7 @@ const directoryName = computed(() => {
 const navItems = [
   { path: '/images', icon: '🖼️', label: 'Images' },
   { path: '/audio', icon: '🎵', label: 'Audio' },
+  { path: '/notes', icon: '📝', label: 'Notes' },
   { path: '/party', icon: '👥', label: 'Party' },
   { path: '/encounters', icon: '⚔️', label: 'Encounters' },
   { path: '/initiative', icon: '🎯', label: 'Initiative' },

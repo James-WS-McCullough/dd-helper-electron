@@ -497,6 +497,52 @@ async function getAvailablePinBoards(directoryPath) {
     return [];
   }
 }
+async function loadNotes(directoryPath) {
+  try {
+    const files = await fs.promises.readdir(directoryPath);
+    const notes = [];
+    for (const file of files) {
+      if (file.startsWith("note_") && file.endsWith(".json")) {
+        try {
+          const filePath = path.join(directoryPath, file);
+          const content = await fs.promises.readFile(filePath, "utf-8");
+          const note = JSON.parse(content);
+          notes.push(note);
+        } catch (error) {
+          console.log(`Skipping invalid note file: ${file}`);
+        }
+      }
+    }
+    return notes.sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch (error) {
+    console.error("Error loading notes:", error);
+    return [];
+  }
+}
+async function saveNote(directoryPath, note) {
+  try {
+    const fileName = `note_${note.id}.json`;
+    const filePath = path.join(directoryPath, fileName);
+    await fs.promises.writeFile(filePath, JSON.stringify(note, null, 2), "utf-8");
+    console.log(`Note saved: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.error("Error saving note:", error);
+    return false;
+  }
+}
+async function deleteNote(directoryPath, noteId) {
+  try {
+    const fileName = `note_${noteId}.json`;
+    const filePath = path.join(directoryPath, fileName);
+    await fs.promises.unlink(filePath);
+    console.log(`Note deleted: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    return false;
+  }
+}
 let displayState = {
   portraits: [],
   focusedPortraitPath: null,
@@ -686,6 +732,15 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle("get-available-pin-boards", async (_event, directoryPath) => {
     return await getAvailablePinBoards(directoryPath);
+  });
+  electron.ipcMain.handle("load-notes", async (_event, directoryPath) => {
+    return await loadNotes(directoryPath);
+  });
+  electron.ipcMain.handle("save-note", async (_event, directoryPath, note) => {
+    return await saveNote(directoryPath, note);
+  });
+  electron.ipcMain.handle("delete-note", async (_event, directoryPath, noteId) => {
+    return await deleteNote(directoryPath, noteId);
   });
   electron.ipcMain.handle("save-party-data", async (_event, filePath, partyData) => {
     return await savePartyData(filePath, partyData);

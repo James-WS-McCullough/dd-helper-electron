@@ -68,6 +68,19 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke('get-available-pin-boards', directoryPath),
 
   // ============================================
+  // NOTES MANAGEMENT
+  // ============================================
+
+  loadNotes: (directoryPath: string) =>
+    ipcRenderer.invoke('load-notes', directoryPath),
+
+  saveNote: (directoryPath: string, note: any) =>
+    ipcRenderer.invoke('save-note', directoryPath, note),
+
+  deleteNote: (directoryPath: string, noteId: string) =>
+    ipcRenderer.invoke('delete-note', directoryPath, noteId),
+
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
 

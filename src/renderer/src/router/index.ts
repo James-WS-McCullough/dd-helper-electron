@@ -27,6 +27,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Audio' }
   },
   {
+    path: '/notes',
+    name: 'Notes',
+    component: () => import('../views/NotesView.vue'),
+    meta: { title: 'Notes' }
+  },
+  {
     path: '/party',
     name: 'Party',
     component: () => import('../views/PartyManagement.vue'),

@@ -24,7 +24,10 @@ import {
   getBattlemapFiles,
   savePinBoard,
   loadPinBoard,
-  getAvailablePinBoards
+  getAvailablePinBoards,
+  loadNotes,
+  saveNote,
+  deleteNote
 } from './fileOperations'
 
 // Display state management
@@ -284,6 +287,22 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('get-available-pin-boards', async (_event, directoryPath: string) => {
     return await getAvailablePinBoards(directoryPath)
+  })
+
+  // ============================================
+  // NOTES MANAGEMENT
+  // ============================================
+
+  ipcMain.handle('load-notes', async (_event, directoryPath: string) => {
+    return await loadNotes(directoryPath)
+  })
+
+  ipcMain.handle('save-note', async (_event, directoryPath: string, note: any) => {
+    return await saveNote(directoryPath, note)
+  })
+
+  ipcMain.handle('delete-note', async (_event, directoryPath: string, noteId: string) => {
+    return await deleteNote(directoryPath, noteId)
   })
 
   // ============================================

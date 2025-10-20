@@ -468,3 +468,78 @@ export async function getAvailablePinBoards(directoryPath: string): Promise<stri
     return []
   }
 }
+
+// ============================================
+// NOTES MANAGEMENT
+// ============================================
+
+interface Note {
+  id: string
+  title: string
+  content: string
+  createdAt: number
+  updatedAt: number
+}
+
+/**
+ * Load all notes from directory
+ */
+export async function loadNotes(directoryPath: string): Promise<Note[]> {
+  try {
+    const files = await fs.readdir(directoryPath)
+    const notes: Note[] = []
+
+    for (const file of files) {
+      if (file.startsWith('note_') && file.endsWith('.json')) {
+        try {
+          const filePath = join(directoryPath, file)
+          const content = await fs.readFile(filePath, 'utf-8')
+          const note = JSON.parse(content)
+          notes.push(note)
+        } catch (error) {
+          console.log(`Skipping invalid note file: ${file}`)
+        }
+      }
+    }
+
+    // Sort by updated time (most recent first)
+    return notes.sort((a, b) => b.updatedAt - a.updatedAt)
+  } catch (error) {
+    console.error('Error loading notes:', error)
+    return []
+  }
+}
+
+/**
+ * Save a note to JSON file
+ */
+export async function saveNote(directoryPath: string, note: Note): Promise<boolean> {
+  try {
+    const fileName = `note_${note.id}.json`
+    const filePath = join(directoryPath, fileName)
+
+    await fs.writeFile(filePath, JSON.stringify(note, null, 2), 'utf-8')
+    console.log(`Note saved: ${filePath}`)
+    return true
+  } catch (error) {
+    console.error('Error saving note:', error)
+    return false
+  }
+}
+
+/**
+ * Delete a note file
+ */
+export async function deleteNote(directoryPath: string, noteId: string): Promise<boolean> {
+  try {
+    const fileName = `note_${noteId}.json`
+    const filePath = join(directoryPath, fileName)
+
+    await fs.unlink(filePath)
+    console.log(`Note deleted: ${filePath}`)
+    return true
+  } catch (error) {
+    console.error('Error deleting note:', error)
+    return false
+  }
+}

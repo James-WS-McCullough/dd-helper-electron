@@ -140,6 +140,33 @@ export interface ElectronAPI {
   getAvailablePinBoards: (directoryPath: string) => Promise<string[]>
 
   // ============================================
+  // NOTES MANAGEMENT
+  // ============================================
+
+  /**
+   * Load all notes from directory
+   * @param directoryPath - Root directory path
+   * @returns Array of notes
+   */
+  loadNotes: (directoryPath: string) => Promise<any[]>
+
+  /**
+   * Save a note to file
+   * @param directoryPath - Root directory path
+   * @param note - Note data to save
+   * @returns Success status
+   */
+  saveNote: (directoryPath: string, note: any) => Promise<boolean>
+
+  /**
+   * Delete a note
+   * @param directoryPath - Root directory path
+   * @param noteId - ID of note to delete
+   * @returns Success status
+   */
+  deleteNote: (directoryPath: string, noteId: string) => Promise<boolean>
+
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
 

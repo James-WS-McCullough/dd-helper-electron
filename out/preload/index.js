@@ -27,6 +27,12 @@ const electronAPI = {
   loadPinBoard: (directoryPath, boardName) => electron.ipcRenderer.invoke("load-pin-board", directoryPath, boardName),
   getAvailablePinBoards: (directoryPath) => electron.ipcRenderer.invoke("get-available-pin-boards", directoryPath),
   // ============================================
+  // NOTES MANAGEMENT
+  // ============================================
+  loadNotes: (directoryPath) => electron.ipcRenderer.invoke("load-notes", directoryPath),
+  saveNote: (directoryPath, note) => electron.ipcRenderer.invoke("save-note", directoryPath, note),
+  deleteNote: (directoryPath, noteId) => electron.ipcRenderer.invoke("delete-note", directoryPath, noteId),
+  // ============================================
   // PARTY DATA MANAGEMENT
   // ============================================
   savePartyData: (filePath, partyData) => electron.ipcRenderer.invoke("save-party-data", filePath, partyData),

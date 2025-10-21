@@ -73,7 +73,7 @@
               @keydown="onKeyDown"
               class="w-full h-full p-6 bg-gray-800 rounded-lg border border-gray-700 text-gray-100 text-base leading-relaxed focus:outline-none focus:border-purple-500 transition-colors overflow-auto"
               style="font-family: 'Menlo', 'Monaco', 'Lucida Console', 'Courier New', monospace; font-weight: 400;"
-              data-placeholder="Write your notes here... Use markdown (*italic*, **bold**, # heading) or dice notation (d20, 3d6), then press Enter to format!"
+              data-placeholder="Write your notes here... Use markdown (*italic*, **bold**, # heading), checkboxes ([]), or dice notation (d20, 3d6), then press Enter to format!"
             ></div>
           </div>
         </div>
@@ -397,6 +397,9 @@ function handleDiceClick(event: MouseEvent) {
   } else if (target.classList.contains('death-save-marker')) {
     event.preventDefault()
     handleDeathSaveClick(target)
+  } else if (target.classList.contains('checkbox-marker')) {
+    event.preventDefault()
+    handleCheckboxClick(target)
   }
 }
 
@@ -447,6 +450,39 @@ function handleDeathSaveClick(marker: HTMLElement) {
   setTimeout(() => {
     ensureEditorFocusAndRerender()
   }, 50)
+
+  scheduleAutoSave()
+}
+
+function handleCheckboxClick(marker: HTMLElement) {
+  const checkboxId = marker.getAttribute('data-checkbox-id')
+  if (!checkboxId) return
+
+  // Find the checkbox container
+  const checkboxContainer = document.querySelector(`.checkbox-container[data-checkbox-id="${checkboxId}"]`) as HTMLElement
+  if (!checkboxContainer) return
+
+  // Get current checked state
+  const isChecked = marker.getAttribute('data-checked') === 'true'
+
+  // Toggle the state
+  marker.setAttribute('data-checked', (!isChecked).toString())
+
+  // Update the checkbox display
+  const checkmark = marker.querySelector('.checkbox-checkmark') as HTMLElement
+  if (checkmark) {
+    checkmark.style.display = !isChecked ? 'block' : 'none'
+  }
+
+  // Find the checkbox text span and toggle strikethrough
+  const textSpan = checkboxContainer.querySelector('.checkbox-text') as HTMLElement
+  if (textSpan) {
+    if (!isChecked) {
+      textSpan.classList.add('checkbox-checked')
+    } else {
+      textSpan.classList.remove('checkbox-checked')
+    }
+  }
 
   scheduleAutoSave()
 }
@@ -509,8 +545,8 @@ function onKeyDown(event: KeyboardEvent) {
       slashQuery.value = ''
     }
 
-    // First, insert the line breaks
-    document.execCommand('insertHTML', false, '<br><br>')
+    // Insert line breaks - this preserves content after cursor and moves it to new line
+    document.execCommand('insertHTML', false, '<br>')
     event.preventDefault()
 
     // Then process markup (dice and markdown)
@@ -756,22 +792,25 @@ function processContentMarkup() {
     return
   }
 
-  // Insert a temporary marker at the cursor position to preserve it
-  const currentRange = selection.getRangeAt(0)
+  // Insert a unique marker element at cursor position to preserve it
+  const range = selection.getRangeAt(0)
   const marker = document.createElement('span')
-  marker.id = 'cursor-marker-temp'
+  marker.id = 'cursor-position-marker'
   marker.setAttribute('data-cursor-marker', 'true')
-  currentRange.insertNode(marker)
+  marker.textContent = '\u200B' // Zero-width space to make it findable
+  range.insertNode(marker)
 
   // STEP 1: Get the entire plain text content, preserving line breaks
   // We need to replace <br> tags with newlines before getting text
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = editorRef.value.innerHTML
 
-  // Remove the cursor marker from the temp div
-  const tempMarker = tempDiv.querySelector('#cursor-marker-temp')
-  if (tempMarker) {
-    tempMarker.remove()
+  // Preserve the cursor marker by replacing it with a unique text placeholder
+  const cursorMarkerElement = tempDiv.querySelector('#cursor-position-marker')
+  const CURSOR_PLACEHOLDER = '___CURSOR_POSITION___'
+  if (cursorMarkerElement) {
+    const placeholderNode = document.createTextNode(CURSOR_PLACEHOLDER)
+    cursorMarkerElement.parentNode?.replaceChild(placeholderNode, cursorMarkerElement)
   }
 
   // Remove all existing dice buttons, HP buttons, death saves, stat blocks, and styled spans to get clean text
@@ -804,6 +843,19 @@ function processContentMarkup() {
     container.parentNode?.replaceChild(textNode, container)
   })
 
+  // Replace checkbox containers with clean text representation
+  tempDiv.querySelectorAll('.checkbox-container').forEach(container => {
+    const marker = container.querySelector('.checkbox-marker') as HTMLElement
+    const textSpan = container.querySelector('.checkbox-text') as HTMLElement
+    if (marker && textSpan) {
+      const isChecked = marker.getAttribute('data-checked') === 'true'
+      const checkboxSymbol = isChecked ? '[x]' : '[]'
+      const textContent = textSpan.textContent || ''
+      const textNode = document.createTextNode(`${checkboxSymbol} ${textContent}`)
+      container.parentNode?.replaceChild(textNode, container)
+    }
+  })
+
   // Remove all markdown styling to get clean text
   tempDiv.querySelectorAll('.md-syntax, .md-content, .md-heading').forEach(span => {
     const textNode = document.createTextNode(span.textContent || '')
@@ -829,6 +881,22 @@ function processContentMarkup() {
     line = line.replace(/[/\\]hp\b/g, '50/50hp')
     line = line.replace(/[/\\]dc\b/g, '/dc') // Placeholder for future
     line = line.replace(/[/\\]statblock\b/g, 'statblock[10,10,10,10,10,10]')
+
+    // Store checkbox information before processing markdown
+    const originalLine = lines[i]
+    const checkboxPattern = /^\s*\[([ xX]?)\]\s*(.*)$/
+    const checkboxMatch = checkboxPattern.exec(originalLine)
+    let hasCheckbox = false
+    let isChecked = false
+    let checkboxText = ''
+
+    if (checkboxMatch) {
+      hasCheckbox = true
+      isChecked = checkboxMatch[1].toLowerCase() === 'x'
+      checkboxText = checkboxMatch[2]
+      // Remove the checkbox syntax from the line for further processing
+      line = checkboxText
+    }
 
     // Process markdown first (in order of precedence)
     // Bold: **text**
@@ -862,7 +930,6 @@ function processContentMarkup() {
     }
 
     // Process dice notation on the original plain text (before markdown was added)
-    const originalLine = lines[i] // Get the original plain text line
     const dicePattern = /\b(\d*d\d+(?:[+-]\d+)?)\b/gi
     const diceMatches: Array<{ notation: string; index: number }> = []
     let match: RegExpExecArray | null
@@ -1010,22 +1077,67 @@ function processContentMarkup() {
       })
     }
 
-    formattedHTML += line
+    // Wrap line with checkbox if needed
+    if (hasCheckbox) {
+      const checkboxId = `checkbox-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const checkedClass = isChecked ? 'checkbox-checked' : ''
+      const checkmarkDisplay = isChecked ? 'block' : 'none'
+
+      formattedHTML += `<span class="checkbox-container" data-checkbox-id="${checkboxId}">`
+      formattedHTML += `<button class="checkbox-marker" data-checkbox-id="${checkboxId}" data-checked="${isChecked}" contenteditable="false">`
+      formattedHTML += `<span class="checkbox-checkmark" style="display: ${checkmarkDisplay};">✓</span>`
+      formattedHTML += `</button>`
+      formattedHTML += `<span class="checkbox-text ${checkedClass}">${line}</span>`
+      formattedHTML += `</span>`
+    } else {
+      formattedHTML += line
+    }
+
     if (i < lines.length - 1) {
       formattedHTML += '<br>'
     }
   }
 
-  // STEP 3: Replace editor content with formatted HTML
+  // STEP 3: Replace the cursor placeholder with a marker element in the formatted HTML
+  const markerHTML = '<span id="cursor-position-marker"></span>'
+  formattedHTML = formattedHTML.replace(CURSOR_PLACEHOLDER, markerHTML)
+
+  // STEP 4: Replace editor content with formatted HTML
   editorRef.value.innerHTML = formattedHTML
 
-  // STEP 4: Restore cursor position
-  // Find where the marker should be in the new content
-  const range = document.createRange()
-  range.selectNodeContents(editorRef.value)
-  range.collapse(false) // Move to end
-  selection.removeAllRanges()
-  selection.addRange(range)
+  // STEP 5: Find the marker, restore cursor position, and remove marker
+  try {
+    const restoredMarker = editorRef.value.querySelector('#cursor-position-marker')
+
+    if (restoredMarker) {
+      const newRange = document.createRange()
+
+      // Place cursor right before the marker
+      newRange.setStartBefore(restoredMarker)
+      newRange.collapse(true)
+
+      selection.removeAllRanges()
+      selection.addRange(newRange)
+
+      // Remove the marker
+      restoredMarker.remove()
+    } else {
+      // Fallback: place cursor at end if marker not found
+      const newRange = document.createRange()
+      newRange.selectNodeContents(editorRef.value)
+      newRange.collapse(false)
+      selection.removeAllRanges()
+      selection.addRange(newRange)
+    }
+  } catch (e) {
+    // If anything fails, just place cursor at the end
+    console.error('Failed to restore cursor position:', e)
+    const newRange = document.createRange()
+    newRange.selectNodeContents(editorRef.value)
+    newRange.collapse(false)
+    selection.removeAllRanges()
+    selection.addRange(newRange)
+  }
 
   isProcessing = false
 }
@@ -1464,6 +1576,64 @@ function onHpTooltipKeydown(event: KeyboardEvent) {
 
 :deep(.stat-dice-roller):active {
   transform: scale(1.0);
+}
+
+/* Checkbox styling */
+:deep(.checkbox-container) {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-right: 4px;
+}
+
+:deep(.checkbox-marker) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  background: transparent;
+  border: 2px solid #8b5cf6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+}
+
+:deep(.checkbox-marker):hover {
+  background: rgba(139, 92, 246, 0.1);
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+:deep(.checkbox-marker):active {
+  transform: scale(0.95);
+}
+
+:deep(.checkbox-checkmark) {
+  font-size: 14px;
+  font-weight: bold;
+  color: #8b5cf6;
+  line-height: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+:deep(.checkbox-text) {
+  flex: 1;
+  transition: all 0.2s;
+}
+
+:deep(.checkbox-text.checkbox-checked) {
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
 /* Toast animations */

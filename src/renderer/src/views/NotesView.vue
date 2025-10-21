@@ -155,6 +155,38 @@
         </div>
       </div>
 
+      <!-- Image picker menu -->
+      <div
+        v-if="showImageMenu"
+        class="fixed bg-gray-800 border border-purple-500 rounded-lg shadow-2xl p-3 z-50 w-96"
+        :style="{
+          left: imageMenuPosition.x + 'px',
+          top: imageMenuPosition.y + 'px'
+        }"
+      >
+        <div v-if="filteredImages.length > 0" class="grid grid-cols-3 gap-2">
+          <button
+            v-for="(img, index) in filteredImages"
+            :key="img.path"
+            @click="insertImage(img)"
+            class="aspect-square rounded overflow-hidden border-2 transition-all"
+            :class="index === selectedImageIndex ? 'border-purple-400 ring-2 ring-purple-400 scale-105' : 'border-gray-600 hover:border-purple-500'"
+          >
+            <img
+              :src="`media://${img.path}`"
+              :alt="getGMDisplayName(img)"
+              class="w-full h-full object-cover"
+            />
+          </button>
+        </div>
+        <div v-else class="text-center py-6 text-gray-500 text-sm">
+          No images found
+        </div>
+        <div class="mt-2 text-xs text-gray-500 border-t border-gray-700 pt-2">
+          <span class="text-purple-400">↑↓</span> navigate · <span class="text-purple-400">Tab</span> to insert · <span class="text-purple-400">Esc</span> to cancel
+        </div>
+      </div>
+
       <!-- Toast notifications (lower-left corner) -->
       <div class="fixed bottom-6 left-6 space-y-3 z-50 pointer-events-none">
         <transition-group name="toast">
@@ -200,6 +232,10 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import { useNotesStore, type Note } from '../stores/notes'
 import { parseDiceNotation, rollDice, type DiceRoll } from '../utils/diceRoller'
+import { useDirectoryStore } from '../stores/directory'
+import type { MediaFile } from '../types/media'
+import { getAllVisualMedia } from '../utils/mediaFilters'
+import { getGMDisplayName } from '../utils/displayNames'
 
 interface Toast {
   id: number
@@ -214,6 +250,7 @@ interface SlashCommand {
 }
 
 const notesStore = useNotesStore()
+const directoryStore = useDirectoryStore()
 const editorRef = ref<HTMLDivElement | null>(null)
 const toasts = ref<Toast[]>([])
 const currentNote = ref<Note | null>(null)
@@ -225,11 +262,17 @@ const hpTooltipPosition = ref({ x: 0, y: 0 })
 const hpTooltipMode = ref<'damage' | 'heal'>('damage')
 const hpTooltipValue = ref('')
 const currentHpElement = ref<HTMLElement | null>(null)
+const showImageMenu = ref(false)
+const imageMenuPosition = ref({ x: 0, y: 0 })
+const imageSearchQuery = ref('')
+const selectedImageIndex = ref(0)
+const imageSearchStartPos = ref<{ node: Node; offset: number } | null>(null)
 
 const slashCommands: SlashCommand[] = [
   { command: '/hp', label: '/hp', description: 'Insert HP tracker' },
   { command: '/dc', label: '/dc', description: 'Insert DC calculator' },
-  { command: '/statblock', label: '/statblock', description: 'Insert stat block' }
+  { command: '/statblock', label: '/statblock', description: 'Insert stat block' },
+  { command: '/img', label: '/img', description: 'Insert image from library' }
 ]
 
 const filteredCommands = computed(() => {
@@ -238,6 +281,24 @@ const filteredCommands = computed(() => {
   return slashCommands.filter(cmd =>
     cmd.command.toLowerCase().includes(query)
   )
+})
+
+// Get filtered images based on search query
+const filteredImages = computed(() => {
+  const allImages = getAllVisualMedia(directoryStore.mediaTree)
+
+  if (!imageSearchQuery.value) {
+    return allImages.slice(0, 6) // Show first 6 by default
+  }
+
+  const query = imageSearchQuery.value.toLowerCase()
+  return allImages
+    .filter(img => {
+      const displayName = getGMDisplayName(img).toLowerCase()
+      const fileName = img.name.toLowerCase()
+      return displayName.includes(query) || fileName.includes(query)
+    })
+    .slice(0, 6) // Limit to 6 results
 })
 
 let isProcessing = false
@@ -360,7 +421,69 @@ function onTitleChange() {
 // Handle content input
 function onContentInput(event: Event) {
   handleSlashInput(event as InputEvent)
+  handleImageSearchInput()
   scheduleAutoSave()
+}
+
+// Handle input for image search
+function handleImageSearchInput() {
+  if (!showImageMenu.value || !editorRef.value) return
+
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) return
+
+  const currentRange = selection.getRangeAt(0)
+
+  try {
+    // Get text before cursor to find "/img[" and extract search term
+    const preCaretRange = currentRange.cloneRange()
+    preCaretRange.selectNodeContents(editorRef.value)
+    preCaretRange.setEnd(currentRange.endContainer, currentRange.endOffset)
+    const textBeforeCursor = preCaretRange.toString()
+
+    // Find the last "/img[" before cursor
+    const imgIndex = textBeforeCursor.lastIndexOf('/img[')
+    if (imgIndex === -1) {
+      // No "/img[" found, close menu
+      showImageMenu.value = false
+      imageSearchQuery.value = ''
+      imageSearchStartPos.value = null
+      return
+    }
+
+    // Extract search term (everything after "/img[")
+    const searchText = textBeforeCursor.substring(imgIndex + 5) // 5 = length of "/img["
+
+    // If user added a newline or closing bracket, close the menu
+    if (searchText.includes('\n') || searchText.includes(']')) {
+      showImageMenu.value = false
+      imageSearchQuery.value = ''
+      imageSearchStartPos.value = null
+      return
+    }
+
+    // Update search query
+    imageSearchQuery.value = searchText
+    selectedImageIndex.value = 0
+
+    // Update menu position
+    const tempSpan = document.createElement('span')
+    tempSpan.textContent = '\u200B'
+    const posRange = currentRange.cloneRange()
+    posRange.insertNode(tempSpan)
+    const rect = tempSpan.getBoundingClientRect()
+    tempSpan.remove()
+
+    // Normalize to fix any DOM issues from removing the span
+    editorRef.value.normalize()
+
+    imageMenuPosition.value = {
+      x: rect.left,
+      y: rect.bottom + 8
+    }
+  } catch (e) {
+    console.error('Error in handleImageSearchInput:', e)
+  }
 }
 
 // Format date for display
@@ -514,6 +637,27 @@ function handleHpButtonClick(button: HTMLElement) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Check for image menu navigation
+  if (showImageMenu.value) {
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      if (filteredImages.value.length > 0) {
+        insertSelectedImage()
+      }
+      return
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      selectedImageIndex.value = Math.min(selectedImageIndex.value + 1, filteredImages.value.length - 1)
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      selectedImageIndex.value = Math.max(selectedImageIndex.value - 1, 0)
+      return
+    }
+  }
+
   // Check for slash command menu
   if (event.key === 'Tab' && showSlashMenu.value) {
     // Tab key autocompletes the selected command
@@ -531,22 +675,58 @@ function onKeyDown(event: KeyboardEvent) {
     return
   }
 
-  if (event.key === 'Escape' && showSlashMenu.value) {
-    showSlashMenu.value = false
-    slashQuery.value = ''
-    event.preventDefault()
-    return
-  }
-
-  if (event.key === 'Enter') {
-    // Close slash menu if open
+  if (event.key === 'Escape') {
     if (showSlashMenu.value) {
       showSlashMenu.value = false
       slashQuery.value = ''
+      event.preventDefault()
+      return
+    }
+    if (showImageMenu.value) {
+      showImageMenu.value = false
+      imageSearchQuery.value = ''
+      imageSearchStartPos.value = null
+      event.preventDefault()
+      return
+    }
+  }
+
+  if (event.key === 'Enter') {
+    // Handle slash menu autocomplete
+    if (showSlashMenu.value) {
+      event.preventDefault()
+      if (filteredCommands.value.length > 0) {
+        completeSlashCommand(filteredCommands.value[0].command)
+      }
+      return
     }
 
+    // Handle image menu insert
+    if (showImageMenu.value) {
+      event.preventDefault()
+      if (filteredImages.value.length > 0) {
+        insertSelectedImage()
+      }
+      return
+    }
+
+    // Normal line break behavior
     // Insert line breaks - this preserves content after cursor and moves it to new line
-    document.execCommand('insertHTML', false, '<br>')
+    // Insert <br> to end current line, then process markup to handle formatting
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+
+      // Insert a line break
+      const br = document.createElement('br')
+      range.insertNode(br)
+
+      // Move cursor after the br
+      range.setStartAfter(br)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
     event.preventDefault()
 
     // Then process markup (dice and markdown)
@@ -595,21 +775,32 @@ function onKeyDown(event: KeyboardEvent) {
 function handleSlashInput(_event: InputEvent) {
   if (!showSlashMenu.value) return
 
-  // Get text content from editor
-  const text = editorRef.value?.textContent || ''
+  // Get the current selection/cursor position
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) return
 
-  // Find the last occurrence of "/"
-  const lastSlashIndex = text.lastIndexOf('/')
+  const range = selection.getRangeAt(0)
+
+  // Create a range from the start of the editor to the cursor
+  const preCaretRange = range.cloneRange()
+  preCaretRange.selectNodeContents(editorRef.value!)
+  preCaretRange.setEnd(range.endContainer, range.endOffset)
+
+  // Get only the text before the cursor
+  const textBeforeCursor = preCaretRange.toString()
+
+  // Find the last occurrence of "/" before the cursor
+  const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
   if (lastSlashIndex === -1) {
     showSlashMenu.value = false
     return
   }
 
-  // Get the query after the last "/"
-  const query = text.substring(lastSlashIndex + 1)
+  // Get the query after the last "/" (only up to cursor)
+  const query = textBeforeCursor.substring(lastSlashIndex + 1)
 
-  // If there's a space in the query, close the menu
-  if (query.includes(' ')) {
+  // If there's a space or newline in the query, close the menu
+  if (query.includes(' ') || query.includes('\n')) {
     showSlashMenu.value = false
     slashQuery.value = ''
     return
@@ -622,17 +813,21 @@ function handleSlashInput(_event: InputEvent) {
 function completeSlashCommand(command: string) {
   if (!editorRef.value) return
 
-  const text = editorRef.value.textContent || ''
-  const lastSlashIndex = text.lastIndexOf('/')
-
-  if (lastSlashIndex === -1) return
-
   // Get the selection
   const selection = window.getSelection()
-  if (!selection) return
+  if (!selection || selection.rangeCount === 0) return
 
-  // Create a range from the "/" to the current cursor position
-  const range = document.createRange()
+  const currentRange = selection.getRangeAt(0)
+
+  // Get text before cursor to find the slash command
+  const preCaretRange = currentRange.cloneRange()
+  preCaretRange.selectNodeContents(editorRef.value)
+  preCaretRange.setEnd(currentRange.endContainer, currentRange.endOffset)
+  const textBeforeCursor = preCaretRange.toString()
+
+  // Find the last "/" before cursor
+  const lastSlashIndex = textBeforeCursor.lastIndexOf('/')
+  if (lastSlashIndex === -1) return
 
   // Create a tree walker to find the text node containing "/"
   const walker = document.createTreeWalker(
@@ -658,26 +853,76 @@ function completeSlashCommand(command: string) {
   }
 
   if (slashNode) {
-    // Set range from "/" to current cursor position
     try {
+      // Create range from "/" to cursor
+      const range = document.createRange()
       range.setStart(slashNode, slashOffset)
-      const currentRange = selection.getRangeAt(0)
       range.setEnd(currentRange.endContainer, currentRange.endOffset)
 
       // Delete the "/query" text
       range.deleteContents()
 
-      // Insert the completed command
-      const textNode = document.createTextNode(command + ' ')
-      range.insertNode(textNode)
+      // Handle /img specially
+      if (command === '/img') {
+        // Insert "/img[" text
+        const textNode = document.createTextNode('/img[')
+        range.insertNode(textNode)
 
-      // Move cursor after the inserted text
-      range.setStartAfter(textNode)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    } catch (_e) {
-      console.error('Failed to complete command')
+        // Move cursor after the text
+        range.setStartAfter(textNode)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        // Activate image search mode - store position after the "["
+        imageSearchStartPos.value = {
+          node: range.startContainer,
+          offset: range.startOffset
+        }
+        imageSearchQuery.value = ''
+        selectedImageIndex.value = 0
+        showImageMenu.value = true
+
+        // Position the menu
+        const tempSpan = document.createElement('span')
+        tempSpan.textContent = '\u200B'
+        range.insertNode(tempSpan)
+        const rect = tempSpan.getBoundingClientRect()
+        tempSpan.remove()
+
+        // Restore selection
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        imageMenuPosition.value = {
+          x: rect.left,
+          y: rect.bottom + 8
+        }
+      } else {
+        // Insert the completed command for other commands
+        let insertText = ''
+        if (command === '/hp') {
+          insertText = '50/50hp '
+        } else if (command === '/dc') {
+          insertText = '/dc '
+        } else if (command === '/statblock') {
+          insertText = 'statblock[10,10,10,10,10,10] '
+        } else {
+          insertText = command + ' '
+        }
+
+        const textNode = document.createTextNode(insertText)
+        range.insertNode(textNode)
+
+        // Move cursor after the inserted text
+        range.setStartAfter(textNode)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+    } catch (e) {
+      console.error('Failed to complete command:', e)
     }
   }
 
@@ -685,77 +930,10 @@ function completeSlashCommand(command: string) {
   slashQuery.value = ''
 }
 
-// Insert slash command with actual content
+// Insert slash command with actual content (called when clicking menu item)
 function insertSlashCommand(command: string) {
-  if (!editorRef.value) return
-
-  const text = editorRef.value.textContent || ''
-  const lastSlashIndex = text.lastIndexOf('/')
-
-  if (lastSlashIndex === -1) return
-
-  const selection = window.getSelection()
-  if (!selection) return
-
-  const range = document.createRange()
-
-  // Create a tree walker to find the text node containing "/"
-  const walker = document.createTreeWalker(
-    editorRef.value,
-    NodeFilter.SHOW_TEXT
-  )
-
-  let currentNode: Node | null
-  let charCount = 0
-  let slashNode: Node | null = null
-  let slashOffset = 0
-
-  while ((currentNode = walker.nextNode())) {
-    const nodeLength = currentNode.textContent?.length || 0
-
-    if (charCount + nodeLength > lastSlashIndex) {
-      slashNode = currentNode
-      slashOffset = lastSlashIndex - charCount
-      break
-    }
-
-    charCount += nodeLength
-  }
-
-  if (slashNode) {
-    try {
-      range.setStart(slashNode, slashOffset)
-      const currentRange = selection.getRangeAt(0)
-      range.setEnd(currentRange.endContainer, currentRange.endOffset)
-
-      // Delete the "/query" text
-      range.deleteContents()
-
-      // Insert content based on command
-      let insertText = ''
-      if (command === '/hp') {
-        insertText = '50/50hp '
-      } else if (command === '/dc') {
-        insertText = '/dc '
-      } else if (command === '/statblock') {
-        insertText = '/statblock '
-      }
-
-      const textNode = document.createTextNode(insertText)
-      range.insertNode(textNode)
-
-      // Move cursor after the inserted text
-      range.setStartAfter(textNode)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    } catch (_e) {
-      console.error('Failed to insert command')
-    }
-  }
-
-  showSlashMenu.value = false
-  slashQuery.value = ''
+  // Just call completeSlashCommand - they do the same thing now
+  completeSlashCommand(command)
 }
 
 function ensureEditorFocusAndRerender() {
@@ -812,6 +990,14 @@ function processContentMarkup() {
     const placeholderNode = document.createTextNode(CURSOR_PLACEHOLDER)
     cursorMarkerElement.parentNode?.replaceChild(placeholderNode, cursorMarkerElement)
   }
+
+  // Preserve images by replacing them with placeholders
+  const preservedImages: HTMLImageElement[] = []
+  tempDiv.querySelectorAll('.inline-note-image').forEach((img, index) => {
+    preservedImages.push(img.cloneNode(true) as HTMLImageElement)
+    const placeholder = document.createTextNode(`___IMAGE_${index}___`)
+    img.parentNode?.replaceChild(placeholder, img)
+  })
 
   // Remove all existing dice buttons, HP buttons, death saves, stat blocks, and styled spans to get clean text
   tempDiv.querySelectorAll('[data-dice-button]').forEach(button => button.remove())
@@ -986,7 +1172,7 @@ function processContentMarkup() {
     for (const { match, scores } of statBlockMatches) {
       const statBlockRegex = new RegExp(escapeRegex(match))
       line = line.replace(statBlockRegex, () => {
-        const statBlockId = `statblock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const statBlockId = `statblock-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 
         // Calculate modifiers from ability scores: (score - 10) / 2, rounded down
         const calculateModifier = (score: number) => Math.floor((score - 10) / 2)
@@ -1039,7 +1225,7 @@ function processContentMarkup() {
       const hpRegex = new RegExp(`\\b${escapeRegex(match)}\\b`)
       line = line.replace(hpRegex, (matched) => {
         // Generate a unique ID for this HP tracker
-        const hpId = `hp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const hpId = `hp-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
         const currentHp = parseInt(current, 10)
 
         // Get preserved death save data if it exists
@@ -1079,7 +1265,7 @@ function processContentMarkup() {
 
     // Wrap line with checkbox if needed
     if (hasCheckbox) {
-      const checkboxId = `checkbox-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const checkboxId = `checkbox-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
       const checkedClass = isChecked ? 'checkbox-checked' : ''
       const checkmarkDisplay = isChecked ? 'block' : 'none'
 
@@ -1090,20 +1276,68 @@ function processContentMarkup() {
       formattedHTML += `<span class="checkbox-text ${checkedClass}">${line}</span>`
       formattedHTML += `</span>`
     } else {
+      // For lines that are just the cursor placeholder, keep them as the placeholder
+      // but we'll need to ensure they create an empty line visually
       formattedHTML += line
     }
 
+    // Add <br> after each line except possibly the last
     if (i < lines.length - 1) {
       formattedHTML += '<br>'
     }
   }
 
+  // Handle trailing empty lines - ensure they're represented with a <br>
+  // This allows cursor to be positioned on empty lines at the end
+  const lastLine = lines.length > 0 ? lines[lines.length - 1] : ''
+  // Treat cursor-only lines as empty
+  if (lastLine === '' || lastLine === CURSOR_PLACEHOLDER) {
+    formattedHTML += '<br>'
+  }
+
   // STEP 3: Replace the cursor placeholder with a marker element in the formatted HTML
-  const markerHTML = '<span id="cursor-position-marker"></span>'
+  // Use a marker that includes a zero-width space to ensure it occupies space
+  const markerHTML = '<span id="cursor-position-marker">\u200B</span>'
   formattedHTML = formattedHTML.replace(CURSOR_PLACEHOLDER, markerHTML)
+
+  // STEP 3.5: Ensure cursor has a place to be - if marker is at the end, add a zero-width space after it
+  if (formattedHTML.endsWith(markerHTML)) {
+    formattedHTML += '\u200B' // Zero-width space
+  }
 
   // STEP 4: Replace editor content with formatted HTML
   editorRef.value.innerHTML = formattedHTML
+
+  // STEP 4.5: Restore preserved images
+  preservedImages.forEach((img, index) => {
+    const placeholder = `___IMAGE_${index}___`
+    const walker = document.createTreeWalker(
+      editorRef.value,
+      NodeFilter.SHOW_TEXT
+    )
+
+    let textNode: Node | null = null
+    while ((textNode = walker.nextNode())) {
+      const text = textNode.textContent || ''
+      if (text.includes(placeholder)) {
+        // Split the text node and insert the image
+        const parts = text.split(placeholder)
+        const parent = textNode.parentNode
+
+        if (parent) {
+          // Create text nodes for the parts
+          const before = document.createTextNode(parts[0])
+          const after = document.createTextNode(parts.slice(1).join(placeholder))
+
+          // Replace the text node with: before + image + after
+          parent.replaceChild(after, textNode)
+          parent.insertBefore(img, after)
+          parent.insertBefore(before, img)
+        }
+        break
+      }
+    }
+  })
 
   // STEP 5: Find the marker, restore cursor position, and remove marker
   try {
@@ -1112,15 +1346,19 @@ function processContentMarkup() {
     if (restoredMarker) {
       const newRange = document.createRange()
 
-      // Place cursor right before the marker
-      newRange.setStartBefore(restoredMarker)
+      // Get the text content (zero-width space) from the marker
+      const markerContent = restoredMarker.textContent || ''
+
+      // Replace the marker span with its text content
+      const textNode = document.createTextNode(markerContent)
+      restoredMarker.parentNode?.replaceChild(textNode, restoredMarker)
+
+      // Place cursor right after the text node
+      newRange.setStartAfter(textNode)
       newRange.collapse(true)
 
       selection.removeAllRanges()
       selection.addRange(newRange)
-
-      // Remove the marker
-      restoredMarker.remove()
     } else {
       // Fallback: place cursor at end if marker not found
       const newRange = document.createRange()
@@ -1286,6 +1524,93 @@ function onHpTooltipKeydown(event: KeyboardEvent) {
     event.preventDefault()
     closeHpTooltip()
   }
+}
+
+function insertSelectedImage() {
+  if (filteredImages.value.length === 0) return
+  const selectedImage = filteredImages.value[selectedImageIndex.value]
+  if (selectedImage) {
+    insertImage(selectedImage)
+  }
+}
+
+function insertImage(img: MediaFile) {
+  if (!editorRef.value) return
+
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) return
+
+  // If we have an image search start position, delete from "/img[" to cursor
+  if (imageSearchStartPos.value) {
+    const currentRange = selection.getRangeAt(0)
+
+    // Walk backwards to find "/img["
+    const walker = document.createTreeWalker(
+      editorRef.value,
+      NodeFilter.SHOW_TEXT
+    )
+
+    let textNode: Node | null = null
+    let foundNode: Node | null = null
+    let foundOffset = 0
+
+    // Find all text nodes and locate the one with "/img["
+    while ((textNode = walker.nextNode())) {
+      const text = textNode.textContent || ''
+      const imgIndex = text.lastIndexOf('/img[')
+
+      if (imgIndex !== -1) {
+        // Check if this is before or at our search start position
+        foundNode = textNode
+        foundOffset = imgIndex
+      }
+    }
+
+    if (foundNode) {
+      try {
+        // Delete from "/img[" to current cursor
+        const deleteRange = document.createRange()
+        deleteRange.setStart(foundNode, foundOffset)
+        deleteRange.setEnd(currentRange.endContainer, currentRange.endOffset)
+        deleteRange.deleteContents()
+
+        // Create and insert image at the deletion point
+        const imgElement = document.createElement('img')
+        imgElement.src = `media://${img.path}`
+        imgElement.alt = getGMDisplayName(img)
+        imgElement.setAttribute('class', 'inline-note-image')
+        imgElement.setAttribute('contenteditable', 'false')
+        imgElement.style.maxWidth = '200px'
+        imgElement.style.maxHeight = '200px'
+        imgElement.style.borderRadius = '8px'
+        imgElement.style.margin = '4px'
+        imgElement.style.verticalAlign = 'middle'
+
+        deleteRange.insertNode(imgElement)
+
+        // Add a space after the image
+        const spaceNode = document.createTextNode(' ')
+        deleteRange.setStartAfter(imgElement)
+        deleteRange.insertNode(spaceNode)
+
+        // Move cursor after the space
+        deleteRange.setStartAfter(spaceNode)
+        deleteRange.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(deleteRange)
+      } catch (e) {
+        console.error('Failed to insert image:', e)
+      }
+    }
+  }
+
+  // Close the image menu
+  showImageMenu.value = false
+  imageSearchQuery.value = ''
+  imageSearchStartPos.value = null
+
+  // Trigger auto-save
+  scheduleAutoSave()
 }
 </script>
 
@@ -1669,5 +1994,23 @@ function onHpTooltipKeydown(event: KeyboardEvent) {
     transform: translateX(-100%);
     opacity: 0;
   }
+}
+
+/* Inline note images */
+:deep(.inline-note-image) {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  margin: 4px;
+  vertical-align: middle;
+  border: 2px solid #6b7280;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+:deep(.inline-note-image):hover {
+  border-color: #8b5cf6;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
 }
 </style>

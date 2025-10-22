@@ -272,7 +272,8 @@ const slashCommands: SlashCommand[] = [
   { command: '/hp', label: '/hp', description: 'Insert HP tracker' },
   { command: '/dc', label: '/dc', description: 'Insert DC calculator' },
   { command: '/statblock', label: '/statblock', description: 'Insert stat block' },
-  { command: '/img', label: '/img', description: 'Insert image from library' }
+  { command: '/img', label: '/img', description: 'Insert image from library' },
+  { command: '/dctable', label: '/dctable', description: 'Insert DC check table' }
 ]
 
 const filteredCommands = computed(() => {
@@ -523,6 +524,12 @@ function handleDiceClick(event: MouseEvent) {
   } else if (target.classList.contains('checkbox-marker')) {
     event.preventDefault()
     handleCheckboxClick(target)
+  } else if (target.classList.contains('dc-table-add')) {
+    event.preventDefault()
+    handleDcTableAdd(target)
+  } else if (target.classList.contains('dc-table-remove')) {
+    event.preventDefault()
+    handleDcTableRemove(target)
   }
 }
 
@@ -692,6 +699,13 @@ function onKeyDown(event: KeyboardEvent) {
   }
 
   if (event.key === 'Enter') {
+    // Check if we're inside a DC table textarea - if so, allow default behavior
+    const target = event.target as HTMLElement
+    if (target && target.classList.contains('dc-table-text')) {
+      // Let the textarea handle Enter naturally
+      return
+    }
+
     // Handle slash menu autocomplete
     if (showSlashMenu.value) {
       event.preventDefault()
@@ -908,6 +922,8 @@ function completeSlashCommand(command: string) {
           insertText = '/dc '
         } else if (command === '/statblock') {
           insertText = 'statblock[10,10,10,10,10,10] '
+        } else if (command === '/dctable') {
+          insertText = 'dctable[10:First check,15:Second check,20:Hard check] '
         } else {
           insertText = command + ' '
         }
@@ -983,6 +999,21 @@ function processContentMarkup() {
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = editorRef.value.innerHTML
 
+  // IMPORTANT: Sync form element values from the live DOM to the clone
+  // (innerHTML doesn't capture current input/textarea values)
+  editorRef.value.querySelectorAll('.dc-table-dc').forEach((input, index) => {
+    const clonedInput = tempDiv.querySelectorAll('.dc-table-dc')[index] as HTMLInputElement
+    if (clonedInput && input instanceof HTMLInputElement) {
+      clonedInput.value = input.value
+    }
+  })
+  editorRef.value.querySelectorAll('.dc-table-text').forEach((textarea, index) => {
+    const clonedTextarea = tempDiv.querySelectorAll('.dc-table-text')[index] as HTMLTextAreaElement
+    if (clonedTextarea && textarea instanceof HTMLTextAreaElement) {
+      clonedTextarea.value = textarea.value
+    }
+  })
+
   // Preserve the cursor marker by replacing it with a unique text placeholder
   const cursorMarkerElement = tempDiv.querySelector('#cursor-position-marker')
   const CURSOR_PLACEHOLDER = '___CURSOR_POSITION___'
@@ -1040,6 +1071,23 @@ function processContentMarkup() {
       const textNode = document.createTextNode(`${checkboxSymbol} ${textContent}`)
       container.parentNode?.replaceChild(textNode, container)
     }
+  })
+
+  // Replace DC table containers with text representation
+  tempDiv.querySelectorAll('.dc-table-container').forEach(container => {
+    const rows = container.querySelectorAll('.dc-table-row')
+    const rowData: string[] = []
+    rows.forEach(row => {
+      const dcInput = row.querySelector('.dc-table-dc') as HTMLInputElement
+      const textInput = row.querySelector('.dc-table-text') as HTMLTextAreaElement
+      if (dcInput && textInput) {
+        // Escape special characters in the text to preserve them
+        const escapedText = textInput.value.replace(/\n/g, '\\n').replace(/,/g, '\\c')
+        rowData.push(`${dcInput.value}:${escapedText}`)
+      }
+    })
+    const textNode = document.createTextNode(`dctable[${rowData.join(',')}]`)
+    container.parentNode?.replaceChild(textNode, container)
   })
 
   // Remove all markdown styling to get clean text
@@ -1206,6 +1254,79 @@ function processContentMarkup() {
       })
     }
 
+    // Process DC tables (e.g., dctable[10:Check description,15:Another check])
+    const dcTablePattern = /\bdctable\[([^\]]+)\]/gi
+    const dcTableMatches: Array<{ match: string; rows: Array<{ dc: number; text: string }>; index: number }> = []
+    let dcTableMatch: RegExpExecArray | null
+
+    while ((dcTableMatch = dcTablePattern.exec(originalLine)) !== null) {
+      const rowsStr = dcTableMatch[1]
+      const rows: Array<{ dc: number; text: string }> = []
+
+      // Parse rows - we need to handle escaped commas (\\c)
+      // Split by commas that aren't escaped
+      const rowParts: string[] = []
+      let currentPart = ''
+      for (let i = 0; i < rowsStr.length; i++) {
+        if (rowsStr[i] === ',' && (i === 0 || rowsStr[i-1] !== '\\')) {
+          rowParts.push(currentPart)
+          currentPart = ''
+        } else {
+          currentPart += rowsStr[i]
+        }
+      }
+      if (currentPart) rowParts.push(currentPart)
+
+      for (const part of rowParts) {
+        const colonIndex = part.indexOf(':')
+        if (colonIndex !== -1) {
+          const dc = parseInt(part.substring(0, colonIndex).trim(), 10)
+          let text = part.substring(colonIndex + 1).trim()
+          // Unescape special characters
+          text = text.replace(/\\n/g, '\n').replace(/\\c/g, ',')
+          if (!isNaN(dc)) {
+            rows.push({ dc, text })
+          }
+        }
+      }
+
+      if (rows.length > 0) {
+        dcTableMatches.push({
+          match: dcTableMatch[0],
+          rows,
+          index: dcTableMatch.index
+        })
+      }
+    }
+
+    // Add DC tables
+    for (const { match, rows } of dcTableMatches) {
+      const dcTableRegex = new RegExp(escapeRegex(match))
+      line = line.replace(dcTableRegex, () => {
+        const tableId = `dctable-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
+        let html = `<div class="dc-table-container" data-dctable-id="${tableId}" contenteditable="false">`
+
+        // Add rows
+        rows.forEach((row, index) => {
+          const rowId = `${tableId}-row-${index}`
+          html += `<div class="dc-table-row" data-row-id="${rowId}">`
+          html += `<input type="number" class="dc-table-dc" value="${row.dc}" data-row-id="${rowId}" />`
+          html += `<textarea class="dc-table-text" data-row-id="${rowId}" rows="1">${escapeHtml(row.text)}</textarea>`
+          html += `</div>`
+        })
+
+        // Add control buttons
+        html += `<div class="dc-table-controls">`
+        html += `<button class="dc-table-btn dc-table-add" data-dctable-id="${tableId}" contenteditable="false">+ Add Row</button>`
+        html += `<button class="dc-table-btn dc-table-remove" data-dctable-id="${tableId}" contenteditable="false">− Remove Row</button>`
+        html += `</div>`
+
+        html += `</div>`
+        return html
+      })
+    }
+
     // First, collect existing death save data from the editor before we replace anything
     const deathSaveData = new Map<string, { successes: number; failures: number }>()
     if (editorRef.value) {
@@ -1311,6 +1432,8 @@ function processContentMarkup() {
   // STEP 4.5: Restore preserved images
   preservedImages.forEach((img, index) => {
     const placeholder = `___IMAGE_${index}___`
+    if (!editorRef.value) return
+
     const walker = document.createTreeWalker(
       editorRef.value,
       NodeFilter.SHOW_TEXT
@@ -1524,6 +1647,69 @@ function onHpTooltipKeydown(event: KeyboardEvent) {
     event.preventDefault()
     closeHpTooltip()
   }
+}
+
+function handleDcTableAdd(button: HTMLElement) {
+  const tableId = button.getAttribute('data-dctable-id')
+  if (!tableId) return
+
+  // Find the table container
+  const tableContainer = document.querySelector(`.dc-table-container[data-dctable-id="${tableId}"]`)
+  if (!tableContainer) return
+
+  // Create a new row
+  const rowCount = tableContainer.querySelectorAll('.dc-table-row').length
+  const newRowId = `${tableId}-row-${rowCount}`
+
+  const newRow = document.createElement('div')
+  newRow.className = 'dc-table-row'
+  newRow.setAttribute('data-row-id', newRowId)
+
+  const dcInput = document.createElement('input')
+  dcInput.type = 'number'
+  dcInput.className = 'dc-table-dc'
+  dcInput.value = '10'
+  dcInput.setAttribute('data-row-id', newRowId)
+
+  const textInput = document.createElement('textarea')
+  textInput.className = 'dc-table-text'
+  textInput.value = 'New check'
+  textInput.rows = 1
+  textInput.setAttribute('data-row-id', newRowId)
+
+  newRow.appendChild(dcInput)
+  newRow.appendChild(textInput)
+
+  // Insert before the controls div
+  const controls = tableContainer.querySelector('.dc-table-controls')
+  if (controls) {
+    tableContainer.insertBefore(newRow, controls)
+  }
+
+  // Trigger auto-save
+  scheduleAutoSave()
+}
+
+function handleDcTableRemove(button: HTMLElement) {
+  const tableId = button.getAttribute('data-dctable-id')
+  if (!tableId) return
+
+  // Find the table container
+  const tableContainer = document.querySelector(`.dc-table-container[data-dctable-id="${tableId}"]`)
+  if (!tableContainer) return
+
+  // Get all rows
+  const rows = tableContainer.querySelectorAll('.dc-table-row')
+
+  // Don't remove if only one row left
+  if (rows.length <= 1) return
+
+  // Remove the last row
+  const lastRow = rows[rows.length - 1]
+  lastRow.remove()
+
+  // Trigger auto-save
+  scheduleAutoSave()
 }
 
 function insertSelectedImage() {
@@ -2012,5 +2198,106 @@ function insertImage(img: MediaFile) {
   border-color: #8b5cf6;
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+}
+
+/* DC Table styling */
+:deep(.dc-table-container) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px solid #8b5cf6;
+  border-radius: 8px;
+}
+
+:deep(.dc-table-row) {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+:deep(.dc-table-dc) {
+  width: 60px;
+  padding: 6px 8px;
+  background: #1f2937;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  color: #f3f4f6;
+  font-weight: 600;
+  text-align: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+:deep(.dc-table-dc):focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: #374151;
+}
+
+:deep(.dc-table-text) {
+  flex: 1;
+  padding: 6px 12px;
+  background: #1f2937;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  color: #f3f4f6;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+  resize: vertical;
+  min-height: 32px;
+  line-height: 1.4;
+}
+
+:deep(.dc-table-text):focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: #374151;
+}
+
+:deep(.dc-table-controls) {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: flex-end;
+}
+
+:deep(.dc-table-btn) {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid rgba(107, 114, 128, 0.4);
+  border-radius: 4px;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.6;
+}
+
+:deep(.dc-table-btn):hover {
+  opacity: 1;
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+:deep(.dc-table-btn):active {
+  transform: scale(0.95);
+}
+
+:deep(.dc-table-add):hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+:deep(.dc-table-remove):hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
 }
 </style>

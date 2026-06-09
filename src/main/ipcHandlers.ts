@@ -47,6 +47,10 @@ let displayState: DisplayState = {
   soundEffects: []
 }
 
+// Currently displayed battlemap (null = none). Persisted here so a display
+// window that opens or reloads after "Show on Display" can fetch it on mount.
+let currentBattlemap: Battlemap | null = null
+
 /**
  * Register all IPC handlers
  */
@@ -391,13 +395,21 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('display-battlemap', async (_event, battlemapData: Battlemap) => {
     try {
+      // Persist so a display window that is opened/reloaded later can fetch it
+      currentBattlemap = battlemapData
+
+      // Open the display window if it isn't already; it will fetch the
+      // battlemap via get-battlemap-state once it has loaded.
+      if (!hasDisplayWindow()) {
+        openDisplayWindow()
+        return { success: true }
+      }
+
       const displayWindow = getDisplayWindow()
       if (displayWindow) {
         displayWindow.webContents.send('display-battlemap', battlemapData)
-        console.log('Battlemap sent to display window')
-        return { success: true }
       }
-      return { success: false, error: 'Display window not available' }
+      return { success: true }
     } catch (error: any) {
       console.error('Error displaying battlemap:', error)
       return { success: false, error: error.message }
@@ -406,17 +418,22 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('hide-battlemap', async () => {
     try {
+      currentBattlemap = null
       const displayWindow = getDisplayWindow()
-      if (displayWindow) {
+      if (hasDisplayWindow() && displayWindow) {
         displayWindow.webContents.send('hide-battlemap')
         console.log('Battlemap hidden from display')
-        return { success: true }
       }
-      return { success: false, error: 'Display window not available' }
+      return { success: true }
     } catch (error: any) {
       console.error('Error hiding battlemap:', error)
       return { success: false, error: error.message }
     }
+  })
+
+  // Lets a freshly opened/reloaded display window pick up the active battlemap
+  ipcMain.handle('get-battlemap-state', () => {
+    return currentBattlemap
   })
 
   // ============================================

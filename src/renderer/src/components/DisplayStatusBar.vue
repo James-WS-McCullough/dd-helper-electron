@@ -39,6 +39,35 @@
           </div>
         </div>
 
+        <!-- Battlemap Display -->
+        <div
+          v-if="battlemapStore.isDisplayed && battlemapStore.currentBattlemap"
+          class="flex-shrink-0 relative group"
+        >
+          <div class="relative w-32 h-20 bg-gray-900 rounded-lg overflow-hidden border border-orange-500/50">
+            <img
+              v-if="battlemapStore.currentBattlemap.backgroundImage"
+              :src="`media://${battlemapStore.currentBattlemap.backgroundImage}`"
+              alt="Battlemap"
+              class="w-full h-full object-cover"
+            />
+            <div v-else class="w-full h-full flex items-center justify-center text-3xl">🗺️</div>
+            <div class="absolute top-1 right-1">
+              <button
+                @click="battlemapStore.hideBattlemap()"
+                class="p-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
+                title="Hide battlemap from display"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+              <p class="text-orange-200 text-xs font-medium truncate">Battlemap</p>
+              <p class="text-gray-300 text-xs truncate">{{ battlemapStore.currentBattlemap.name || 'Untitled' }}</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Portraits Display -->
         <div
           v-for="portrait in displayStore.displayState.portraits"
@@ -297,12 +326,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useDisplayStore, usePinsStore } from '../stores'
+import { useDisplayStore, usePinsStore, useBattlemapStore } from '../stores'
 import { getGMDisplayNameFromPath } from '../utils/displayNames'
 import type { MediaItem } from '../types'
 
 const displayStore = useDisplayStore()
 const pinsStore = usePinsStore()
+const battlemapStore = useBattlemapStore()
 
 // Volume control state
 const volumeControlId = ref<string | null>(null)
@@ -358,7 +388,8 @@ const hasActiveDisplay = computed(() => {
     displayStore.hasPortraits ||
     displayStore.hasBackgroundMusic ||
     displayStore.backgroundSoundCount > 0 ||
-    displayStore.soundEffectCount > 0
+    displayStore.soundEffectCount > 0 ||
+    (battlemapStore.isDisplayed && !!battlemapStore.currentBattlemap)
   )
 })
 
@@ -383,7 +414,8 @@ async function clearAllContent(): Promise<void> {
     displayStore.clearAll(),
     displayStore.clearBackgroundMusic(),
     displayStore.clearAllBackgroundSounds(),
-    displayStore.clearAllSoundEffects()
+    displayStore.clearAllSoundEffects(),
+    battlemapStore.isDisplayed ? battlemapStore.hideBattlemap() : Promise.resolve()
   ])
 }
 

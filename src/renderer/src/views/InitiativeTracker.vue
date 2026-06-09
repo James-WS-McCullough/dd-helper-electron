@@ -167,7 +167,7 @@
                 </span>
                 <template v-if="addingTagForId === combatant.id">
                   <input
-                    :ref="(el) => { if (el) tagInput = el as HTMLInputElement }"
+                    :ref="(el) => { tagInput = el as HTMLInputElement | null }"
                     v-model="newTagValue"
                     @keyup.enter="confirmAddTag(combatant.id)"
                     @keyup.escape="cancelAddTag"
@@ -720,7 +720,7 @@ const hpInput = ref<HTMLInputElement | null>(null)
 const toast = ref<string | null>(null)
 const addingTagForId = ref<string | null>(null)
 const newTagValue = ref('')
-let tagInput: HTMLInputElement | null = null
+const tagInput = ref<HTMLInputElement | null>(null)
 
 const addForm = ref({
   name: '',
@@ -1099,7 +1099,7 @@ function startAddTag(id: string): void {
   addingTagForId.value = id
   newTagValue.value = ''
   nextTick(() => {
-    tagInput?.focus()
+    tagInput.value?.focus()
   })
 }
 

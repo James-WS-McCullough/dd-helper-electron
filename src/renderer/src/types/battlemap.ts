@@ -4,6 +4,8 @@
  * Type definitions for tactical battlemaps with grid and tokens
  */
 
+export type BattlemapTokenType = 'player' | 'character' | 'enemy'
+
 export interface BattlemapToken {
   name: string
   x: number
@@ -11,6 +13,14 @@ export interface BattlemapToken {
   portrait?: string
   hidden?: boolean
   color?: string
+  /** Classification used for styling and movement defaults */
+  type?: BattlemapTokenType
+  /** Movement speed in feet (defaults to 30 when unset) */
+  movementSpeed?: number
+  /** For "???" secret tokens: reveal the real name to players on the display */
+  nameRevealed?: boolean
+  /** Monotonic insertion order, used to auto-label matching tokens (A, B, C…) */
+  seq?: number
 }
 
 export interface BattlemapZoom {
@@ -20,6 +30,7 @@ export interface BattlemapZoom {
   lastMovedToken?: {
     x: number
     y: number
+    name?: string
   }
 }
 
@@ -27,7 +38,14 @@ export interface MovementRadius {
   active: boolean
   centerX: number
   centerY: number
+  /** Radius measured in grid cells */
   radius: number
+  /** Name of the token whose radius is shown */
+  tokenName?: string
+  /** Movement speed in feet the radius was derived from */
+  movementSpeed?: number
+  /** True when shown automatically during move mode (cleared on cancel/move) */
+  isAutomatic?: boolean
 }
 
 export interface Battlemap {
@@ -38,6 +56,10 @@ export interface Battlemap {
   zoom?: BattlemapZoom
   movementRadius?: MovementRadius
   name?: string
+  /** Fog of war: "x-y" keys of tiles hidden from players (dark for the DM, black on the display) */
+  hiddenTiles?: string[]
+  /** Cached aspect ratio (width / height) of the background image */
+  imageAspectRatio?: number
   createdAt?: string
   updatedAt?: string
 }

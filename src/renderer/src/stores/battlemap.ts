@@ -202,9 +202,11 @@ export const useBattlemapStore = defineStore('battlemap', () => {
       const fileName = customFileName || 'default_battlemap.json'
       currentBattlemap.value.updatedAt = new Date().toISOString()
 
+      // Plain (deep-cloned) object — a reactive proxy can break IPC serialization
+      const plain = JSON.parse(JSON.stringify(currentBattlemap.value))
       const result = await window.electronAPI.saveBattlemapData(
         directoryStore.currentDirectory,
-        currentBattlemap.value,
+        plain,
         fileName
       )
 
@@ -286,7 +288,10 @@ export const useBattlemapStore = defineStore('battlemap', () => {
     }
 
     try {
-      const result = await window.electronAPI.displayBattlemap(currentBattlemap.value)
+      // Send a plain (deep-cloned) object — a Pinia reactive proxy can fail
+      // Electron's structured-clone serialization over IPC.
+      const plain = JSON.parse(JSON.stringify(currentBattlemap.value))
+      const result = await window.electronAPI.displayBattlemap(plain)
 
       if (result.success) {
         isDisplayed.value = true

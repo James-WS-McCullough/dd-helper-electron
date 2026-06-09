@@ -97,9 +97,12 @@
       @ended="displayStore.clearSoundEffect(String(effect.id))"
     />
 
+    <!-- Battlemap Layer (overlays everything else when active) -->
+    <BattlemapDisplay v-if="activeBattlemap" :battlemap="activeBattlemap" />
+
     <!-- Placeholder when nothing is displayed -->
     <div
-      v-if="!displayStore.hasBackground && !displayStore.hasEvent && !displayStore.hasPortraits && showPlaceholder"
+      v-if="!displayStore.hasBackground && !displayStore.hasEvent && !displayStore.hasPortraits && !activeBattlemap && showPlaceholder"
       class="absolute inset-0 flex items-center justify-center z-0"
     >
       <div class="text-center text-gray-600">
@@ -114,9 +117,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed, ref, watch } from 'vue'
 import { useDisplayStore } from '../stores'
-import type { DisplayState, MediaItem } from '../types'
+import BattlemapDisplay from '../components/BattlemapDisplay.vue'
+import type { DisplayState, MediaItem, Battlemap } from '../types'
 
 const displayStore = useDisplayStore()
+
+// Battlemap currently shown on this display window (null = hidden)
+const activeBattlemap = ref<Battlemap | null>(null)
 
 // Placeholder visibility (hide after 10 seconds)
 const showPlaceholder = ref(true)
@@ -409,6 +416,19 @@ onMounted(() => {
 
   // Listen for volume changes
   window.electronAPI.onSetAudioVolume(handleVolumeChange)
+
+  // Listen for battlemap display / hide events
+  window.electronAPI.onDisplayBattlemap((_event, data: Battlemap) => {
+    activeBattlemap.value = data
+  })
+  window.electronAPI.onHideBattlemap(() => {
+    activeBattlemap.value = null
+  })
+
+  // Pick up a battlemap that was already shown before this window opened/reloaded
+  window.electronAPI.getBattlemapState().then((bm) => {
+    if (bm) activeBattlemap.value = bm
+  })
 
   // Initialize the store to get current state
   displayStore.initialize()

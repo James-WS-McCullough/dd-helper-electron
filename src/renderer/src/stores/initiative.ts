@@ -226,15 +226,15 @@ export const useInitiativeStore = defineStore('initiative', () => {
       )
 
       if (loadedData) {
-        initiativeData.value = {
+        const defaults: InitiativeData = {
           combatants: [],
           currentTurn: 0,
           round: 1,
           isActive: false,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          ...loadedData
+          updatedAt: new Date().toISOString()
         }
+        initiativeData.value = { ...defaults, ...loadedData }
         return true
       } else {
         // No saved data, use default

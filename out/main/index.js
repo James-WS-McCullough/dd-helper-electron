@@ -672,6 +672,7 @@ let displayState = {
   backgroundMusic: null,
   soundEffects: []
 };
+let currentBattlemap = null;
 function registerIpcHandlers() {
   electron.ipcMain.handle("select-directory", async () => {
     const mainWindow2 = getMainWindow();
@@ -913,13 +914,16 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle("display-battlemap", async (_event, battlemapData) => {
     try {
+      currentBattlemap = battlemapData;
+      if (!hasDisplayWindow()) {
+        openDisplayWindow();
+        return { success: true };
+      }
       const displayWindow2 = getDisplayWindow();
       if (displayWindow2) {
         displayWindow2.webContents.send("display-battlemap", battlemapData);
-        console.log("Battlemap sent to display window");
-        return { success: true };
       }
-      return { success: false, error: "Display window not available" };
+      return { success: true };
     } catch (error) {
       console.error("Error displaying battlemap:", error);
       return { success: false, error: error.message };
@@ -927,17 +931,20 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle("hide-battlemap", async () => {
     try {
+      currentBattlemap = null;
       const displayWindow2 = getDisplayWindow();
-      if (displayWindow2) {
+      if (hasDisplayWindow() && displayWindow2) {
         displayWindow2.webContents.send("hide-battlemap");
         console.log("Battlemap hidden from display");
-        return { success: true };
       }
-      return { success: false, error: "Display window not available" };
+      return { success: true };
     } catch (error) {
       console.error("Error hiding battlemap:", error);
       return { success: false, error: error.message };
     }
+  });
+  electron.ipcMain.handle("get-battlemap-state", () => {
+    return currentBattlemap;
   });
   electron.ipcMain.handle(
     "save-character-stats",

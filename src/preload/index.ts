@@ -131,6 +131,8 @@ const electronAPI: ElectronAPI = {
 
   hideBattlemap: () => ipcRenderer.invoke('hide-battlemap'),
 
+  getBattlemapState: () => ipcRenderer.invoke('get-battlemap-state'),
+
   // ============================================
   // CHARACTER STATS MANAGEMENT
   // ============================================

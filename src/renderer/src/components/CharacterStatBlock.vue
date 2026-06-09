@@ -316,15 +316,6 @@ function formatMod(mod: number): string {
   return formatModifier(mod)
 }
 
-function adjustHP(delta: number): void {
-  const current = props.character.currentHitPoints ?? props.character.maxHitPoints
-  const newHP = Math.max(0, Math.min(current + delta, props.character.maxHitPoints))
-  emit('update:character', {
-    ...props.character,
-    currentHitPoints: newHP
-  })
-}
-
 function onDiceRoll(result: DiceRoll): void {
   // Create toast
   const toastId = ++toastIdCounter

@@ -57,6 +57,7 @@ const electronAPI = {
   getBattlemapFiles: (directoryPath) => electron.ipcRenderer.invoke("get-battlemap-files", directoryPath),
   displayBattlemap: (battlemapData) => electron.ipcRenderer.invoke("display-battlemap", battlemapData),
   hideBattlemap: () => electron.ipcRenderer.invoke("hide-battlemap"),
+  getBattlemapState: () => electron.ipcRenderer.invoke("get-battlemap-state"),
   // ============================================
   // CHARACTER STATS MANAGEMENT
   // ============================================

@@ -10,6 +10,7 @@ export type { Enemy, Encounter, EncounterFileInfo, Disposition } from './encount
 export type { Combatant, CombatantType, DeathSaves, InitiativeData, TurnOrder } from './initiative'
 export type {
   BattlemapToken,
+  BattlemapTokenType,
   BattlemapZoom,
   MovementRadius,
   Battlemap,

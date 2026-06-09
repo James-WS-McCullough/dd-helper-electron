@@ -290,6 +290,13 @@ export interface ElectronAPI {
    */
   hideBattlemap: () => Promise<{ success: boolean; error?: string }>
 
+  /**
+   * Get the battlemap currently shown on the display window (null if none).
+   * Used by the display window to pick up state on mount/reload.
+   * @returns Active battlemap or null
+   */
+  getBattlemapState: () => Promise<Battlemap | null>
+
   // ============================================
   // CHARACTER STATS MANAGEMENT
   // ============================================

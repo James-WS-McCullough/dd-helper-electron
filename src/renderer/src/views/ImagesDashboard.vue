@@ -6,6 +6,18 @@
         <div class="flex items-center gap-4 mb-3">
           <h2 class="text-lg font-semibold text-white">Gallery</h2>
 
+          <!-- Refresh Button -->
+          <button
+            @click="refreshDirectory"
+            :disabled="directoryStore.isScanning"
+            class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh files"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'animate-spin': directoryStore.isScanning }" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
           <!-- Search Bar -->
           <div class="flex-1 relative">
             <input
@@ -119,6 +131,8 @@
             v-for="media in currentItems.files"
             :key="media.path"
             @click="handleMediaSelect(media)"
+            @mouseenter="handleMediaMouseEnter(media, $event)"
+            @mouseleave="handleMediaMouseLeave"
             class="group relative aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
           >
               <!-- Image/Video Thumbnail -->
@@ -135,6 +149,16 @@
                 class="w-full h-full object-cover"
                 muted
               />
+
+              <!-- Character Linked Indicator -->
+              <button
+                v-if="hasLinkedCharacter(media)"
+                @click.stop="navigateToCharacter(media)"
+                class="absolute top-2 left-2 p-1.5 bg-purple-600 hover:bg-purple-500 rounded-full z-10 transition-colors"
+                title="View stat block"
+              >
+                <span class="text-white text-sm">📋</span>
+              </button>
 
               <!-- Overlay -->
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -178,14 +202,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Character Stat Block Tooltip -->
+    <teleport to="body">
+      <div
+        v-if="hoveredMedia && getLinkedCharacter(hoveredMedia)"
+        class="fixed z-50 pointer-events-none"
+        :style="{ left: `${tooltipPosition.x}px`, top: `${tooltipPosition.y}px` }"
+      >
+        <CharacterStatBlockMini :character="getLinkedCharacter(hoveredMedia)!" />
+      </div>
+    </teleport>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
-import { useDirectoryStore, useDisplayStore, usePinsStore } from '../stores'
+import { useDirectoryStore, useDisplayStore, usePinsStore, useCharacterStatsStore } from '../stores'
+import CharacterStatBlockMini from '../components/CharacterStatBlockMini.vue'
 import { filterVisualMedia } from '../utils/mediaFilters'
 import { getGMDisplayName } from '../utils/displayNames'
 import type { MediaFile, MediaSubtype } from '../types'
@@ -195,6 +231,16 @@ const route = useRoute()
 const directoryStore = useDirectoryStore()
 const displayStore = useDisplayStore()
 const pinsStore = usePinsStore()
+const characterStatsStore = useCharacterStatsStore()
+
+// Hovered media item for stat block tooltip
+const hoveredMedia = ref<MediaFile | null>(null)
+const tooltipPosition = ref({ x: 0, y: 0 })
+
+// Initialize character stats store to enable portrait linking
+onMounted(() => {
+  characterStatsStore.initialize()
+})
 
 // Current folder path (persisted in store)
 const currentFolderPath = computed(() => directoryStore.currentImagesFolderPath)
@@ -345,6 +391,10 @@ async function handleMediaSelect(media: MediaFile) {
   }
 }
 
+async function refreshDirectory() {
+  await directoryStore.scanCurrentDirectory()
+}
+
 function getBadgeClass(subtype: MediaSubtype): string {
   const classes: Record<MediaSubtype, string> = {
     portrait: 'bg-blue-500/30 text-blue-200',
@@ -424,5 +474,42 @@ function togglePinMedia(media: MediaFile) {
     mediaSubtype: media.mediaSubtype
   }
   pinsStore.togglePin(pin)
+}
+
+// Character stat block integration
+function getLinkedCharacter(media: MediaFile) {
+  if (media.mediaSubtype !== 'portrait') return null
+  return characterStatsStore.getCharacterByPortrait(media.path)
+}
+
+function hasLinkedCharacter(media: MediaFile): boolean {
+  return !!getLinkedCharacter(media)
+}
+
+function handleMediaMouseEnter(media: MediaFile, event: MouseEvent) {
+  if (media.mediaSubtype === 'portrait' && hasLinkedCharacter(media)) {
+    hoveredMedia.value = media
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    tooltipPosition.value = {
+      x: rect.right + 10,
+      y: rect.top
+    }
+  }
+}
+
+function handleMediaMouseLeave() {
+  hoveredMedia.value = null
+}
+
+function navigateToCharacter(media: MediaFile) {
+  const character = getLinkedCharacter(media)
+  if (character) {
+    // Navigate to characters page - the store will handle selecting
+    characterStatsStore.setCurrentCharacter(character.id)
+    // Use router to navigate
+    import('../router').then(({ default: router }) => {
+      router.push('/characters')
+    })
+  }
 }
 </script>

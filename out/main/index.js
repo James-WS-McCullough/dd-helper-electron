@@ -1,6 +1,29 @@
 "use strict";
-const electron = require("electron");
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+const dotenv = require("dotenv");
 const path = require("path");
+const electron = require("electron");
 const os = require("os");
 const fs = require("fs");
 require("fs/promises");
@@ -219,7 +242,7 @@ function getCachedDirectory() {
   return cachedDirectory;
 }
 async function scanDirectory(directoryPath) {
-  const mediaExtensions = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".mp3", ".wav", ".ogg"];
+  const mediaExtensions = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".mp3", ".wav", ".ogg", ".m4a"];
   async function scanDir(dirPath) {
     const items = await fs.promises.readdir(dirPath, { withFileTypes: true });
     const result = {
@@ -248,7 +271,7 @@ async function scanDirectory(directoryPath) {
           } else if ([".mp4", ".webm"].includes(ext)) {
             mediaType = "video";
             mediaSubtype = fileName.toLowerCase().endsWith("_location") ? "background" : "event";
-          } else if ([".mp3", ".wav", ".ogg"].includes(ext)) {
+          } else if ([".mp3", ".wav", ".ogg", ".m4a"].includes(ext)) {
             mediaType = "audio";
             if (fileName.toLowerCase().endsWith("_loop")) {
               mediaSubtype = "loop";
@@ -275,22 +298,27 @@ async function scanDirectory(directoryPath) {
 }
 async function savePartyData(filePath, partyData) {
   try {
-    await fs.promises.writeFile(filePath, JSON.stringify(partyData, null, 2));
+    const json = JSON.stringify(partyData, null, 2);
+    console.log(`[fileOps] Writing party data to ${filePath} (${partyData.members?.length ?? 0} members, ${json.length} bytes)`);
+    await fs.promises.writeFile(filePath, json);
     return true;
   } catch (error) {
-    console.error("Error saving party data:", error);
+    console.error("[fileOps] Error saving party data:", error);
     throw error;
   }
 }
 async function loadPartyData(filePath) {
   try {
     const data = await fs.promises.readFile(filePath, "utf8");
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    console.log(`[fileOps] Loaded party data from ${filePath} (${parsed.members?.length ?? 0} members)`);
+    return parsed;
   } catch (error) {
     if (error.code === "ENOENT") {
+      console.log(`[fileOps] Party file not found: ${filePath}`);
       return null;
     }
-    console.error("Error loading party data:", error);
+    console.error("[fileOps] Error loading party data:", error);
     throw error;
   }
 }
@@ -541,6 +569,98 @@ async function deleteNote(directoryPath, noteId) {
   } catch (error) {
     console.error("Error deleting note:", error);
     return false;
+  }
+}
+async function saveCharacterStats(directoryPath, stats, fileName) {
+  try {
+    const sanitizedName = stats.name.replace(/[^a-z0-9_-]/gi, "_").toLowerCase();
+    const actualFileName = fileName || `${sanitizedName}_statblock.json`;
+    const filePath = path.join(directoryPath, actualFileName);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    if (!stats.createdAt) {
+      stats.createdAt = now;
+    }
+    stats.updatedAt = now;
+    await fs.promises.writeFile(filePath, JSON.stringify(stats, null, 2), "utf-8");
+    console.log("Character stats saved to:", filePath);
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error("Error saving character stats:", error);
+    return { success: false, error: error.message };
+  }
+}
+async function loadCharacterStats(filePath) {
+  try {
+    const data = await fs.promises.readFile(filePath, "utf-8");
+    const stats = JSON.parse(data);
+    console.log("Character stats loaded from:", filePath);
+    return stats;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return null;
+    }
+    console.error("Error loading character stats:", error);
+    throw error;
+  }
+}
+async function deleteCharacterStats(filePath) {
+  try {
+    await fs.promises.unlink(filePath);
+    console.log("Character stats deleted:", filePath);
+    return true;
+  } catch (error) {
+    console.error("Error deleting character stats:", error);
+    return false;
+  }
+}
+async function getCharacterStatsFiles(directoryPath) {
+  try {
+    const items = await fs.promises.readdir(directoryPath, { withFileTypes: true });
+    const characterFiles = [];
+    for (const item of items) {
+      if (item.isFile() && item.name.endsWith("_statblock.json")) {
+        const filePath = path.join(directoryPath, item.name);
+        try {
+          const fileContent = await fs.promises.readFile(filePath, "utf-8");
+          const statsData = JSON.parse(fileContent);
+          if (statsData.name !== void 0 && statsData.abilityScores !== void 0 && statsData.armorClass !== void 0) {
+            const fileStats = await fs.promises.stat(filePath);
+            characterFiles.push({
+              filename: item.name,
+              path: filePath,
+              name: statsData.name,
+              type: statsData.type,
+              challengeRating: statsData.challengeRating,
+              maxHitPoints: statsData.maxHitPoints,
+              armorClass: statsData.armorClass,
+              portraitPath: statsData.portraitPath,
+              tags: statsData.tags,
+              lastModified: fileStats.mtime
+            });
+          }
+        } catch (error) {
+          console.log(`Skipping invalid character stats file: ${item.name}`);
+        }
+      }
+    }
+    characterFiles.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+    return characterFiles;
+  } catch (error) {
+    console.error("Error getting character stats files:", error);
+    return [];
+  }
+}
+async function getCharacterByPortrait(directoryPath, portraitPath) {
+  try {
+    const files = await getCharacterStatsFiles(directoryPath);
+    const matchingFile = files.find((f) => f.portraitPath === portraitPath);
+    if (matchingFile) {
+      return await loadCharacterStats(matchingFile.path);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error finding character by portrait:", error);
+    return null;
   }
 }
 let displayState = {
@@ -819,6 +939,156 @@ function registerIpcHandlers() {
       return { success: false, error: error.message };
     }
   });
+  electron.ipcMain.handle(
+    "save-character-stats",
+    async (_event, directoryPath, stats, fileName) => {
+      return await saveCharacterStats(directoryPath, stats, fileName);
+    }
+  );
+  electron.ipcMain.handle("load-character-stats", async (_event, filePath) => {
+    return await loadCharacterStats(filePath);
+  });
+  electron.ipcMain.handle("delete-character-stats", async (_event, filePath) => {
+    return await deleteCharacterStats(filePath);
+  });
+  electron.ipcMain.handle("get-character-stats-files", async (_event, directoryPath) => {
+    return await getCharacterStatsFiles(directoryPath);
+  });
+  electron.ipcMain.handle(
+    "get-character-by-portrait",
+    async (_event, directoryPath, portraitPath) => {
+      return await getCharacterByPortrait(directoryPath, portraitPath);
+    }
+  );
+  electron.ipcMain.handle(
+    "generate-character-stats",
+    async (_event, description, characterType) => {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        return {
+          success: false,
+          error: "ANTHROPIC_API_KEY environment variable not set"
+        };
+      }
+      try {
+        const systemPrompt = `You are a D&D 5e stat block generator. Generate complete stat blocks in JSON format.
+Return ONLY valid JSON with no additional text or markdown formatting.
+
+The JSON must match this TypeScript interface:
+{
+  "name": string,
+  "type": string (e.g., "Medium humanoid (elf)"),
+  "alignment": string (e.g., "Neutral Evil"),
+  "challengeRating": string (e.g., "1/4", "5"),
+  "abilityScores": {
+    "strength": number,
+    "dexterity": number,
+    "constitution": number,
+    "intelligence": number,
+    "wisdom": number,
+    "charisma": number
+  },
+  "armorClass": number,
+  "acDescription": string (optional, e.g., "natural armor"),
+  "maxHitPoints": number,
+  "hitDice": string (e.g., "4d8+8"),
+  "speed": { "walk": number, "fly": number (optional), "swim": number (optional) },
+  "proficiencyBonus": number,
+  "savingThrows": { [ability]: true } (optional),
+  "skills": { [skill]: "proficient" | "expertise" } (optional),
+  "damageVulnerabilities": string[] (optional),
+  "damageResistances": string[] (optional),
+  "damageImmunities": string[] (optional),
+  "conditionImmunities": string[] (optional),
+  "senses": { "darkvision": number, "passivePerception": number } (optional),
+  "languages": string[],
+  "abilities": [
+    {
+      "id": string (uuid),
+      "name": string,
+      "type": "action" | "bonus_action" | "reaction" | "trait" | "legendary",
+      "description": string (include dice notation like "2d6+3 slashing damage"),
+      "recharge": string (optional, e.g., "Recharge 5-6")
+    }
+  ],
+  "tags": string[] (relevant tags like "undead", "boss", "spellcaster")
+}`;
+        const userPrompt = characterType ? `Create a ${characterType} stat block for: ${description}` : `Create a D&D 5e stat block for: ${description}`;
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 4096,
+            messages: [
+              {
+                role: "user",
+                content: userPrompt
+              },
+              {
+                role: "assistant",
+                content: "{"
+              }
+            ],
+            system: systemPrompt
+          })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Claude API error:", errorText);
+          return {
+            success: false,
+            error: `API error: ${response.status} ${response.statusText}`
+          };
+        }
+        const data = await response.json();
+        const content = data.content?.[0]?.text;
+        if (!content) {
+          return {
+            success: false,
+            error: "No content in API response"
+          };
+        }
+        const fullJson = "{" + content;
+        const lastBrace = fullJson.lastIndexOf("}");
+        const jsonStr = lastBrace !== -1 ? fullJson.substring(0, lastBrace + 1) : fullJson;
+        let stats;
+        try {
+          stats = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error("Failed to parse Claude response as JSON:", jsonStr);
+          return {
+            success: false,
+            error: "Failed to parse generated stats as JSON"
+          };
+        }
+        const { randomUUID } = await import("crypto");
+        stats.id = randomUUID();
+        stats.createdAt = (/* @__PURE__ */ new Date()).toISOString();
+        stats.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+        if (stats.abilities) {
+          stats.abilities = stats.abilities.map((ability) => ({
+            ...ability,
+            id: ability.id || randomUUID()
+          }));
+        }
+        return {
+          success: true,
+          stats
+        };
+      } catch (error) {
+        console.error("Error generating character stats:", error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }
+  );
 }
 function registerMediaProtocol() {
   electron.protocol.registerFileProtocol("media", (request, callback) => {
@@ -838,6 +1108,7 @@ function registerMediaProtocol() {
     }
   });
 }
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 function registerAppEventListeners() {
   electron.app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {

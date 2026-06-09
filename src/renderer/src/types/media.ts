@@ -43,5 +43,5 @@ export interface MediaExtensions {
 export const MEDIA_EXTENSIONS: MediaExtensions = {
   images: ['.jpg', '.jpeg', '.png', '.gif'],
   videos: ['.mp4', '.webm'],
-  audio: ['.mp3', '.wav', '.ogg']
+  audio: ['.mp3', '.wav', '.ogg', '.m4a']
 }

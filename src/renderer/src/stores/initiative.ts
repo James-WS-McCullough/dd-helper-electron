@@ -192,9 +192,10 @@ export const useInitiativeStore = defineStore('initiative', () => {
 
     try {
       initiativeData.value.updatedAt = new Date().toISOString()
+      const plainData = JSON.parse(JSON.stringify(initiativeData.value))
       const result = await window.electronAPI.saveInitiativeData(
         directoryStore.currentDirectory,
-        initiativeData.value
+        plainData
       )
       return result.success
     } catch (error) {
@@ -225,7 +226,15 @@ export const useInitiativeStore = defineStore('initiative', () => {
       )
 
       if (loadedData) {
-        initiativeData.value = loadedData
+        initiativeData.value = {
+          combatants: [],
+          currentTurn: 0,
+          round: 1,
+          isActive: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          ...loadedData
+        }
         return true
       } else {
         // No saved data, use default

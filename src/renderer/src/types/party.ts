@@ -1,17 +1,23 @@
 /**
  * Party Types
  *
- * Type definitions for D&D party members and party data
+ * Type definitions for D&D party members and party data.
+ * Focused on base stat blocks for auto-rolling initiative, saving throws,
+ * and tracking passive perception / AC.
  */
+
+import type { AbilityScores, SkillProficiency } from './characterStats'
 
 export interface PartyMember {
   id: string
   name: string
   class: string
   level: number
-  maxHp: number
-  currentHp: number
   ac: number
+  abilityScores: AbilityScores
+  proficiencyBonus: number
+  savingThrowProficiencies: { [ability: string]: boolean }
+  skillProficiencies?: { [skill: string]: SkillProficiency }
   portraitPath?: string
   notes?: string
 }

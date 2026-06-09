@@ -127,14 +127,27 @@
           </div>
         </div>
 
-        <!-- Sound Effects Count (if any active) -->
+        <!-- Sound Effects (one card each, with stop button) -->
         <div
-          v-if="displayStore.soundEffectCount > 0"
+          v-for="effect in displayStore.displayState.soundEffects"
+          :key="effect.id"
           class="flex-shrink-0 relative group"
         >
-          <div class="relative w-32 h-20 bg-orange-900/50 rounded-lg overflow-hidden flex flex-col items-center justify-center border border-orange-500/50">
-            <span class="text-3xl">💥</span>
-            <p class="text-orange-200 text-xs font-medium mt-1">{{ displayStore.soundEffectCount }} SFX</p>
+          <div class="relative w-32 h-20 bg-orange-900/50 rounded-lg overflow-hidden flex items-center justify-center border border-orange-500/50">
+            <span class="text-4xl">💥</span>
+            <div class="absolute top-1 right-1">
+              <button
+                @click.stop="displayStore.clearSoundEffect(String(effect.id))"
+                class="p-1 bg-red-600 hover:bg-red-700 rounded-full text-white text-xs transition-colors"
+                title="Stop sound effect"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+              <p class="text-orange-200 text-xs font-medium truncate">SFX</p>
+              <p class="text-orange-300 text-xs truncate">{{ getGMDisplayNameFromPath(effect.path, effect.displayName) }}</p>
+            </div>
           </div>
         </div>
 

@@ -128,7 +128,8 @@ export const useEncounterStore = defineStore('encounter', () => {
       const filePath = `${directoryStore.currentDirectory}/${fileName}`
       currentEncounter.value.updatedAt = new Date().toISOString()
 
-      const success = await window.electronAPI.saveEncounterData(filePath, currentEncounter.value)
+      const plainData = JSON.parse(JSON.stringify(currentEncounter.value))
+      const success = await window.electronAPI.saveEncounterData(filePath, plainData)
 
       if (success) {
         await refreshEncounterList()

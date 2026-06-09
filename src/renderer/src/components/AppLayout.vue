@@ -19,6 +19,9 @@
           <span class="font-medium">{{ item.label }}</span>
         </router-link>
       </nav>
+
+      <!-- Info Button Bar -->
+      <InfoButtonBar />
     </aside>
 
     <!-- Main Content with Pins Sidebar -->
@@ -43,6 +46,7 @@ import { computed } from 'vue'
 import { useDirectoryStore, usePinsStore } from '../stores'
 import DisplayStatusBar from './DisplayStatusBar.vue'
 import PinsSidebar from './PinsSidebar.vue'
+import InfoButtonBar from './InfoButtonBar.vue'
 
 const directoryStore = useDirectoryStore()
 const pinsStore = usePinsStore()
@@ -59,6 +63,7 @@ const navItems = [
   { path: '/images', icon: '🖼️', label: 'Images' },
   { path: '/audio', icon: '🎵', label: 'Audio' },
   { path: '/notes', icon: '📝', label: 'Notes' },
+  { path: '/characters', icon: '📋', label: 'Characters' },
   { path: '/party', icon: '👥', label: 'Party' },
   { path: '/encounters', icon: '⚔️', label: 'Encounters' },
   { path: '/initiative', icon: '🎯', label: 'Initiative' },

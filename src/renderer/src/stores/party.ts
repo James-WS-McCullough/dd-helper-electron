@@ -21,24 +21,36 @@ export const usePartyStore = defineStore('party', () => {
   const isSaving = ref(false)
   const isLoading = ref(false)
   const lastError = ref<string | null>(null)
+  const isInitialized = ref(false)
 
   // Getters
-  const members = computed(() => partyData.value.members)
-  const memberCount = computed(() => partyData.value.members.length)
-  const hasMembers = computed(() => partyData.value.members.length > 0)
+  const members = computed(() => partyData.value.members || [])
+  const memberCount = computed(() => (partyData.value.members || []).length)
+  const hasMembers = computed(() => (partyData.value.members || []).length > 0)
 
   // Actions
 
   /**
    * Initialize party data by loading from file
    */
+  let initPromise: Promise<void> | null = null
+
   async function initialize(): Promise<void> {
+    // Prevent concurrent initializations — reuse in-flight promise
+    if (initPromise) {
+      return initPromise
+    }
+
     const directoryStore = useDirectoryStore()
     if (!directoryStore.currentDirectory) {
       return
     }
 
-    await loadPartyData()
+    initPromise = loadPartyData().then(() => {
+      isInitialized.value = true
+      initPromise = null
+    })
+    return initPromise
   }
 
   /**
@@ -84,6 +96,7 @@ export const usePartyStore = defineStore('party', () => {
   async function savePartyData(): Promise<boolean> {
     const directoryStore = useDirectoryStore()
     if (!directoryStore.currentDirectory) {
+      console.error('[PartyStore] Save failed: no directory selected')
       lastError.value = 'No directory selected'
       return false
     }
@@ -93,11 +106,26 @@ export const usePartyStore = defineStore('party', () => {
 
     try {
       const filePath = `${directoryStore.currentDirectory}/party.json`
-      partyData.value.updatedAt = new Date().toISOString()
-      const success = await window.electronAPI.savePartyData(filePath, partyData.value)
+      // Build a clean PartyData object to avoid serializing a corrupted reactive state
+      const currentMembers = Array.isArray(partyData.value.members)
+        ? partyData.value.members
+        : Array.isArray(partyData.value)
+          ? [...(partyData.value as unknown as PartyMember[])]
+          : []
+
+      const plainData: PartyData = {
+        name: partyData.value.name || 'My Party',
+        members: JSON.parse(JSON.stringify(currentMembers)),
+        createdAt: partyData.value.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      console.log(`[PartyStore] Saving ${plainData.members.length} members to ${filePath}`)
+      const success = await window.electronAPI.savePartyData(filePath, plainData)
+      console.log(`[PartyStore] Save result: ${success}`)
       return success
     } catch (error) {
-      console.error('Failed to save party data:', error)
+      console.error('[PartyStore] Failed to save party data:', error)
       lastError.value = error instanceof Error ? error.message : 'Unknown error'
       return false
     } finally {
@@ -111,6 +139,7 @@ export const usePartyStore = defineStore('party', () => {
   async function loadPartyData(): Promise<boolean> {
     const directoryStore = useDirectoryStore()
     if (!directoryStore.currentDirectory) {
+      console.warn('[PartyStore] Load skipped: no directory selected')
       lastError.value = 'No directory selected'
       return false
     }
@@ -120,23 +149,66 @@ export const usePartyStore = defineStore('party', () => {
 
     try {
       const filePath = `${directoryStore.currentDirectory}/party.json`
+      console.log(`[PartyStore] Loading from ${filePath}`)
       const loadedData = await window.electronAPI.loadPartyData(filePath)
+      console.log(`[PartyStore] Loaded data:`, loadedData ? `${loadedData.members?.length ?? 0} members` : 'null (file not found)')
 
       if (loadedData) {
-        partyData.value = loadedData
+        // Handle legacy format: bare array of members instead of PartyData object
+        let rawMembers: any[]
+        if (Array.isArray(loadedData)) {
+          console.warn(`[PartyStore] Legacy format detected: bare array with ${loadedData.length} members`)
+          rawMembers = loadedData
+        } else {
+          rawMembers = Array.isArray(loadedData.members) ? loadedData.members : []
+        }
+
+        // Migrate legacy members that lack abilityScores (old schema had maxHp/currentHp instead)
+        const migratedMembers: PartyMember[] = rawMembers.map((m: any) => ({
+          id: m.id || crypto.randomUUID(),
+          name: m.name || 'Unknown',
+          class: m.class || 'Fighter',
+          level: m.level || 1,
+          ac: m.ac || 10,
+          abilityScores: m.abilityScores || {
+            strength: 10, dexterity: 10, constitution: 10,
+            intelligence: 10, wisdom: 10, charisma: 10
+          },
+          proficiencyBonus: m.proficiencyBonus || Math.ceil((m.level || 1) / 4) + 1,
+          savingThrowProficiencies: m.savingThrowProficiencies || {},
+          skillProficiencies: m.skillProficiencies || {},
+          ...(m.portraitPath && { portraitPath: m.portraitPath }),
+          ...(m.notes && { notes: m.notes })
+        }))
+
+        partyData.value = {
+          name: (!Array.isArray(loadedData) && loadedData.name) || 'My Party',
+          members: migratedMembers,
+          createdAt: (!Array.isArray(loadedData) && loadedData.createdAt) || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+
+        // Re-save in correct format if migration happened
+        if (Array.isArray(loadedData) || rawMembers.some((m: any) => !m.abilityScores)) {
+          console.log('[PartyStore] Re-saving migrated data')
+          await savePartyData()
+        }
         return true
       } else {
-        // No file exists, use default empty party
-        partyData.value = {
-          name: 'My Party',
-          members: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+        // No file exists yet - only reset if store has no members
+        // (avoids overwriting in-memory data that hasn't been saved yet)
+        if (!partyData.value.members.length) {
+          partyData.value = {
+            name: 'My Party',
+            members: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
         }
         return false
       }
     } catch (error) {
-      console.error('Failed to load party data:', error)
+      console.error('[PartyStore] Failed to load party data:', error)
       lastError.value = error instanceof Error ? error.message : 'Unknown error'
       return false
     } finally {
@@ -153,6 +225,30 @@ export const usePartyStore = defineStore('party', () => {
       members: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
+    }
+  }
+
+  /**
+   * Create a default new party member
+   */
+  function createDefaultMember(name: string): PartyMember {
+    return {
+      id: crypto.randomUUID(),
+      name,
+      class: 'Fighter',
+      level: 1,
+      ac: 10,
+      abilityScores: {
+        strength: 10,
+        dexterity: 10,
+        constitution: 10,
+        intelligence: 10,
+        wisdom: 10,
+        charisma: 10
+      },
+      proficiencyBonus: 2,
+      savingThrowProficiencies: {},
+      skillProficiencies: {}
     }
   }
 
@@ -176,6 +272,7 @@ export const usePartyStore = defineStore('party', () => {
     getMemberById,
     savePartyData,
     loadPartyData,
-    clearParty
+    clearParty,
+    createDefaultMember
   }
 })

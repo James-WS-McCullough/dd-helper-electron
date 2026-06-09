@@ -132,6 +132,28 @@ const electronAPI: ElectronAPI = {
   hideBattlemap: () => ipcRenderer.invoke('hide-battlemap'),
 
   // ============================================
+  // CHARACTER STATS MANAGEMENT
+  // ============================================
+
+  saveCharacterStats: (directoryPath: string, stats: any, fileName?: string) =>
+    ipcRenderer.invoke('save-character-stats', directoryPath, stats, fileName),
+
+  loadCharacterStats: (filePath: string) =>
+    ipcRenderer.invoke('load-character-stats', filePath),
+
+  deleteCharacterStats: (filePath: string) =>
+    ipcRenderer.invoke('delete-character-stats', filePath),
+
+  getCharacterStatsFiles: (directoryPath: string) =>
+    ipcRenderer.invoke('get-character-stats-files', directoryPath),
+
+  getCharacterByPortrait: (directoryPath: string, portraitPath: string) =>
+    ipcRenderer.invoke('get-character-by-portrait', directoryPath, portraitPath),
+
+  generateCharacterStats: (description: string, characterType?: string) =>
+    ipcRenderer.invoke('generate-character-stats', description, characterType),
+
+  // ============================================
   // EVENT LISTENERS
   // ============================================
 

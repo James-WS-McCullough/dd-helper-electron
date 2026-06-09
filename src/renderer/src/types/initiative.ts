@@ -5,9 +5,10 @@
  */
 
 import type { PartyMember } from './party'
-import type { Enemy } from './encounter'
+import type { Enemy, Disposition } from './encounter'
+import type { CharacterStats } from './characterStats'
 
-export type CombatantType = 'player' | 'enemy'
+export type CombatantType = 'player' | 'enemy' | 'note'
 
 export interface Combatant {
   id: string
@@ -19,8 +20,17 @@ export interface Combatant {
   ac: number
   portraitPath?: string
   notes?: string
+  stats?: CharacterStats
+  disposition?: Disposition
+  tags?: string[]
+  deathSaves?: DeathSaves
   // Reference to original data
   originalData?: PartyMember | Enemy
+}
+
+export interface DeathSaves {
+  successes: number
+  failures: number
 }
 
 export interface InitiativeData {

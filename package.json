@@ -16,7 +16,11 @@
     "test:main:watch": "jest --config jest.config.ts.js --watch",
     "test:main:coverage": "jest --config jest.config.ts.js --coverage",
     "legacy:test": "jest",
-    "legacy:start": "electron src-legacy/main.js"
+    "legacy:start": "electron src-legacy/main.js",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "keywords": [
     "electron",
@@ -56,6 +60,7 @@
     "vue-tsc": "^3.1.1"
   },
   "dependencies": {
+    "dotenv": "^17.3.1",
     "path": "^0.12.7",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",

@@ -57,6 +57,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Battlemap Editor' }
   },
   {
+    path: '/characters',
+    name: 'Characters',
+    component: () => import('../views/CharacterStatsDashboard.vue'),
+    meta: { title: 'Character Library' }
+  },
+  {
     path: '/display',
     name: 'Display',
     component: () => import('../views/DisplayWindow.vue'),

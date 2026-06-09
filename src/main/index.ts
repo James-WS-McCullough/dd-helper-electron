@@ -4,6 +4,12 @@
  * Initializes the Electron application and coordinates all modules
  */
 
+import { config } from 'dotenv'
+import { resolve } from 'path'
+
+// Load .env from project root before anything else
+config({ path: resolve(__dirname, '../../.env') })
+
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { createMainWindow } from './windows'

@@ -4,14 +4,19 @@
  * Type definitions for combat encounters and enemies
  */
 
+import type { CharacterStats } from './characterStats'
+
+export type Disposition = 'hostile' | 'friendly' | 'neutral'
+
 export interface Enemy {
   name: string
-  hp: number
   maxHp: number
   ac: number
   initiative?: number
   portraitPath?: string
   notes?: string
+  stats?: CharacterStats
+  disposition?: Disposition
 }
 
 export interface Encounter {

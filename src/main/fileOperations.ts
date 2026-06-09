@@ -17,7 +17,9 @@ import type {
   EncounterFileInfo,
   InitiativeData,
   Battlemap,
-  BattlemapFileInfo
+  BattlemapFileInfo,
+  CharacterStats,
+  CharacterStatsFileInfo
 } from '../renderer/src/types'
 
 // Lazy initialization for user data paths
@@ -90,7 +92,7 @@ export function getCachedDirectory(): string | null {
  * Scan directory and return media file tree
  */
 export async function scanDirectory(directoryPath: string): Promise<MediaFile> {
-  const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm', '.mp3', '.wav', '.ogg']
+  const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm', '.mp3', '.wav', '.ogg', '.m4a']
 
   async function scanDir(dirPath: string): Promise<MediaFile> {
     const items = await fs.readdir(dirPath, { withFileTypes: true })
@@ -125,7 +127,7 @@ export async function scanDirectory(directoryPath: string): Promise<MediaFile> {
           } else if (['.mp4', '.webm'].includes(ext)) {
             mediaType = 'video'
             mediaSubtype = fileName.toLowerCase().endsWith('_location') ? 'background' : 'event'
-          } else if (['.mp3', '.wav', '.ogg'].includes(ext)) {
+          } else if (['.mp3', '.wav', '.ogg', '.m4a'].includes(ext)) {
             mediaType = 'audio'
             if (fileName.toLowerCase().endsWith('_loop')) {
               mediaSubtype = 'loop'
@@ -161,10 +163,12 @@ export async function scanDirectory(directoryPath: string): Promise<MediaFile> {
  */
 export async function savePartyData(filePath: string, partyData: PartyData): Promise<boolean> {
   try {
-    await fs.writeFile(filePath, JSON.stringify(partyData, null, 2))
+    const json = JSON.stringify(partyData, null, 2)
+    console.log(`[fileOps] Writing party data to ${filePath} (${partyData.members?.length ?? 0} members, ${json.length} bytes)`)
+    await fs.writeFile(filePath, json)
     return true
   } catch (error) {
-    console.error('Error saving party data:', error)
+    console.error('[fileOps] Error saving party data:', error)
     throw error
   }
 }
@@ -175,12 +179,15 @@ export async function savePartyData(filePath: string, partyData: PartyData): Pro
 export async function loadPartyData(filePath: string): Promise<PartyData | null> {
   try {
     const data = await fs.readFile(filePath, 'utf8')
-    return JSON.parse(data)
+    const parsed = JSON.parse(data)
+    console.log(`[fileOps] Loaded party data from ${filePath} (${parsed.members?.length ?? 0} members)`)
+    return parsed
   } catch (error: any) {
     if (error.code === 'ENOENT') {
+      console.log(`[fileOps] Party file not found: ${filePath}`)
       return null
     }
-    console.error('Error loading party data:', error)
+    console.error('[fileOps] Error loading party data:', error)
     throw error
   }
 }
@@ -541,5 +548,145 @@ export async function deleteNote(directoryPath: string, noteId: string): Promise
   } catch (error) {
     console.error('Error deleting note:', error)
     return false
+  }
+}
+
+// ============================================
+// CHARACTER STATS MANAGEMENT
+// ============================================
+
+/**
+ * Save character stats to JSON file
+ */
+export async function saveCharacterStats(
+  directoryPath: string,
+  stats: CharacterStats,
+  fileName?: string
+): Promise<{ success: boolean; error?: string; path?: string }> {
+  try {
+    // Generate filename from character name if not provided
+    const sanitizedName = stats.name.replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
+    const actualFileName = fileName || `${sanitizedName}_statblock.json`
+    const filePath = join(directoryPath, actualFileName)
+
+    // Update timestamps
+    const now = new Date().toISOString()
+    if (!stats.createdAt) {
+      stats.createdAt = now
+    }
+    stats.updatedAt = now
+
+    await fs.writeFile(filePath, JSON.stringify(stats, null, 2), 'utf-8')
+    console.log('Character stats saved to:', filePath)
+    return { success: true, path: filePath }
+  } catch (error: any) {
+    console.error('Error saving character stats:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Load character stats from file
+ */
+export async function loadCharacterStats(filePath: string): Promise<CharacterStats | null> {
+  try {
+    const data = await fs.readFile(filePath, 'utf-8')
+    const stats = JSON.parse(data)
+    console.log('Character stats loaded from:', filePath)
+    return stats
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      return null
+    }
+    console.error('Error loading character stats:', error)
+    throw error
+  }
+}
+
+/**
+ * Delete character stats file
+ */
+export async function deleteCharacterStats(filePath: string): Promise<boolean> {
+  try {
+    await fs.unlink(filePath)
+    console.log('Character stats deleted:', filePath)
+    return true
+  } catch (error) {
+    console.error('Error deleting character stats:', error)
+    return false
+  }
+}
+
+/**
+ * Get list of character stats files in directory
+ */
+export async function getCharacterStatsFiles(
+  directoryPath: string
+): Promise<CharacterStatsFileInfo[]> {
+  try {
+    const items = await fs.readdir(directoryPath, { withFileTypes: true })
+    const characterFiles: CharacterStatsFileInfo[] = []
+
+    for (const item of items) {
+      if (item.isFile() && item.name.endsWith('_statblock.json')) {
+        const filePath = join(directoryPath, item.name)
+        try {
+          const fileContent = await fs.readFile(filePath, 'utf-8')
+          const statsData = JSON.parse(fileContent)
+
+          // Validate it's a character stats file (has required fields)
+          if (
+            statsData.name !== undefined &&
+            statsData.abilityScores !== undefined &&
+            statsData.armorClass !== undefined
+          ) {
+            const fileStats = await fs.stat(filePath)
+
+            characterFiles.push({
+              filename: item.name,
+              path: filePath,
+              name: statsData.name,
+              type: statsData.type,
+              challengeRating: statsData.challengeRating,
+              maxHitPoints: statsData.maxHitPoints,
+              armorClass: statsData.armorClass,
+              portraitPath: statsData.portraitPath,
+              tags: statsData.tags,
+              lastModified: fileStats.mtime
+            })
+          }
+        } catch (error) {
+          console.log(`Skipping invalid character stats file: ${item.name}`)
+        }
+      }
+    }
+
+    // Sort by last modified (most recent first)
+    characterFiles.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+    return characterFiles
+  } catch (error) {
+    console.error('Error getting character stats files:', error)
+    return []
+  }
+}
+
+/**
+ * Find character by portrait path
+ */
+export async function getCharacterByPortrait(
+  directoryPath: string,
+  portraitPath: string
+): Promise<CharacterStats | null> {
+  try {
+    const files = await getCharacterStatsFiles(directoryPath)
+    const matchingFile = files.find((f) => f.portraitPath === portraitPath)
+
+    if (matchingFile) {
+      return await loadCharacterStats(matchingFile.path)
+    }
+    return null
+  } catch (error) {
+    console.error('Error finding character by portrait:', error)
+    return null
   }
 }

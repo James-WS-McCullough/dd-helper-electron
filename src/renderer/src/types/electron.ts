@@ -10,6 +10,7 @@ import type { PartyData } from './party'
 import type { Encounter, EncounterFileInfo } from './encounter'
 import type { InitiativeData } from './initiative'
 import type { Battlemap, BattlemapFileInfo } from './battlemap'
+import type { CharacterStats, CharacterStatsFileInfo } from './characterStats'
 
 export interface ElectronAPI {
   // ============================================
@@ -288,6 +289,66 @@ export interface ElectronAPI {
    * @returns Operation result
    */
   hideBattlemap: () => Promise<{ success: boolean; error?: string }>
+
+  // ============================================
+  // CHARACTER STATS MANAGEMENT
+  // ============================================
+
+  /**
+   * Save character stats to file
+   * @param directoryPath - Directory to save in
+   * @param stats - Character stats to save
+   * @param fileName - Optional custom filename
+   * @returns Operation result with path
+   */
+  saveCharacterStats: (
+    directoryPath: string,
+    stats: CharacterStats,
+    fileName?: string
+  ) => Promise<{ success: boolean; error?: string; path?: string }>
+
+  /**
+   * Load character stats from file
+   * @param filePath - File path to load from
+   * @returns Character stats or null
+   */
+  loadCharacterStats: (filePath: string) => Promise<CharacterStats | null>
+
+  /**
+   * Delete character stats file
+   * @param filePath - File path to delete
+   * @returns Success status
+   */
+  deleteCharacterStats: (filePath: string) => Promise<boolean>
+
+  /**
+   * Get list of character stats files in directory
+   * @param directoryPath - Directory to scan
+   * @returns List of character stats files
+   */
+  getCharacterStatsFiles: (directoryPath: string) => Promise<CharacterStatsFileInfo[]>
+
+  /**
+   * Find character by portrait path
+   * @param directoryPath - Directory to search
+   * @param portraitPath - Portrait path to match
+   * @returns Character stats or null
+   */
+  getCharacterByPortrait: (
+    directoryPath: string,
+    portraitPath: string
+  ) => Promise<CharacterStats | null>
+
+  /**
+   * Generate character stats using Claude AI
+   * @param description - Description of the character to generate
+   * @param characterType - Optional type (NPC, Monster, etc.)
+   * @returns Generated character stats or error
+   */
+  generateCharacterStats: (
+    description: string,
+    characterType?: string
+  ) => Promise<{ success: boolean; stats?: CharacterStats; error?: string }>
 
   // ============================================
   // EVENT LISTENERS
